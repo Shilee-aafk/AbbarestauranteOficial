@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Iniciar Sesión</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .card {
+            border: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary {
+            background-color: #6f42c1;
+            border-color: #6f42c1;
+        }
+        .btn-primary:hover {
+            background-color: #5a359a;
+            border-color: #5a359a;
+        }
+        .icon-container {
+            background-color: rgba(111, 66, 193, 0.1);
+            color: #6f42c1;
+        }
+    </style>
+</head>
+<body class="d-flex align-items-center justify-content-center min-vh-100">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-4">
+                <div class="card">
+                    <div class="card-body p-5">
+                        <div class="text-center mb-4">
+                            <div class="icon-container d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 64px; height: 64px;">
+                                <span class="fs-2">🍽️</span>
+                            </div>
+                            <h1 class="h3 mb-2">Bienvenido</h1>
+                            <p class="text-muted">Ingresa a tu cuenta para continuar</p>
+                        </div>
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="id_username" class="form-label">Usuario</label>
+                                <input type="text" name="username" id="id_username" class="form-control" placeholder="tuusuario" required>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <label for="id_password" class="form-label">Contraseña</label>
+                                    <button type="button" class="btn btn-link p-0 text-decoration-none">¿Olvidaste tu contraseña?</button>
+                                </div>
+                                <input type="password" name="password" id="id_password" class="form-control" placeholder="••••••••" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Iniciar sesión</button>
+                        </form>
+                        <div class="text-center mt-4">
+                            <p class="text-muted mb-0">¿No tienes una cuenta? <button class="btn btn-link p-0 text-decoration-none">Regístrate aquí</button></p>
+                        </div>
+                        {% if form.errors %}
+                            <div class="alert alert-danger mt-3" role="alert">
+                                Credenciales incorrectas. Inténtalo de nuevo.
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

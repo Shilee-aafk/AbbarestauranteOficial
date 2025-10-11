@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Garzón - Abba Hotel Restaurante</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Sidebar -->
+    <div class="fixed inset-y-0 left-0 w-64 bg-white shadow-md">
+        <div class="flex items-center justify-center h-16 bg-white border-b border-gray-200">
+            <svg class="w-8 h-8 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            <span class="text-xl font-semibold text-gray-800">Abba Hotel Restaurante</span>
+        </div>
+        <nav class="mt-8">
+            <a href="#" class="nav-link active flex items-center px-6 py-3 text-amber-800 bg-amber-100 border-r-4 border-amber-500" data-section="mesas">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z"></path>
+                </svg>
+                Gestión de Mesas
+            </a>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="ml-64 bg-gray-50 min-h-screen">
+        <!-- Header -->
+        <div class="bg-white shadow-sm border-b border-gray-200 px-8 py-4 flex justify-between items-center">
+            <div></div>
+            <div class="flex items-center space-x-4">
+                <span class="text-gray-700">Garzón</span>
+                <a href="{% url 'logout' %}" class="text-red-600 hover:text-red-800">Cerrar Sesión</a>
+            </div>
+        </div>
+
+        <div class="p-8">
+            <!-- Gestión de Mesas Section -->
+            <div id="mesas" class="content-section">
+                <h1 class="text-3xl font-bold text-gray-900 mb-8">Gestión de Mesas</h1>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {% for table in tables %}
+                    <div class="bg-white rounded-lg shadow-md p-6 text-center cursor-pointer hover:shadow-lg transition-shadow" onclick="openOrder({{ table.id }}, {{ table.number }}, {{ table.is_available|lower }})">
+                        <h3 class="text-2xl font-semibold text-gray-900 mb-2">Mesa {{ table.number }}</h3>
+                        <span class="px-4 py-2 text-sm font-medium rounded-full {% if table.is_available %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                            {% if table.is_available %}Disponible{% else %}Ocupado{% endif %}
+                        </span>
+                    </div>
+                    {% empty %}
+                    <p class="text-gray-500">No hay mesas</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Toma de Pedido Section -->
+            <div id="pedido" class="content-section hidden">
+                <div class="flex items-center mb-8">
+                    <button onclick="backToMesas()" class="mr-4 text-blue-600 hover:text-blue-800">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                    </button>
+                    <h1 class="text-3xl font-bold text-gray-900">Pedido Mesa <span id="table-number"></span></h1>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Left Column: Menu -->
+                    <div>
+                        <h2 class="text-xl font-semibold mb-4">Menú</h2>
+                        <div class="mb-4">
+                            {% for category in categories %}
+                            <button class="category-btn px-4 py-2 mr-2 mb-2 rounded {% if forloop.first %}bg-blue-500 text-white{% else %}bg-gray-200 text-gray-700{% endif %}" data-category="{{ category }}">{{ category }}</button>
+                            {% endfor %}
+                        </div>
+                        <div id="menu-items">
+                            {% for category in categories %}
+                            <div class="category-section {% if not forloop.first %}hidden{% endif %}" data-category="{{ category }}">
+                                {% for item in menu_items %}
+                                {% if item.category == category %}
+                                <div class="flex justify-between items-center p-3 border-b">
+                                    <div>
+                                        <h3 class="font-medium">{{ item.name }}</h3>
+                                        <p class="text-sm text-gray-600">${{ item.price }}</p>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <button class="note-btn mr-2 text-gray-500 hover:text-blue-500" data-item-id="{{ item.id }}">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                            </svg>
+                                        </button>
+                                        <button class="add-btn bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600" data-item-id="{{ item.id }}">+</button>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% endfor %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <!-- Right Column: Order Summary -->
+                    <div>
+                        <h2 class="text-xl font-semibold mb-4">Resumen del Pedido</h2>
+                        <div id="order-summary" class="space-y-2"></div>
+                        <div class="mt-8 space-y-2">
+                            <button id="send-to-kitchen" class="w-full bg-green-500 text-white py-3 rounded-lg font-medium hover:bg-green-600">Enviar a Cocina</button>
+                            <button id="save-order" class="w-full bg-yellow-500 text-white py-3 rounded-lg font-medium hover:bg-yellow-600">Guardar Pedido</button>
+                            <button id="cancel-order" class="w-full bg-gray-500 text-white py-3 rounded-lg font-medium hover:bg-gray-600">Cancelar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let menuItems = {{ menu_items_json|safe }};
+        let currentTable = null;
+        let currentOrder = {}; // item_id: {quantity, note}
+
+        function openOrder(tableId, tableNumber, isAvailable) {
+            currentTable = tableId;
+            document.getElementById('table-number').textContent = tableNumber;
+            document.getElementById('mesas').classList.add('hidden');
+            document.getElementById('pedido').classList.remove('hidden');
+            if (!isAvailable) {
+                // Load existing order if any
+                // For now, assume no existing, or mock
+            }
+            renderOrderSummary();
+        }
+
+        function backToMesas() {
+            document.getElementById('pedido').classList.add('hidden');
+            document.getElementById('mesas').classList.remove('hidden');
+            currentOrder = {};
+        }
+
+        // Category switching
+        document.querySelectorAll('.category-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('bg-blue-500', 'text-white').addClass('bg-gray-200', 'text-gray-700'));
+                this.classList.add('bg-blue-500', 'text-white').removeClass('bg-gray-200', 'text-gray-700');
+                const category = this.getAttribute('data-category');
+                document.querySelectorAll('.category-section').forEach(sec => sec.classList.add('hidden'));
+                document.querySelector(`.category-section[data-category="${category}"]`).classList.remove('hidden');
+            });
+        });
+
+        // Add item
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('add-btn')) {
+                const itemId = e.target.getAttribute('data-item-id');
+                if (!currentOrder[itemId]) {
+                    currentOrder[itemId] = { quantity: 0, note: '' };
+                }
+                currentOrder[itemId].quantity += 1;
+                renderOrderSummary();
+            }
+        });
+
+        // Note
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.note-btn')) {
+                const itemId = e.target.closest('.note-btn').getAttribute('data-item-id');
+                const note = prompt('Añadir nota:');
+                if (note !== null) {
+                    if (!currentOrder[itemId]) {
+                        currentOrder[itemId] = { quantity: 1, note: '' };
+                    }
+                    currentOrder[itemId].note = note;
+                    renderOrderSummary();
+                }
+            }
+        });
+
+        function renderOrderSummary() {
+            const summary = document.getElementById('order-summary');
+            summary.innerHTML = '';
+            const grouped = {};
+            for (const [itemId, data] of Object.entries(currentOrder)) {
+                const item = menuItems.find(i => i.id == itemId);
+                const key = data.note ? `${item.name}::${data.note}` : item.name;
+                if (!grouped[key]) {
+                    grouped[key] = { name: item.name, quantity: 0, note: data.note, price: item.price };
+                }
+                grouped[key].quantity += data.quantity;
+            }
+            for (const [key, data] of Object.entries(grouped)) {
+                const div = document.createElement('div');
+                div.className = 'flex justify-between items-center p-2 bg-gray-50 rounded';
+                div.innerHTML = `
+                    <div>
+                        <span class="font-medium">${data.name} x${data.quantity}</span>
+                        ${data.note ? `<br><small class="text-gray-600">- ${data.note}</small>` : ''}
+                    </div>
+                    <span>$${(data.price * data.quantity).toFixed(2)}</span>
+                `;
+                summary.appendChild(div);
+            }
+        }
+
+        // Buttons
+        document.getElementById('send-to-kitchen').addEventListener('click', function() {
+            if (Object.keys(currentOrder).length === 0) {
+                alert('No hay items en el pedido');
+                return;
+            }
+            const items = Object.entries(currentOrder).map(([id, data]) => ({
+                id: parseInt(id),
+                quantity: data.quantity,
+                note: data.note
+            }));
+            fetch('/restaurant/save_order/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    table_id: currentTable,
+                    items: items
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Pedido enviado a cocina');
+                    backToMesas();
+                } else {
+                    alert('Error al enviar pedido');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al enviar pedido');
+            });
+        });
+
+        document.getElementById('save-order').addEventListener('click', function() {
+            alert('Pedido guardado');
+        });
+
+        document.getElementById('cancel-order').addEventListener('click', function() {
+            if (confirm('¿Cancelar pedido?')) {
+                currentOrder = {};
+                renderOrderSummary();
+            }
+        });
+    </script>
+</body>
+</html>

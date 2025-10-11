@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="flex h-screen">
+        <aside class="bg-white w-64 shadow-md">
+        <div class="p-4">
+          <!-- Logo -->
+          <div class="flex items-center space-x-2 px-2 mb-10">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            <span class="text-xl font-bold text-gray-800">AbbaHotel</span>
+          </div>
+
+          <!-- Menú de Navegación -->
+          <nav>
+            <ul class="space-y-2">
+              <li>
+                <a href="#" class="nav-link flex items-center space-x-3 rounded-lg px-4 py-2 bg-blue-100 text-blue-600 font-semibold" data-section="dashboard">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                  <span>Dashboard</span>
+                </a>
+              </li>
+              <li>
+                <a href="#" class="nav-link flex items-center space-x-3 rounded-lg px-4 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800" data-section="orders">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                  </svg>
+                  <span>Pedidos</span>
+                </a>
+              </li>
+              <li>
+                <a href="#" class="nav-link flex items-center space-x-3 rounded-lg px-4 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800" data-section="kitchen">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7.C14 5 16.09 5.777 17.657 7.343A8 8 0 0117.657 18.657z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 16.121A3 3 0 1014.12 11.88A3 3 0 009.879 16.121z" />
+                  </svg>
+                  <span>Vista de Cocina</span>
+                </a>
+              </li>
+              <li>
+                <a href="#" class="nav-link flex items-center space-x-3 rounded-lg px-4 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800" data-section="tables">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                  <span>Gestión de Mesas</span>
+                </a>
+              </li>
+              <li>
+                <a href="#" class="nav-link flex items-center space-x-3 rounded-lg px-4 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800" data-section="menu">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v11.494m-9-5.747h18" />
+                  </svg>
+                  <span>Menú y Platos</span>
+                </a>
+              </li>
+              <li>
+                <a href="#" class="nav-link flex items-center space-x-3 rounded-lg px-4 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800" data-section="inventory">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                  </svg>
+                  <span>Inventario</span>
+                </a>
+              </li>
+              <li>
+                <a href="#" class="nav-link flex items-center space-x-3 rounded-lg px-4 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800" data-section="reports">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <span>Reportes</span>
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+        </aside>
+        <main class="flex-1 overflow-y-auto p-8">
+        <!-- Header Superior -->
+        <header class="flex justify-end items-center mb-6">
+            <div class="flex items-center space-x-4">
+                <span class="text-sm font-semibold text-gray-700">Admin</span>
+                <a href="#" class="text-sm font-semibold text-red-500 hover:text-red-700">Cerrar Sesión</a>
+            </div>
+        </header>
+
+        <!-- Banner de Bienvenida -->
+        <div class="bg-green-100 border border-green-200 text-green-800 px-4 py-3 rounded-lg relative mb-6" role="alert">
+            <div class="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+                <span>¡Bienvenido, Admin!</span>
+            </div>
+        </div>
+
+        <!-- Dashboard Section -->
+        <div id="dashboard" class="content-section">
+            <h2 class="text-2xl font-bold mb-4">Dashboard</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h3 class="text-lg font-semibold">Total Pedidos Hoy</h3>
+                    <p id="total-orders" class="text-2xl font-bold text-blue-600">0</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h3 class="text-lg font-semibold">Preparando</h3>
+                    <p id="preparing-count" class="text-2xl font-bold text-yellow-600">0</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h3 class="text-lg font-semibold">Listos</h3>
+                    <p id="ready-count" class="text-2xl font-bold text-green-600">0</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h3 class="text-lg font-semibold">Servidos</h3>
+                    <p id="served-count" class="text-2xl font-bold text-gray-600">0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Orders Section -->
+        <div id="orders" class="content-section hidden">
+            <h2 class="text-2xl font-bold mb-4">Gestión de Pedidos</h2>
+            <button id="add-order-btn" class="bg-blue-500 text-white px-4 py-2 rounded mb-4">Agregar Pedido</button>
+            <table id="orders-table" class="w-full bg-white shadow rounded">
+                <thead>
+                    <tr class="bg-gray-200">
+                        <th class="p-2">ID</th>
+                        <th class="p-2">Mesa</th>
+                        <th class="p-2">Estado</th>
+                        <th class="p-2">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="orders-tbody">
+                </tbody>
+            </table>
+            <div id="order-form" class="hidden bg-white p-4 shadow rounded mt-4">
+                <h3 id="form-title" class="text-lg font-semibold mb-2">Agregar Pedido</h3>
+                <form id="order-form-element">
+                    <input type="hidden" id="order-id">
+                    <label>Mesa: <input type="number" id="order-table" class="border p-2 w-full mb-2" required></label>
+                    <label>Estado: 
+                        <select id="order-status" class="border p-2 w-full mb-2">
+                            <option value="pending">Pendiente</option>
+                            <option value="preparing">Preparando</option>
+                            <option value="ready">Listo</option>
+                            <option value="served">Servido</option>
+                        </select>
+                    </label>
+                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Guardar</button>
+                    <button type="button" id="cancel-order-btn" class="bg-gray-500 text-white px-4 py-2 rounded ml-2">Cancelar</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Kitchen Section -->
+        <div id="kitchen" class="content-section hidden">
+            <h2 class="text-2xl font-bold mb-4">Vista de Cocina</h2>
+            <table id="kitchen-table" class="w-full bg-white shadow rounded">
+                <thead>
+                    <tr class="bg-gray-200">
+                        <th class="p-2">ID Pedido</th>
+                        <th class="p-2">Mesa</th>
+                        <th class="p-2">Estado</th>
+                        <th class="p-2">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="kitchen-tbody">
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Tables Section -->
+        <div id="tables" class="content-section hidden">
+            <h2 class="text-2xl font-bold mb-4">Gestión de Mesas</h2>
+            <button id="add-table-btn" class="bg-blue-500 text-white px-4 py-2 rounded mb-4">Agregar Mesa</button>
+            <table id="tables-table" class="w-full bg-white shadow rounded">
+                <thead>
+                    <tr class="bg-gray-200">
+                        <th class="p-2">Número</th>
+                        <th class="p-2">Capacidad</th>
+                        <th class="p-2">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tables-tbody">
+                </tbody>
+            </table>
+            <div id="table-form" class="hidden bg-white p-4 shadow rounded mt-4">
+                <h3 id="table-form-title" class="text-lg font-semibold mb-2">Agregar Mesa</h3>
+                <form id="table-form-element">
+                    <input type="hidden" id="table-id">
+                    <label>Número: <input type="number" id="table-number" class="border p-2 w-full mb-2" required></label>
+                    <label>Capacidad: <input type="number" id="table-capacity" class="border p-2 w-full mb-2" required></label>
+                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Guardar</button>
+                    <button type="button" id="cancel-table-btn" class="bg-gray-500 text-white px-4 py-2 rounded ml-2">Cancelar</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Menu Section -->
+        <div id="menu" class="content-section hidden">
+            <h2 class="text-2xl font-bold mb-4">Menú y Platos</h2>
+            <button id="add-menu-btn" class="bg-blue-500 text-white px-4 py-2 rounded mb-4">Agregar Plato</button>
+            <table id="menu-table" class="w-full bg-white shadow rounded">
+                <thead>
+                    <tr class="bg-gray-200">
+                        <th class="p-2">Nombre</th>
+                        <th class="p-2">Precio</th>
+                        <th class="p-2">Disponible</th>
+                        <th class="p-2">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="menu-tbody">
+                </tbody>
+            </table>
+            <div id="menu-form" class="hidden bg-white p-4 shadow rounded mt-4">
+                <h3 id="menu-form-title" class="text-lg font-semibold mb-2">Agregar Plato</h3>
+                <form id="menu-form-element">
+                    <input type="hidden" id="menu-id">
+                    <label>Nombre: <input type="text" id="menu-name" class="border p-2 w-full mb-2" required></label>
+                    <label>Precio: <input type="number" step="0.01" id="menu-price" class="border p-2 w-full mb-2" required></label>
+                    <label>Disponible: <input type="checkbox" id="menu-available" checked></label>
+                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Guardar</button>
+                    <button type="button" id="cancel-menu-btn" class="bg-gray-500 text-white px-4 py-2 rounded ml-2">Cancelar</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Inventory Section -->
+        <div id="inventory" class="content-section hidden">
+            <h2 class="text-2xl font-bold mb-4">Inventario</h2>
+            <p>Funcionalidad de inventario próximamente.</p>
+        </div>
+
+        <!-- Reports Section -->
+        <div id="reports" class="content-section hidden">
+            <h2 class="text-2xl font-bold mb-4">Reportes</h2>
+            <p>Funcionalidad de reportes próximamente.</p>
+        </div>
+
+        </main>
+    </div>
+
+    <script>
+        // Data storage
+        let orders = JSON.parse(localStorage.getItem('orders')) || [];
+        let tables = JSON.parse(localStorage.getItem('tables')) || [];
+        let menuItems = JSON.parse(localStorage.getItem('menuItems')) || [];
+
+        // Save data
+        function saveData() {
+            localStorage.setItem('orders', JSON.stringify(orders));
+            localStorage.setItem('tables', JSON.stringify(tables));
+            localStorage.setItem('menuItems', JSON.stringify(menuItems));
+        }
+
+        // Navigation
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const section = this.getAttribute('data-section');
+                showSection(section);
+            });
+        });
+
+        function showSection(section) {
+            document.querySelectorAll('.content-section').forEach(sec => sec.classList.add('hidden'));
+            document.getElementById(section).classList.remove('hidden');
+            if (section === 'dashboard') renderDashboard();
+            if (section === 'orders') renderOrders();
+            if (section === 'kitchen') renderKitchen();
+            if (section === 'tables') renderTables();
+            if (section === 'menu') renderMenu();
+        }
+
+        // Dashboard
+        function renderDashboard() {
+            const total = orders.length;
+            const preparing = orders.filter(o => o.status === 'preparing').length;
+            const ready = orders.filter(o => o.status === 'ready').length;
+            const served = orders.filter(o => o.status === 'served').length;
+            document.getElementById('total-orders').textContent = total;
+            document.getElementById('preparing-count').textContent = preparing;
+            document.getElementById('ready-count').textContent = ready;
+            document.getElementById('served-count').textContent = served;
+        }
+
+        // Orders
+        function renderOrders() {
+            const tbody = document.getElementById('orders-tbody');
+            tbody.innerHTML = '';
+            orders.forEach(order => {
+                const row = `<tr>
+                    <td class="p-2">${order.id}</td>
+                    <td class="p-2">${order.table}</td>
+                    <td class="p-2">${order.status}</td>
+                    <td class="p-2">
+                        <button class="bg-yellow-500 text-white px-2 py-1 rounded mr-2" onclick="editOrder(${order.id})">Editar</button>
+                        <button class="bg-red-500 text-white px-2 py-1 rounded" onclick="deleteOrder(${order.id})">Eliminar</button>
+                    </td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
+        }
+
+        document.getElementById('add-order-btn').addEventListener('click', () => {
+            document.getElementById('order-id').value = '';
+            document.getElementById('order-table').value = '';
+            document.getElementById('order-status').value = 'pending';
+            document.getElementById('form-title').textContent = 'Agregar Pedido';
+            document.getElementById('order-form').classList.remove('hidden');
+        });
+
+        document.getElementById('cancel-order-btn').addEventListener('click', () => {
+            document.getElementById('order-form').classList.add('hidden');
+        });
+
+        document.getElementById('order-form-element').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const id = document.getElementById('order-id').value;
+            const table = document.getElementById('order-table').value;
+            const status = document.getElementById('order-status').value;
+            if (id) {
+                const order = orders.find(o => o.id == id);
+                order.table = table;
+                order.status = status;
+            } else {
+                const newId = orders.length ? Math.max(...orders.map(o => o.id)) + 1 : 1;
+                orders.push({ id: newId, table: parseInt(table), status });
+            }
+            saveData();
+            renderOrders();
+            renderDashboard();
+            renderKitchen();
+            document.getElementById('order-form').classList.add('hidden');
+        });
+
+        function editOrder(id) {
+            const order = orders.find(o => o.id == id);
+            document.getElementById('order-id').value = order.id;
+            document.getElementById('order-table').value = order.table;
+            document.getElementById('order-status').value = order.status;
+            document.getElementById('form-title').textContent = 'Editar Pedido';
+            document.getElementById('order-form').classList.remove('hidden');
+        }
+
+        function deleteOrder(id) {
+            orders = orders.filter(o => o.id != id);
+            saveData();
+            renderOrders();
+            renderDashboard();
+            renderKitchen();
+        }
+
+        // Kitchen
+        function renderKitchen() {
+            const tbody = document.getElementById('kitchen-tbody');
+            tbody.innerHTML = '';
+            const kitchenOrders = orders.filter(o => o.status === 'pending' || o.status === 'preparing');
+            kitchenOrders.forEach(order => {
+                const row = `<tr>
+                    <td class="p-2">${order.id}</td>
+                    <td class="p-2">${order.table}</td>
+                    <td class="p-2">${order.status}</td>
+                    <td class="p-2">
+                        <button class="bg-green-500 text-white px-2 py-1 rounded" onclick="updateStatus(${order.id}, 'preparing')">Preparar</button>
+                        <button class="bg-blue-500 text-white px-2 py-1 rounded ml-2" onclick="updateStatus(${order.id}, 'ready')">Listo</button>
+                    </td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function updateStatus(id, status) {
+            const order = orders.find(o => o.id == id);
+            order.status = status;
+            saveData();
+            renderKitchen();
+            renderDashboard();
+        }
+
+        // Tables
+        function renderTables() {
+            const tbody = document.getElementById('tables-tbody');
+            tbody.innerHTML = '';
+            tables.forEach(table => {
+                const row = `<tr>
+                    <td class="p-2">${table.number}</td>
+                    <td class="p-2">${table.capacity}</td>
+                    <td class="p-2">
+                        <button class="bg-yellow-500 text-white px-2 py-1 rounded mr-2" onclick="editTable(${table.id})">Editar</button>
+                        <button class="bg-red-500 text-white px-2 py-1 rounded" onclick="deleteTable(${table.id})">Eliminar</button>
+                    </td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
+        }
+
+        document.getElementById('add-table-btn').addEventListener('click', () => {
+            document.getElementById('table-id').value = '';
+            document.getElementById('table-number').value = '';
+            document.getElementById('table-capacity').value = '';
+            document.getElementById('table-form-title').textContent = 'Agregar Mesa';
+            document.getElementById('table-form').classList.remove('hidden');
+        });
+
+        document.getElementById('cancel-table-btn').addEventListener('click', () => {
+            document.getElementById('table-form').classList.add('hidden');
+        });
+
+        document.getElementById('table-form-element').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const id = document.getElementById('table-id').value;
+            const number = document.getElementById('table-number').value;
+            const capacity = document.getElementById('table-capacity').value;
+            if (id) {
+                const table = tables.find(t => t.id == id);
+                table.number = parseInt(number);
+                table.capacity = parseInt(capacity);
+            } else {
+                const newId = tables.length ? Math.max(...tables.map(t => t.id)) + 1 : 1;
+                tables.push({ id: newId, number: parseInt(number), capacity: parseInt(capacity) });
+            }
+            saveData();
+            renderTables();
+            document.getElementById('table-form').classList.add('hidden');
+        });
+
+        function editTable(id) {
+            const table = tables.find(t => t.id == id);
+            document.getElementById('table-id').value = table.id;
+            document.getElementById('table-number').value = table.number;
+            document.getElementById('table-capacity').value = table.capacity;
+            document.getElementById('table-form-title').textContent = 'Editar Mesa';
+            document.getElementById('table-form').classList.remove('hidden');
+        }
+
+        function deleteTable(id) {
+            tables = tables.filter(t => t.id != id);
+            saveData();
+            renderTables();
+        }
+
+        // Menu
+        function renderMenu() {
+            const tbody = document.getElementById('menu-tbody');
+            tbody.innerHTML = '';
+            menuItems.forEach(item => {
+                const row = `<tr>
+                    <td class="p-2">${item.name}</td>
+                    <td class="p-2">${item.price}</td>
+                    <td class="p-2">${item.available ? 'Sí' : 'No'}</td>
+                    <td class="p-2">
+                        <button class="bg-yellow-500 text-white px-2 py-1 rounded mr-2" onclick="editMenu(${item.id})">Editar</button>
+                        <button class="bg-red-500 text-white px-2 py-1 rounded" onclick="deleteMenu(${item.id})">Eliminar</button>
+                    </td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
+        }
+
+        document.getElementById('add-menu-btn').addEventListener('click', () => {
+            document.getElementById('menu-id').value = '';
+            document.getElementById('menu-name').value = '';
+            document.getElementById('menu-price').value = '';
+            document.getElementById('menu-available').checked = true;
+            document.getElementById('menu-form-title').textContent = 'Agregar Plato';
+            document.getElementById('menu-form').classList.remove('hidden');
+        });
+
+        document.getElementById('cancel-menu-btn').addEventListener('click', () => {
+            document.getElementById('menu-form').classList.add('hidden');
+        });
+
+        document.getElementById('menu-form-element').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const id = document.getElementById('menu-id').value;
+            const name = document.getElementById('menu-name').value;
+            const price = document.getElementById('menu-price').value;
+            const available = document.getElementById('menu-available').checked;
+            if (id) {
+                const item = menuItems.find(i => i.id == id);
+                item.name = name;
+                item.price = parseFloat(price);
+                item.available = available;
+            } else {
+                const newId = menuItems.length ? Math.max(...menuItems.map(i => i.id)) + 1 : 1;
+                menuItems.push({ id: newId, name, price: parseFloat(price), available });
+            }
+            saveData();
+            renderMenu();
+            document.getElementById('menu-form').classList.add('hidden');
+        });
+
+        function editMenu(id) {
+            const item = menuItems.find(i => i.id == id);
+            document.getElementById('menu-id').value = item.id;
+            document.getElementById('menu-name').value = item.name;
+            document.getElementById('menu-price').value = item.price;
+            document.getElementById('menu-available').checked = item.available;
+            document.getElementById('menu-form-title').textContent = 'Editar Plato';
+            document.getElementById('menu-form').classList.remove('hidden');
+        }
+
+        function deleteMenu(id) {
+            menuItems = menuItems.filter(i => i.id != id);
+            saveData();
+            renderMenu();
+        }
+
+        // Initial render
+        renderDashboard();
+    </script>
+</body>
+</html>
