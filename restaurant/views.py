@@ -1,8 +1,11 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import logout
+from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.core.exceptions import ValidationError
+from django.db import IntegrityError
 import json
 from .models import Reservation, Order, OrderItem, MenuItem, Table
 
@@ -59,6 +62,7 @@ def admin_dashboard(request):
     menu_items_json = json.dumps([{
         'id': m.id,
         'name': m.name,
+        'description': m.description,
         'price': float(m.price),
         'category': m.category,
         'available': m.available
@@ -166,6 +170,7 @@ def save_order(request):
         return JsonResponse({'success': True, 'order_id': order.id})
     return JsonResponse({'success': False})
 
+@csrf_exempt
 @login_required
 @user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
 def add_menu_item(request):
@@ -173,17 +178,81 @@ def add_menu_item(request):
         if request.content_type == 'application/json':
             data = json.loads(request.body)
             name = data.get('name')
+            description = data.get('description', '')
             price = data.get('price')
             category = data.get('category')
             available = data.get('available')
-            item = MenuItem.objects.create(name=name, price=price, category=category, available=available)
-            return JsonResponse({'success': True, 'item': {'id': item.id, 'name': item.name, 'price': float(item.price), 'category': item.category, 'available': item.available}})
+
+            # Validation
+            if not name or not name.strip():
+                return JsonResponse({'success': False, 'error': 'El nombre es obligatorio.'})
+            name = name.strip()
+            if len(name) > 100:
+                return JsonResponse({'success': False, 'error': 'El nombre no puede exceder 100 caracteres.'})
+
+            if price is None:
+                return JsonResponse({'success': False, 'error': 'El precio es obligatorio.'})
+            try:
+                price = float(price)
+                if price <= 0:
+                    return JsonResponse({'success': False, 'error': 'El precio debe ser un número positivo.'})
+            except (ValueError, TypeError):
+                return JsonResponse({'success': False, 'error': 'El precio debe ser un número válido.'})
+
+            if not category or not category.strip():
+                return JsonResponse({'success': False, 'error': 'La categoría es obligatoria.'})
+            category = category.strip()
+            if len(category) > 50:
+                return JsonResponse({'success': False, 'error': 'La categoría no puede exceder 50 caracteres.'})
+
+            available = bool(available)
+
+            try:
+                item = MenuItem.objects.create(name=name, description=description, price=price, category=category, available=available)
+                return JsonResponse({'success': True, 'item': {'id': item.id, 'name': item.name, 'description': item.description, 'price': float(item.price), 'category': item.category, 'available': item.available}})
+            except (ValidationError, IntegrityError, ValueError) as e:
+                return JsonResponse({'success': False, 'error': str(e)})
         else:
             name = request.POST.get('name')
+            description = request.POST.get('description', '')
             price = request.POST.get('price')
             category = request.POST.get('category')
             available = request.POST.get('available') == 'on'
-            MenuItem.objects.create(name=name, price=price, category=category, available=available)
+
+            # Validation for form POST
+            if not name or not name.strip():
+                messages.error(request, 'El nombre es obligatorio.')
+                return redirect('admin_dashboard')
+            name = name.strip()
+            if len(name) > 100:
+                messages.error(request, 'El nombre no puede exceder 100 caracteres.')
+                return redirect('admin_dashboard')
+
+            if not price:
+                messages.error(request, 'El precio es obligatorio.')
+                return redirect('admin_dashboard')
+            try:
+                price = float(price)
+                if price <= 0:
+                    messages.error(request, 'El precio debe ser un número positivo.')
+                    return redirect('admin_dashboard')
+            except (ValueError, TypeError):
+                messages.error(request, 'El precio debe ser un número válido.')
+                return redirect('admin_dashboard')
+
+            if not category or not category.strip():
+                messages.error(request, 'La categoría es obligatoria.')
+                return redirect('admin_dashboard')
+            category = category.strip()
+            if len(category) > 50:
+                messages.error(request, 'La categoría no puede exceder 50 caracteres.')
+                return redirect('admin_dashboard')
+
+            try:
+                MenuItem.objects.create(name=name, description=description, price=price, category=category, available=available)
+                messages.success(request, 'Plato agregado exitosamente.')
+            except (ValidationError, IntegrityError, ValueError) as e:
+                messages.error(request, f'Error al agregar plato: {str(e)}')
             return redirect('admin_dashboard')
     return redirect('admin_dashboard')
 
@@ -192,14 +261,27 @@ def add_menu_item(request):
 @user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
 def edit_menu_item(request, item_id):
     if request.method == 'POST':
-        data = json.loads(request.body)
-        item = MenuItem.objects.get(id=item_id)
-        item.name = data.get('name')
-        item.price = data.get('price')
-        item.category = data.get('category')
-        item.available = data.get('available')
-        item.save()
-        return JsonResponse({'success': True, 'item': {'id': item.id, 'name': item.name, 'price': float(item.price), 'category': item.category, 'available': item.available}})
+        if request.content_type == 'application/json':
+            data = json.loads(request.body)
+            item = MenuItem.objects.get(id=item_id)
+            item.name = data.get('name')
+            item.description = data.get('description', '')
+            item.price = data.get('price')
+            item.category = data.get('category')
+            item.available = data.get('available')
+            item.save()
+            return JsonResponse({'success': True, 'item': {'id': item.id, 'name': item.name, 'price': float(item.price), 'category': item.category, 'available': item.available}})
+        else:
+            # Handle form POST
+            item = MenuItem.objects.get(id=item_id)
+            item.name = request.POST.get('name')
+            item.description = request.POST.get('description', '')
+            item.price = request.POST.get('price')
+            item.category = request.POST.get('category')
+            item.available = request.POST.get('available') == 'on'
+            item.save()
+            messages.success(request, 'Plato editado exitosamente.')
+            return redirect('admin_dashboard')
     return JsonResponse({'success': False})
 
 @csrf_exempt
@@ -207,8 +289,13 @@ def edit_menu_item(request, item_id):
 @user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
 def delete_menu_item(request, item_id):
     if request.method == 'POST':
-        MenuItem.objects.get(id=item_id).delete()
-        return JsonResponse({'success': True})
+        if request.content_type == 'application/json':
+            MenuItem.objects.get(id=item_id).delete()
+            return JsonResponse({'success': True})
+        else:
+            MenuItem.objects.get(id=item_id).delete()
+            messages.success(request, 'Plato eliminado exitosamente.')
+            return redirect('admin_dashboard')
     return JsonResponse({'success': False})
 
 @csrf_exempt

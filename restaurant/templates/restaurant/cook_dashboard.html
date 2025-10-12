@@ -196,6 +196,55 @@
                     document.getElementById(section).classList.remove('hidden');
                 });
             });
+
+            // WebSocket for real-time orders
+            const socket = new WebSocket(`ws://${window.location.host}/ws/pedidos/cocina/`);
+
+            socket.onmessage = function(e) {
+                const data = JSON.parse(e.data);
+                if (data.action === 'created') {
+                    addOrder(data.order);
+                } else if (data.action === 'updated') {
+                    updateOrder(data.order);
+                }
+            };
+
+            function addOrder(order) {
+                const ordersContainer = document.querySelector('#dashboard .space-y-4');
+                if (!ordersContainer) return;
+                const orderDiv = document.createElement('div');
+                orderDiv.className = 'border border-gray-200 rounded-lg p-4';
+                orderDiv.id = `order-${order.id}`;
+                orderDiv.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <h3 class="font-semibold text-gray-900">Pedido #${order.id}</h3>
+                            <p class="text-sm text-gray-600">Mesa ${order.table} - Usuario</p>
+                        </div>
+                        <span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">${order.status}</span>
+                    </div>
+                    <div class="text-sm text-gray-600">
+                        <p>Total: $${order.total}</p>
+                    </div>
+                    <div class="mt-4 flex space-x-2">
+                        <button class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium">Marcar como Listo</button>
+                    </div>
+                `;
+                ordersContainer.prepend(orderDiv);
+            }
+
+            function updateOrder(order) {
+                const orderDiv = document.getElementById(`order-${order.id}`);
+                if (orderDiv) {
+                    const statusSpan = orderDiv.querySelector('span');
+                    if (statusSpan) {
+                        statusSpan.textContent = order.status;
+                        if (order.status === 'ready') {
+                            statusSpan.className = 'px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full';
+                        }
+                    }
+                }
+            }
         });
     </script>
 </body>

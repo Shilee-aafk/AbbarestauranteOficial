@@ -37,7 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'restaurant',
+    'restaurant.apps.RestaurantConfig',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -68,6 +69,14 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'AbbaRestaurate.wsgi.application'
+
+ASGI_APPLICATION = 'AbbaRestaurate.asgi.application'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}
 
 
 # Database

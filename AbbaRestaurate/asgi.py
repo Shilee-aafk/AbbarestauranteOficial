@@ -8,9 +8,20 @@ https://docs.djangoproject.com/en/5.2/howto/deployment/asgi/
 """
 
 import os
-
+import django
+from channels.routing import ProtocolTypeRouter, URLRouter
+from channels.auth import AuthMiddlewareStack
 from django.core.asgi import get_asgi_application
+import restaurant.routing
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'AbbaRestaurate.settings')
+django.setup()
 
-application = get_asgi_application()
+application = ProtocolTypeRouter({
+    'http': get_asgi_application(),
+    'websocket': AuthMiddlewareStack(
+        URLRouter(
+            restaurant.routing.websocket_urlpatterns
+        )
+    ),
+})

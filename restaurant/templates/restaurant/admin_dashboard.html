@@ -46,12 +46,7 @@
                 </svg>
                 Gestión de Mesas
             </a>
-            <a href="#" class="nav-link flex items-center px-6 py-3 text-gray-600 hover:bg-gray-100" data-section="menu">
-                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                </svg>
-                Menú y Platos
-            </a>
+
             <a href="#" class="nav-link flex items-center px-6 py-3 text-gray-600 hover:bg-gray-100" data-section="inventory">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
@@ -331,17 +326,34 @@
                             <th class="p-2">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody id="menu-tbody">
+                    <tbody>
+                        {% for item in menu_items %}
+                        <tr>
+                            <td class="p-2">{{ item.name }}</td>
+                            <td class="p-2">${{ item.price }}</td>
+                            <td class="p-2">{{ item.category }}</td>
+                            <td class="p-2">{{ item.available|yesno:"Sí,No" }}</td>
+                            <td class="p-2">
+                                <button class="bg-yellow-500 text-white px-2 py-1 rounded mr-2">Editar</button>
+                                <form action="{% url 'delete_menu_item' item.id %}" method="post" style="display:inline;" onsubmit="return confirm('¿Eliminar este plato?')">
+                                    {% csrf_token %}
+                                    <button type="submit" class="bg-red-500 text-white px-2 py-1 rounded">Eliminar</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
                 <div id="menu-form" class="hidden bg-white p-4 shadow rounded mt-4">
                     <h3 id="menu-form-title" class="text-lg font-semibold mb-2">Agregar Plato</h3>
-                    <form id="menu-form-element">
-                        <input type="hidden" id="menu-id" name="menu-id">
-                        <label>Nombre: <input type="text" id="menu-name" name="menu-name" class="border p-2 w-full mb-2" required></label>
-                        <label>Precio: <input type="number" step="0.01" id="menu-price" name="menu-price" class="border p-2 w-full mb-2" required></label>
-                        <label>Categoría: <input type="text" id="menu-category" name="menu-category" class="border p-2 w-full mb-2" required></label>
-                        <label>Disponible: <input type="checkbox" id="menu-available" name="menu-available" checked></label>
+                    <form id="menu-form-element" action="{% url 'add_menu_item' %}" method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="item_id" id="menu-item-id">
+                        <label>Nombre: <input type="text" name="name" id="menu-name" class="border p-2 w-full mb-2" required></label>
+                        <label>Descripción: <textarea name="description" id="menu-description" class="border p-2 w-full mb-2" rows="3"></textarea></label>
+                        <label>Precio: <input type="number" step="0.01" name="price" id="menu-price" class="border p-2 w-full mb-2" required></label>
+                        <label>Categoría: <input type="text" name="category" id="menu-category" class="border p-2 w-full mb-2" required></label>
+                        <label>Disponible: <input type="checkbox" name="available" id="menu-available" checked></label>
                         <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Guardar</button>
                         <button type="button" id="cancel-menu-btn" class="bg-gray-500 text-white px-4 py-2 rounded ml-2">Cancelar</button>
                     </form>
@@ -367,7 +379,6 @@
         // Data from Django
         let orders = {{ orders_json|safe }};
         let tables = {{ tables_json|safe }};
-        let menuItems = {{ menu_items_json|safe }};
 
         function saveData() {
             // Data is managed server-side via Django, no local save needed
@@ -398,9 +409,8 @@
             if (section === 'orders') renderOrders();
             if (section === 'kitchen') renderKitchen();
             if (section === 'tables') renderTables();
-            if (section === 'menu') renderMenu();
         }
-
+       
         // Dashboard
         function renderDashboard() {
             const total = orders.length;
@@ -410,8 +420,6 @@
             // Update stats if elements exist
             const totalEl = document.querySelector('.grid .bg-white p:first-child + p');
             if (totalEl) totalEl.textContent = total;
-            // Similarly for others, but since it's Django template, the text is static, so perhaps not update.
-            // For now, leave as is.
         }
 
         // Orders
@@ -568,96 +576,6 @@
             tables = tables.filter(t => t.id !== id);
             saveData();
             renderTables();
-        }
-
-        // Menu
-        function renderMenu() {
-            const tbody = document.getElementById('menu-tbody');
-            tbody.innerHTML = '';
-            menuItems.forEach(item => {
-                const row = `<tr>
-                    <td class="p-2">${item.name}</td>
-                    <td class="p-2">$${item.price}</td>
-                    <td class="p-2">${item.category}</td>
-                    <td class="p-2">${item.available ? 'Sí' : 'No'}</td>
-                    <td class="p-2">
-                        <button class="bg-yellow-500 text-white px-2 py-1 rounded mr-2" onclick="editMenu(${item.id})">Editar</button>
-                        <button class="bg-red-500 text-white px-2 py-1 rounded" onclick="deleteMenu(${item.id})">Eliminar</button>
-                    </td>
-                </tr>`;
-                tbody.innerHTML += row;
-            });
-        }
-
-        document.getElementById('add-menu-btn').addEventListener('click', () => {
-            document.getElementById('menu-id').value = '';
-            document.getElementById('menu-name').value = '';
-            document.getElementById('menu-price').value = '';
-            document.getElementById('menu-available').checked = true;
-            document.getElementById('menu-form-title').textContent = 'Agregar Plato';
-            document.getElementById('menu-form').classList.remove('hidden');
-        });
-
-        document.getElementById('cancel-menu-btn').addEventListener('click', () => {
-            document.getElementById('menu-form').classList.add('hidden');
-        });
-
-        document.getElementById('menu-form-element').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-            const data = {
-                name: formData.get('menu-name'),
-                price: parseFloat(formData.get('menu-price')),
-                category: formData.get('menu-category'),
-                available: formData.get('menu-available') === 'on'
-            };
-            const id = formData.get('menu-id');
-            if (id) {
-                // edit
-                fetch('/restaurant/edit_menu_item/' + id + '/', {
-                    method: 'POST',
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify(data)
-                }).then(response => response.json()).then(result => {
-                    if (result.success) {
-                        const item = menuItems.find(i => i.id === id);
-                        Object.assign(item, result.item);
-                        renderMenu();
-                        document.getElementById('menu-form').classList.add('hidden');
-                    }
-                });
-            } else {
-                // add
-                fetch('/restaurant/add_menu_item/', {
-                    method: 'POST',
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify(data)
-                }).then(response => response.json()).then(result => {
-                    if (result.success) {
-                        menuItems.push(result.item);
-                        renderMenu();
-                        document.getElementById('menu-form').classList.add('hidden');
-                    }
-                });
-            }
-        });
-
-        function editMenu(id) {
-            const item = menuItems.find(i => i.id === id);
-            document.getElementById('menu-id').value = item.id;
-            document.getElementById('menu-name').value = item.name;
-            document.getElementById('menu-price').value = item.price;
-            document.getElementById('menu-category').value = item.category;
-            document.getElementById('menu-available').checked = item.available;
-            document.getElementById('menu-form-title').textContent = 'Editar Plato';
-            document.getElementById('menu-form').classList.remove('hidden');
-        }
-
-        function deleteMenu(id) {
-            fetch('/restaurant/delete_menu_item/' + id + '/', {method: 'POST'}).then(() => {
-                menuItems = menuItems.filter(i => i.id !== id);
-                renderMenu();
-            });
         }
 
         // Initial render

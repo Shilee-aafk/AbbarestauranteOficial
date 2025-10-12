@@ -123,6 +123,67 @@
         let currentTable = null;
         let currentOrder = {}; // item_id: {quantity, note}
 
+        // WebSocket for real-time products
+        const productSocket = new WebSocket(`ws://${window.location.host}/ws/productos/`);
+
+        productSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            if (data.action === 'created') {
+                addProduct(data.product);
+            } else if (data.action === 'updated') {
+                updateProduct(data.product);
+            }
+            renderMenu();
+        };
+
+        function addProduct(product) {
+            menuItems.push(product);
+        }
+
+        function updateProduct(updatedProduct) {
+            const index = menuItems.findIndex(p => p.id === updatedProduct.id);
+            if (index !== -1) {
+                menuItems[index] = updatedProduct;
+            }
+        }
+
+        function renderMenu() {
+            const categories = [...new Set(menuItems.map(item => item.category))];
+            const menuContainer = document.getElementById('menu-items');
+            menuContainer.innerHTML = '';
+            categories.forEach(category => {
+                const section = document.createElement('div');
+                section.className = 'category-section';
+                section.setAttribute('data-category', category);
+                const items = menuItems.filter(item => item.category === category);
+                items.forEach(item => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'flex justify-between items-center p-3 border-b';
+                    itemDiv.innerHTML = `
+                        <div>
+                            <h3 class="font-medium">${item.name}</h3>
+                            <p class="text-sm text-gray-600">$${item.price}</p>
+                        </div>
+                        <div class="flex items-center">
+                            <button class="note-btn mr-2 text-gray-500 hover:text-blue-500" data-item-id="${item.id}">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                            </button>
+                            <button class="add-btn bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600" data-item-id="${item.id}">+</button>
+                        </div>
+                    `;
+                    section.appendChild(itemDiv);
+                });
+                menuContainer.appendChild(section);
+            });
+            // Show first category
+            document.querySelectorAll('.category-section').forEach(sec => sec.classList.add('hidden'));
+            if (document.querySelector('.category-section')) {
+                document.querySelector('.category-section').classList.remove('hidden');
+            }
+        }
+
         function openOrder(tableId, tableNumber, isAvailable) {
             currentTable = tableId;
             document.getElementById('table-number').textContent = tableNumber;
