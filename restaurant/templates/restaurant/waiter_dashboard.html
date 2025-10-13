@@ -3,16 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Garzón - Abba Hotel Restaurante</title>
+    <title>Dashboard Garzón - AbbaHotel- Restaurante</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
+        .category-filter.active {
+            background-color: #9C7B68;
+            color: #EAE0D9;
+        }
     </style>
 </head>
 <body class="bg-gray-50">
     <!-- Sidebar -->
-    <div class="fixed inset-y-0 left-0 w-64 bg-white shadow-md">
+    <div class="fixed inset-y-0 left-0 w-64 bg-white shadow-md hidden lg:block">
         <div class="flex items-center justify-center h-16 bg-white border-b border-gray-200">
             <svg class="w-8 h-8 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
@@ -20,97 +24,105 @@
             <span class="text-xl font-semibold text-gray-800">Abba Hotel Restaurante</span>
         </div>
         <nav class="mt-8">
-            <a href="#" class="nav-link active flex items-center px-6 py-3 text-amber-800 bg-amber-100 border-r-4 border-amber-500" data-section="mesas">
-                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z"></path>
-                </svg>
-                Gestión de Mesas
+            <a href="#" class="nav-link active flex items-center px-6 py-3 text-amber-800 bg-amber-100 border-r-4 border-amber-500" data-section="dashboard">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z"></path></svg>
+                Mesas y Pedidos
             </a>
         </nav>
     </div>
 
     <!-- Main Content -->
-    <div class="ml-64 bg-gray-50 min-h-screen">
+    <div class="lg:ml-64 bg-gray-50 min-h-screen">
         <!-- Header -->
         <div class="bg-white shadow-sm border-b border-gray-200 px-8 py-4 flex justify-between items-center">
-            <div></div>
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Panel del Garzón</h1>
+            </div>
             <div class="flex items-center space-x-4">
-                <span class="text-gray-700">Garzón</span>
+                <span class="text-gray-700">{{ user.username }} ({{ user_role }})</span>
                 <a href="{% url 'logout' %}" class="text-red-600 hover:text-red-800">Cerrar Sesión</a>
             </div>
         </div>
 
         <div class="p-8">
-            <!-- Gestión de Mesas Section -->
-            <div id="mesas" class="content-section">
-                <h1 class="text-3xl font-bold text-gray-900 mb-8">Gestión de Mesas</h1>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {% for table in tables %}
-                    <div class="bg-white rounded-lg shadow-md p-6 text-center cursor-pointer hover:shadow-lg transition-shadow" onclick="openOrder({{ table.id }}, {{ table.number }}, {{ table.is_available|lower }})">
-                        <h3 class="text-2xl font-semibold text-gray-900 mb-2">Mesa {{ table.number }}</h3>
-                        <span class="px-4 py-2 text-sm font-medium rounded-full {% if table.is_available %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
-                            {% if table.is_available %}Disponible{% else %}Ocupado{% endif %}
-                        </span>
-                    </div>
-                    {% empty %}
-                    <p class="text-gray-500">No hay mesas</p>
-                    {% endfor %}
-                </div>
+            <!-- Banner -->
+            <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-8 flex items-center">
+                <svg class="w-6 h-6 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                <span class="text-green-800 font-medium">¡Bienvenido, {{ user.username }}!</span>
             </div>
 
-            <!-- Toma de Pedido Section -->
-            <div id="pedido" class="content-section hidden">
-                <div class="flex items-center mb-8">
-                    <button onclick="backToMesas()" class="mr-4 text-blue-600 hover:text-blue-800">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                        </svg>
-                    </button>
-                    <h1 class="text-3xl font-bold text-gray-900">Pedido Mesa <span id="table-number"></span></h1>
-                </div>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <!-- Left Column: Menu -->
-                    <div>
-                        <h2 class="text-xl font-semibold mb-4">Menú</h2>
-                        <div class="mb-4">
-                            {% for category in categories %}
-                            <button class="category-btn px-4 py-2 mr-2 mb-2 rounded {% if forloop.first %}bg-blue-500 text-white{% else %}bg-gray-200 text-gray-700{% endif %}" data-category="{{ category }}">{{ category }}</button>
-                            {% endfor %}
+            <!-- Main Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                <!-- Left Column: Tables -->
+                <div class="lg:col-span-1 bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Estado de Mesas</h2>
+                    <div class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-3 gap-4">
+                        {% for table in tables %}
+                        <div class="table-status p-4 rounded-lg text-center cursor-pointer {% if table.is_available %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}" data-table-id="{{ table.id }}" {% if not table.is_available and table.current_order %}data-order-id="{{ table.current_order.id }}"{% endif %} onclick="handleTableClick(this)">
+                            <p class="font-bold">Mesa {{ table.number }}</p>
+                            <p class="text-sm">{% if table.is_available %}Disponible{% else %}Ocupada{% endif %}</p>
                         </div>
-                        <div id="menu-items">
+                        {% empty %}
+                        <p class="text-gray-500 col-span-full">No hay mesas configuradas.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Right Column: Menu and Order -->
+                <div class="lg:col-span-2 bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Tomar Pedido</h2>
+                    
+                    <!-- Search and Category Filters -->
+                    <div class="mb-6 border-b pb-4">
+                        <div class="mb-4">
+                            <input type="text" id="menu-search-input" placeholder="Buscar producto por nombre..." class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                        <div class="flex flex-wrap gap-2" id="category-filters">
+                            <button class="category-filter active px-4 py-2 text-sm font-medium rounded-full border border-gray-300 hover:bg-gray-100" data-category="all">
+                                Todos
+                            </button>
                             {% for category in categories %}
-                            <div class="category-section {% if not forloop.first %}hidden{% endif %}" data-category="{{ category }}">
-                                {% for item in menu_items %}
-                                {% if item.category == category %}
-                                <div class="flex justify-between items-center p-3 border-b">
-                                    <div>
-                                        <h3 class="font-medium">{{ item.name }}</h3>
-                                        <p class="text-sm text-gray-600">${{ item.price }}</p>
-                                    </div>
-                                    <div class="flex items-center">
-                                        <button class="note-btn mr-2 text-gray-500 hover:text-blue-500" data-item-id="{{ item.id }}">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                            </svg>
-                                        </button>
-                                        <button class="add-btn bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600" data-item-id="{{ item.id }}">+</button>
-                                    </div>
-                                </div>
-                                {% endif %}
-                                {% endfor %}
-                            </div>
+                            <button class="category-filter px-4 py-2 text-sm font-medium rounded-full border border-gray-300 hover:bg-gray-100" data-category="{{ category|slugify }}">
+                                {{ category }}
+                            </button>
                             {% endfor %}
                         </div>
                     </div>
-                    <!-- Right Column: Order Summary -->
-                    <div>
-                        <h2 class="text-xl font-semibold mb-4">Resumen del Pedido</h2>
-                        <div id="order-summary" class="space-y-2"></div>
-                        <div class="mt-8 space-y-2">
-                            <button id="send-to-kitchen" class="w-full bg-green-500 text-white py-3 rounded-lg font-medium hover:bg-green-600">Enviar a Cocina</button>
-                            <button id="save-order" class="w-full bg-yellow-500 text-white py-3 rounded-lg font-medium hover:bg-yellow-600">Guardar Pedido</button>
-                            <button id="cancel-order" class="w-full bg-gray-500 text-white py-3 rounded-lg font-medium hover:bg-gray-600">Cancelar</button>
+
+                    <!-- Menu Items -->
+                    <div id="menu-items-container" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-6" style="max-height: 400px; overflow-y: auto;">
+                        {% for item in menu_items %}
+                        <div class="menu-item border rounded-lg p-3 flex flex-col items-center text-center" data-category="{{ item.category|slugify }}" data-item-id="{{ item.id }}" data-item-name="{{ item.name }}" data-item-price="{{ item.price }}">
+                            <h3 class="font-semibold text-gray-800">{{ item.name }}</h3><p class="text-gray-600 text-sm">${{ item.price|floatformat:2 }}</p><button class="add-to-order-btn mt-2 bg-[#9C7B68] text-white px-3 py-1 rounded-md text-sm hover:bg-[#8B6B58]" onclick="addToOrder({{ item.id }}, '{{ item.name }}', {{ item.price }})">
+                                Agregar
+                            </button>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Current Order -->
+                    <div id="current-order">
+                        <h3 class="text-lg font-semibold mb-2">Pedido Actual</h3>
+                        <div class="mb-4">
+                            <label for="table-selection" class="block text-sm font-medium text-gray-700">Seleccionar Mesa:</label>
+                            <select id="table-selection" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                                {% for table in tables %}
+                                    {% if table.is_available %}
+                                        <option value="{{ table.id }}">Mesa {{ table.number }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <ul id="order-items-list" class="space-y-2 mb-4">
+                            <!-- Items will be added here by JS -->
+                        </ul>
+                        <div class="text-right font-bold text-xl mb-4">
+                            Total: $<span id="order-total">0.00</span>
+                        </div>
+                        <div class="flex justify-end">
+                            <button id="clear-order-btn" class="bg-gray-500 text-white px-6 py-2 rounded-lg mr-2 hover:bg-gray-600">Limpiar</button>
+                            <button id="submit-order-btn" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700">Enviar Pedido</button>
                         </div>
                     </div>
                 </div>
@@ -119,199 +131,332 @@
     </div>
 
     <script>
-        let menuItems = {{ menu_items_json|safe }};
-        let currentTable = null;
-        let currentOrder = {}; // item_id: {quantity, note}
+        const csrfToken = '{{ csrf_token }}';
+        let editingOrderId = null; // To track if we are editing an order
+        let currentOrder = [];
 
-        // WebSocket for real-time products
-        const productSocket = new WebSocket(`ws://${window.location.host}/ws/productos/`);
+        // --- Category Filtering Logic ---
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterButtons = document.querySelectorAll('#category-filters .category-filter');
+            const menuItems = document.querySelectorAll('.menu-item');
+            const searchInput = document.getElementById('menu-search-input');
 
-        productSocket.onmessage = function(e) {
-            const data = JSON.parse(e.data);
-            if (data.action === 'created') {
-                addProduct(data.product);
-            } else if (data.action === 'updated') {
-                updateProduct(data.product);
-            }
-            renderMenu();
-        };
-
-        function addProduct(product) {
-            menuItems.push(product);
-        }
-
-        function updateProduct(updatedProduct) {
-            const index = menuItems.findIndex(p => p.id === updatedProduct.id);
-            if (index !== -1) {
-                menuItems[index] = updatedProduct;
-            }
-        }
-
-        function renderMenu() {
-            const categories = [...new Set(menuItems.map(item => item.category))];
-            const menuContainer = document.getElementById('menu-items');
-            menuContainer.innerHTML = '';
-            categories.forEach(category => {
-                const section = document.createElement('div');
-                section.className = 'category-section';
-                section.setAttribute('data-category', category);
-                const items = menuItems.filter(item => item.category === category);
-                items.forEach(item => {
-                    const itemDiv = document.createElement('div');
-                    itemDiv.className = 'flex justify-between items-center p-3 border-b';
-                    itemDiv.innerHTML = `
-                        <div>
-                            <h3 class="font-medium">${item.name}</h3>
-                            <p class="text-sm text-gray-600">$${item.price}</p>
-                        </div>
-                        <div class="flex items-center">
-                            <button class="note-btn mr-2 text-gray-500 hover:text-blue-500" data-item-id="${item.id}">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                </svg>
-                            </button>
-                            <button class="add-btn bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600" data-item-id="${item.id}">+</button>
-                        </div>
-                    `;
-                    section.appendChild(itemDiv);
+            function applyFilters() {
+                // Update active button style
+                const filterButtons = document.querySelectorAll('.category-filter');
+                filterButtons.forEach(button => {
+                    button.addEventListener('click', function() {
+                        filterButtons.forEach(btn => btn.classList.remove('active'));
+                        this.classList.add('active');
+                        applyFilters();
+                    });
                 });
-                menuContainer.appendChild(section);
-            });
-            // Show first category
-            document.querySelectorAll('.category-section').forEach(sec => sec.classList.add('hidden'));
-            if (document.querySelector('.category-section')) {
-                document.querySelector('.category-section').classList.remove('hidden');
-            }
-        }
 
-        function openOrder(tableId, tableNumber, isAvailable) {
-            currentTable = tableId;
-            document.getElementById('table-number').textContent = tableNumber;
-            document.getElementById('mesas').classList.add('hidden');
-            document.getElementById('pedido').classList.remove('hidden');
-            if (!isAvailable) {
-                // Load existing order if any
-                // For now, assume no existing, or mock
-            }
-            renderOrderSummary();
-        }
+                // Event listener for search input
+                const searchInput = document.getElementById('menu-search-input');
+                searchInput.addEventListener('input', applyFilters);
 
-        function backToMesas() {
-            document.getElementById('pedido').classList.add('hidden');
-            document.getElementById('mesas').classList.remove('hidden');
-            currentOrder = {};
-        }
 
-        // Category switching
-        document.querySelectorAll('.category-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('bg-blue-500', 'text-white').addClass('bg-gray-200', 'text-gray-700'));
-                this.classList.add('bg-blue-500', 'text-white').removeClass('bg-gray-200', 'text-gray-700');
-                const category = this.getAttribute('data-category');
-                document.querySelectorAll('.category-section').forEach(sec => sec.classList.add('hidden'));
-                document.querySelector(`.category-section[data-category="${category}"]`).classList.remove('hidden');
-            });
-        });
+                const selectedCategory = document.querySelector('.category-filter.active').getAttribute('data-category');
+                const searchTerm = searchInput.value.toLowerCase();
 
-        // Add item
-        document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('add-btn')) {
-                const itemId = e.target.getAttribute('data-item-id');
-                if (!currentOrder[itemId]) {
-                    currentOrder[itemId] = { quantity: 0, note: '' };
-                }
-                currentOrder[itemId].quantity += 1;
-                renderOrderSummary();
-            }
-        });
+                menuItems.forEach(item => {
+                    const itemName = item.querySelector('h3').textContent.toLowerCase();
+                    const itemCategory = item.getAttribute('data-category');
 
-        // Note
-        document.addEventListener('click', function(e) {
-            if (e.target.closest('.note-btn')) {
-                const itemId = e.target.closest('.note-btn').getAttribute('data-item-id');
-                const note = prompt('Añadir nota:');
-                if (note !== null) {
-                    if (!currentOrder[itemId]) {
-                        currentOrder[itemId] = { quantity: 1, note: '' };
+                    const categoryMatch = (selectedCategory === 'all' || itemCategory === selectedCategory);
+                    const searchMatch = itemName.includes(searchTerm);
+
+                    if (categoryMatch && searchMatch) {
+                        item.style.display = 'flex'; // Use flex to match the class styling
+                    } else {
+                        item.style.display = 'none';
                     }
-                    currentOrder[itemId].note = note;
-                    renderOrderSummary();
-                }
+                });
             }
+
+            // Event listener for category buttons
+            filterButtons.forEach(button => {
+                button.addEventListener('click', applyFilters);
+            });
         });
 
-        function renderOrderSummary() {
-            const summary = document.getElementById('order-summary');
-            summary.innerHTML = '';
-            const grouped = {};
-            for (const [itemId, data] of Object.entries(currentOrder)) {
-                const item = menuItems.find(i => i.id == itemId);
-                const key = data.note ? `${item.name}::${data.note}` : item.name;
-                if (!grouped[key]) {
-                    grouped[key] = { name: item.name, quantity: 0, note: data.note, price: item.price };
+        async function handleTableClick(tableDiv) {
+            const orderId = tableDiv.getAttribute('data-order-id');
+            const tableId = tableDiv.getAttribute('data-table-id');
+
+            if (orderId) { // If the table is occupied, load the order for editing
+                try {
+                    const response = await fetch(`/api/waiter/orders/${orderId}/`);
+                    const items = await response.json();
+                    
+                    currentOrder = items.map(item => ({
+                        ...item,
+                        lineItemId: Date.now() + Math.random() // Assign a new unique ID for frontend editing
+                    }));
+
+                    editingOrderId = orderId;
+                    document.getElementById('submit-order-btn').textContent = 'Actualizar Pedido';
+                    document.getElementById('table-selection').value = tableId;
+                    document.getElementById('table-selection').disabled = true; // Disable changing table when editing
+                    renderOrder();
+
+                } catch (error) {
+                    console.error('Error loading order for editing:', error);
+                    alert('No se pudo cargar el pedido para editar.');
                 }
-                grouped[key].quantity += data.quantity;
-            }
-            for (const [key, data] of Object.entries(grouped)) {
-                const div = document.createElement('div');
-                div.className = 'flex justify-between items-center p-2 bg-gray-50 rounded';
-                div.innerHTML = `
-                    <div>
-                        <span class="font-medium">${data.name} x${data.quantity}</span>
-                        ${data.note ? `<br><small class="text-gray-600">- ${data.note}</small>` : ''}
-                    </div>
-                    <span>$${(data.price * data.quantity).toFixed(2)}</span>
-                `;
-                summary.appendChild(div);
+            } else { // If the table is free, prepare for a new order
+                clearAndPrepareNewOrder();
+                document.getElementById('table-selection').value = tableId;
             }
         }
 
-        // Buttons
-        document.getElementById('send-to-kitchen').addEventListener('click', function() {
-            if (Object.keys(currentOrder).length === 0) {
-                alert('No hay items en el pedido');
+        // --- Real-time WebSocket Logic ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const ws = new WebSocket(`${protocol}//${window.location.host}/ws/waiter-updates/`);
+
+            ws.onmessage = function(e) {
+                const data = JSON.parse(e.data);
+                if (data.type === 'order_update') {
+                    handleOrderUpdate(data.order);
+                }
+            };
+
+            ws.onclose = function(e) {
+                console.error('Waiter WebSocket closed unexpectedly');
+            };
+        });
+
+        function handleOrderUpdate(order) {
+            // 1. Update Table Status
+            const tableDiv = document.querySelector(`div[data-table-id="${order.table_id}"]`);
+            
+            if (tableDiv) {
+                const tableStatusP = tableDiv.querySelector('p:last-child');
+                if (order.status === 'served' || order.status === 'cancelled') {
+                    tableDiv.classList.remove('bg-red-100', 'text-red-800');
+                    tableDiv.classList.add('bg-green-100', 'text-green-800');
+                    tableStatusP.textContent = 'Disponible';
+                    tableDiv.removeAttribute('data-order-id'); // Remove order id as it's now free
+                } else {
+                    tableDiv.setAttribute('data-order-id', order.id); // Add or update order id
+                    tableDiv.classList.remove('bg-green-100', 'text-green-800');
+                    tableDiv.classList.add('bg-red-100', 'text-red-800');
+                    tableStatusP.textContent = 'Ocupada';
+                }
+            }
+
+            // 2. Update Active Orders List
+            const ordersContainer = document.getElementById('active-orders-container');
+            const existingCard = document.getElementById(`order-card-${order.id}`);
+            const noOrdersP = document.getElementById('no-active-orders');
+
+            // If order is completed, remove it from the list
+            if (order.status === 'served' || order.status === 'cancelled' || order.status === 'paid') {
+                if (existingCard) {
+                    existingCard.remove();
+                }
+            } else { // If order is active, add or update it
+                if (noOrdersP) noOrdersP.style.display = 'none';
+
+                let statusClass = 'bg-gray-200 text-gray-800';
+                if (order.status === 'preparing') statusClass = 'bg-yellow-200 text-yellow-800';
+                if (order.status === 'ready') statusClass = 'bg-green-200 text-green-800';
+
+                const cardHTML = `
+                    <div class="flex justify-between items-center">
+                        <p class="font-semibold">Pedido #${order.id} (Mesa ${order.table_number})</p>
+                        <span class="px-2 py-1 text-xs font-medium rounded-full ${statusClass}">${order.status_display}</span>
+                    </div>
+                    ${order.status === 'ready' ? 
+                        `<button class="mt-2 w-full bg-blue-500 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-600" onclick="updateOrderStatus(${order.id}, 'served')">
+                            Marcar como Servido
+                        </button>` : ''
+                    }
+                `;
+
+                if (existingCard) {
+                    existingCard.innerHTML = cardHTML;
+                } else {
+                    const newCard = document.createElement('div');
+                    newCard.className = 'border rounded-lg p-3';
+                    newCard.id = `order-card-${order.id}`;
+                    newCard.innerHTML = cardHTML;
+                    ordersContainer.prepend(newCard);
+                }
+            }
+
+            // Check if there are any orders left
+            if (ordersContainer && noOrdersP) {
+                 if (ordersContainer.querySelectorAll('div[id^="order-card-"]').length === 0) {
+                    noOrdersP.style.display = 'block';
+                 }
+            }
+        }
+
+        async function updateOrderStatus(orderId, newStatus) {
+            try {
+                const response = await fetch(`/api/order/${orderId}/status/`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                if (response.ok) {
+                    // Remove the order card from the view as it's now served
+                    document.getElementById(`order-card-${orderId}`).remove();
+                } else {
+                    alert('Error al actualizar el estado del pedido.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error de conexión al actualizar el estado.');
+            }
+        }
+
+        // --- Order Management Logic ---
+        function addToOrder(itemId, name, price) {
+            // Use a unique line ID to allow the same product with different notes
+            const lineItemId = Date.now() + Math.random(); 
+            currentOrder.push({ 
+                lineItemId: lineItemId,
+                id: itemId, 
+                name: name, 
+                price: price, 
+                quantity: 1, // Always start with 1
+                note: '' 
+            });
+            renderOrder();
+        }
+
+        function updateNote(lineItemId, note) {
+            const item = currentOrder.find(i => i.lineItemId === lineItemId);
+            if (item) {
+                item.note = note;
+            }
+        }
+
+        function increaseQuantity(lineItemId) {
+            const item = currentOrder.find(i => i.lineItemId === lineItemId);
+            if (item) {
+                item.quantity++;
+                renderOrder();
+            }
+        }
+
+        function decreaseQuantity(lineItemId) {
+            const item = currentOrder.find(i => i.lineItemId === lineItemId);
+            if (item) {
+                item.quantity--;
+                if (item.quantity <= 0) {
+                    removeFromOrder(lineItemId);
+                } else {
+                    renderOrder();
+                }
+            }
+        }
+
+        function removeFromOrder(lineItemId) {
+            const itemIndex = currentOrder.findIndex(item => item.lineItemId === lineItemId);
+            if (itemIndex > -1) {
+                currentOrder.splice(itemIndex, 1);
+            }
+            renderOrder();
+        }
+
+        function renderOrder() {
+            const orderList = document.getElementById('order-items-list');
+            const orderTotalEl = document.getElementById('order-total');
+            let total = 0;
+            
+            orderList.innerHTML = ''; // Clear list
+
+            if (currentOrder.length === 0) {
+                orderList.innerHTML = '<li class="text-gray-500">Aún no hay productos en el pedido.</li>';
+            } else {
+                currentOrder.forEach(item => {
+                    const itemTotal = item.price * item.quantity;
+                    total += itemTotal;
+                    const li = document.createElement('li');
+                    li.className = 'flex flex-col bg-gray-100 p-2 rounded';
+                    li.innerHTML = `
+                        <div class="flex justify-between items-center">
+                            <span class="font-medium">${item.name}</span> //
+                            <div class="flex items-center">
+                                <button class="text-gray-600" onclick="decreaseQuantity(${item.lineItemId})"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 10a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1z" clip-rule="evenodd"></path></svg></button> //
+                                <span class="w-8 text-center font-medium">${item.quantity}</span>
+                                <button class="text-gray-600" onclick="increaseQuantity(${item.lineItemId})"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path></svg></button> //
+                            </div>
+                            <div class="flex items-center">
+                                <span class="w-20 text-right mr-2">$${itemTotal.toFixed(2)}</span> //
+                                <button class="text-red-500 hover:text-red-700" onclick="removeFromOrder(${item.lineItemId})"> //
+                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd"></path></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <input type="text" class="mt-2 w-full text-sm border border-gray-200 rounded p-1" placeholder="Agregar nota (ej: sin cebolla...)" value="${item.note}" oninput="updateNote(${item.lineItemId}, this.value)" onfocus="this.select()">
+                    `;
+                    orderList.appendChild(li);
+                });
+            }
+            orderTotalEl.textContent = total.toFixed(2);
+        }
+
+        function clearAndPrepareNewOrder() {
+            currentOrder = [];
+            editingOrderId = null;
+            document.getElementById('submit-order-btn').textContent = 'Enviar Pedido';
+            document.getElementById('table-selection').disabled = false;
+            document.getElementById('table-selection').value = '';
+            renderOrder();
+        }
+
+        document.getElementById('clear-order-btn').addEventListener('click', () => {
+            clearAndPrepareNewOrder();
+        });
+
+        document.getElementById('submit-order-btn').addEventListener('click', async () => {
+            const tableId = document.getElementById('table-selection').value;
+            const isEditing = !!editingOrderId;
+
+            if (!tableId) {
+                alert('Por favor, seleccione una mesa.');
                 return;
             }
-            const items = Object.entries(currentOrder).map(([id, data]) => ({
-                id: parseInt(id),
-                quantity: data.quantity,
-                note: data.note
-            }));
-            fetch('/restaurant/save_order/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    table_id: currentTable,
-                    items: items
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Pedido enviado a cocina');
-                    backToMesas();
+            if (currentOrder.length === 0) {
+                alert('El pedido está vacío.');
+                return;
+            }
+
+            const url = isEditing ? `/api/waiter/orders/${editingOrderId}/` : "{% url 'save_order' %}";
+            const method = isEditing ? 'PUT' : 'POST';
+            const body = { items: currentOrder, table_id: tableId };
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken,
+                    },
+                    body: JSON.stringify(body),
+                });
+                const result = await response.json();
+                if (result.success) {
+                    const message = isEditing ? `Pedido #${result.order_id} actualizado exitosamente.` : `Pedido #${result.order_id} creado exitosamente.`;
+                    alert(message);
+                    clearAndPrepareNewOrder();
+                    // No need to reload, WebSocket will handle the update.
                 } else {
-                    alert('Error al enviar pedido');
+                    alert(`Hubo un error al ${isEditing ? 'actualizar' : 'guardar'} el pedido.`);
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error al enviar pedido');
-            });
-        });
-
-        document.getElementById('save-order').addEventListener('click', function() {
-            alert('Pedido guardado');
-        });
-
-        document.getElementById('cancel-order').addEventListener('click', function() {
-            if (confirm('¿Cancelar pedido?')) {
-                currentOrder = {};
-                renderOrderSummary();
+            } catch (error) {
+                console.error('Error submitting order:', error);
+                alert('Error de conexión al enviar el pedido.');
             }
         });
+
+        renderOrder();
     </script>
 </body>
 </html>

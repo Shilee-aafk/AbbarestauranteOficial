@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Administrador - AbbaHotel- Restaurante</title>
+    <title>Administrador - AbbaHotel- Restaurante</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -20,26 +20,26 @@
             <span class="text-xl font-semibold text-gray-800">Abba Hotel Restaurante</span>
         </div>
         <nav class="mt-8">
-            <a href="#" class="nav-link active flex items-center px-6 py-3 text-amber-800 bg-amber-100 border-r-4 border-amber-500" data-section="dashboard">
+            <a href="{% url 'admin_dashboard' %}?section=dashboard" class="nav-link active flex items-center px-6 py-3 text-amber-800 bg-amber-100 border-r-4 border-amber-500" data-section="dashboard">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                 </svg>
                 Dashboard
             </a>
-            <a href="#" class="nav-link flex items-center px-6 py-3 text-gray-600 hover:bg-gray-100" data-section="orders">
+            <a href="{% url 'admin_dashboard' %}?section=orders" class="nav-link flex items-center px-6 py-3 text-gray-600 hover:bg-gray-100" data-section="orders">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                 </svg>
                 Pedidos
             </a>
-            <a href="#" class="nav-link flex items-center px-6 py-3 text-gray-600 hover:bg-gray-100" data-section="kitchen">
+            <a href="{% url 'admin_dashboard' %}?section=kitchen" class="nav-link flex items-center px-6 py-3 text-gray-600 hover:bg-gray-100" data-section="kitchen">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"></path>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z"></path>
                 </svg>
                 Vista de Cocina
             </a>
-            <a href="#" class="nav-link flex items-center px-6 py-3 text-gray-600 hover:bg-gray-100" data-section="tables">
+            <a href="{% url 'admin_dashboard' %}?section=tables" class="nav-link flex items-center px-6 py-3 text-gray-600 hover:bg-gray-100" data-section="tables">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z"></path>
@@ -47,13 +47,20 @@
                 Gestión de Mesas
             </a>
 
-            <a href="#" class="nav-link flex items-center px-6 py-3 text-gray-600 hover:bg-gray-100" data-section="inventory">
+            <a href="{% url 'admin_dashboard' %}?section=menu" class="nav-link flex items-center px-6 py-3 text-gray-600 hover:bg-gray-100" data-section="menu">
+                <svg class="w-5 h-5 mr-3" ...>
+
+                </svg>
+             Menú y Platos
+            </a>
+
+            <a href="{% url 'admin_dashboard' %}?section=inventory" class="nav-link flex items-center px-6 py-3 text-gray-600 hover:bg-gray-100" data-section="inventory">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
                 </svg>
                 Inventario
             </a>
-            <a href="#" class="nav-link flex items-center px-6 py-3 text-gray-600 hover:bg-gray-100" data-section="reports">
+            <a href="{% url 'admin_dashboard' %}?section=reports" class="nav-link flex items-center px-6 py-3 text-gray-600 hover:bg-gray-100" data-section="reports">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                 </svg>
@@ -334,11 +341,8 @@
                             <td class="p-2">{{ item.category }}</td>
                             <td class="p-2">{{ item.available|yesno:"Sí,No" }}</td>
                             <td class="p-2">
-                                <button class="bg-yellow-500 text-white px-2 py-1 rounded mr-2">Editar</button>
-                                <form action="{% url 'delete_menu_item' item.id %}" method="post" style="display:inline;" onsubmit="return confirm('¿Eliminar este plato?')">
-                                    {% csrf_token %}
-                                    <button type="submit" class="bg-red-500 text-white px-2 py-1 rounded">Eliminar</button>
-                                </form>
+                                <button class="bg-yellow-500 text-white px-2 py-1 rounded mr-2" onclick="editMenuItem({{ item.id }})">Editar</button>
+                                <button class="bg-red-500 text-white px-2 py-1 rounded" onclick="deleteMenuItem(this, {{ item.id }})">Eliminar</button>
                             </td>
                         </tr>
                         {% endfor %}
@@ -346,7 +350,7 @@
                 </table>
                 <div id="menu-form" class="hidden bg-white p-4 shadow rounded mt-4">
                     <h3 id="menu-form-title" class="text-lg font-semibold mb-2">Agregar Plato</h3>
-                    <form id="menu-form-element" action="{% url 'add_menu_item' %}" method="post">
+                    <form id="menu-form-element">
                         {% csrf_token %}
                         <input type="hidden" name="item_id" id="menu-item-id">
                         <label>Nombre: <input type="text" name="name" id="menu-name" class="border p-2 w-full mb-2" required></label>
@@ -354,7 +358,7 @@
                         <label>Precio: <input type="number" step="0.01" name="price" id="menu-price" class="border p-2 w-full mb-2" required></label>
                         <label>Categoría: <input type="text" name="category" id="menu-category" class="border p-2 w-full mb-2" required></label>
                         <label>Disponible: <input type="checkbox" name="available" id="menu-available" checked></label>
-                        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Guardar</button>
+                        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded mt-2">Guardar</button>
                         <button type="button" id="cancel-menu-btn" class="bg-gray-500 text-white px-4 py-2 rounded ml-2">Cancelar</button>
                     </form>
                 </div>
@@ -376,18 +380,15 @@
 
     <script>
         /* eslint-disable */
-        // Data from Django
-        let orders = {{ orders_json|safe }};
-        let tables = {{ tables_json|safe }};
-
-        function saveData() {
-            // Data is managed server-side via Django, no local save needed
-        }
+        const csrfToken = '{{ csrf_token }}';
 
         // Navigation
         document.querySelectorAll('.nav-link').forEach(link => {
             link.addEventListener('click', function(e) {
+                // Prevent full page reload but update URL for history
                 e.preventDefault();
+                window.history.pushState({}, '', this.href);
+
                 const section = this.getAttribute('data-section');
                 
                 // Update active navigation
@@ -405,45 +406,62 @@
         function showSection(section) {
             document.querySelectorAll('.content-section').forEach(sec => sec.classList.add('hidden'));
             document.getElementById(section).classList.remove('hidden');
-            if (section === 'dashboard') renderDashboard();
-            if (section === 'orders') renderOrders();
-            if (section === 'kitchen') renderKitchen();
-            if (section === 'tables') renderTables();
+            // Data for dashboard is rendered server-side.
+            // Other sections can be loaded on demand.
+            if (section === 'orders') loadAndRenderOrders();
+            if (section === 'kitchen') loadAndRenderKitchen();
+            if (section === 'tables') loadAndRenderTables();
+            if (section === 'menu') loadAndRenderMenu(); // Cargar menú dinámicamente
         }
        
-        // Dashboard
-        function renderDashboard() {
-            const total = orders.length;
-            const preparing = orders.filter(o => o.status === 'preparing').length;
-            const ready = orders.filter(o => o.status === 'ready').length;
-            const served = orders.filter(o => o.status === 'served').length;
-            // Update stats if elements exist
-            const totalEl = document.querySelector('.grid .bg-white p:first-child + p');
-            if (totalEl) totalEl.textContent = total;
+        // Helper for fetch requests
+        async function apiRequest(url, method = 'GET', body = null) {
+            const options = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,
+                },
+            };
+            if (body) {
+                options.body = JSON.stringify(body);
+            }
+            const response = await fetch(url, options);
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Something went wrong');
+            }
+            return response.json();
         }
 
         // Orders
-        function renderOrders() {
-            const tbody = document.getElementById('orders-tbody');
-            tbody.innerHTML = '';
-            orders.forEach(order => {
-                const row = `<tr>
-                    <td class="p-2">${order.id}</td>
-                    <td class="p-2">${order.table}</td>
-                    <td class="p-2">${order.status}</td>
-                    <td class="p-2">
-                        <button class="bg-yellow-500 text-white px-2 py-1 rounded mr-2" onclick="editOrder(${order.id})">Editar</button>
-                        <button class="bg-red-500 text-white px-2 py-1 rounded" onclick="deleteOrder(${order.id})">Eliminar</button>
-                    </td>
-                </tr>`;
-                tbody.innerHTML += row;
-            });
+        async function loadAndRenderOrders() {
+            // Assumes you have a URL named 'api_orders' that returns JSON
+            try {
+                const orders = await apiRequest("{% url 'api_orders' %}");
+                const tbody = document.getElementById('orders-tbody');
+                tbody.innerHTML = '';
+                orders.forEach(order => {
+                    const row = `<tr>
+                        <td class="p-2">${order.id}</td>
+                        <td class="p-2">${order.table_number}</td>
+                        <td class="p-2">${order.status}</td>
+                        <td class="p-2">
+                            <button class="bg-yellow-500 text-white px-2 py-1 rounded mr-2" onclick="editOrder(${order.id})">Editar</button>
+                            <button class="bg-red-500 text-white px-2 py-1 rounded" onclick="deleteOrder(${order.id})">Eliminar</button>
+                        </td>
+                    </tr>`;
+                    tbody.innerHTML += row;
+                });
+            } catch (error) {
+                console.error('Failed to load orders:', error);
+                document.getElementById('orders-tbody').innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500">${error.message}</td></tr>`;
+            }
         }
 
         document.getElementById('add-order-btn').addEventListener('click', () => {
+            document.getElementById('order-form-element').reset();
             document.getElementById('order-id').value = '';
-            document.getElementById('order-table').value = '';
-            document.getElementById('order-status').value = 'pending';
             document.getElementById('form-title').textContent = 'Agregar Pedido';
             document.getElementById('order-form').classList.remove('hidden');
         });
@@ -452,72 +470,82 @@
             document.getElementById('order-form').classList.add('hidden');
         });
 
-        document.getElementById('order-form-element').addEventListener('submit', function(e) {
+        document.getElementById('order-form-element').addEventListener('submit', async function(e) {
             e.preventDefault();
             const id = document.getElementById('order-id').value;
             const table = document.getElementById('order-table').value;
             const status = document.getElementById('order-status').value;
-            if (id) {
-                const order = orders.find(o => o.id === id);
-                order.table = table;
-                order.status = status;
-            } else {
-                const newId = orders.length ? Math.max(...orders.map(o => o.id)) + 1 : 1;
-                orders.push({ id: newId, table: parseInt(table), status });
+            
+            const url = id ? `{% url 'api_order_detail' 0 %}`.replace('0', id) : `{% url 'api_orders' %}`;
+            const method = id ? 'PUT' : 'POST';
+
+            try {
+                await apiRequest(url, method, { table, status });
+                document.getElementById('order-form').classList.add('hidden');
+                loadAndRenderOrders(); // Refresh the list
+                // You might want to refresh dashboard stats too
+            } catch (error) {
+                alert(`Error guardando pedido: ${error.message}`);
             }
-            saveData();
-            renderOrders();
-            renderDashboard();
-            renderKitchen();
-            document.getElementById('order-form').classList.add('hidden');
         });
 
-        function editOrder(id) {
-            const order = orders.find(o => o.id === id);
-            document.getElementById('order-id').value = order.id;
-            document.getElementById('order-table').value = order.table;
-            document.getElementById('order-status').value = order.status;
-            document.getElementById('form-title').textContent = 'Editar Pedido';
-            document.getElementById('order-form').classList.remove('hidden');
+        async function editOrder(id) {
+            try {
+                const order = await apiRequest(`{% url 'api_order_detail' 0 %}`.replace('0', id));
+                document.getElementById('order-id').value = order.id;
+                document.getElementById('order-table').value = order.table_id; // Assuming you get table_id
+                document.getElementById('order-status').value = order.status;
+                document.getElementById('form-title').textContent = 'Editar Pedido';
+                document.getElementById('order-form').classList.remove('hidden');
+            } catch (error) {
+                alert(`Error cargando pedido: ${error.message}`);
+            }
         }
 
-        function deleteOrder(id) {
-            orders = orders.filter(o => o.id !== id);
-            saveData();
-            renderOrders();
-            renderDashboard();
-            renderKitchen();
+        async function deleteOrder(id) {
+            if (confirm('¿Estás seguro de que quieres eliminar este pedido?')) {
+                try {
+                    await apiRequest(`{% url 'api_order_detail' 0 %}`.replace('0', id), 'DELETE');
+                    loadAndRenderOrders(); 
+                } catch (error) {
+                    alert(`Error eliminando pedido: ${error.message}`);
+                }
+            }
         }
 
         // Kitchen
-        function renderKitchen() {
-            const tbody = document.getElementById('kitchen-tbody');
+        async function loadAndRenderKitchen() {
+            // Assumes a URL 'api_kitchen_orders'
+            const kitchenOrders = await apiRequest("{% url 'api_kitchen_orders' %}");
+            const tbody = document.getElementById('orders-tbody');
             tbody.innerHTML = '';
-            const kitchenOrders = orders.filter(o => o.status === 'pending' || o.status === 'preparing');
             kitchenOrders.forEach(order => {
                 const row = `<tr>
                     <td class="p-2">${order.id}</td>
-                    <td class="p-2">${order.table}</td>
+                    <td class="p-2">${order.table_number}</td>
                     <td class="p-2">${order.status}</td>
                     <td class="p-2">
-                        <button class="bg-green-500 text-white px-2 py-1 rounded" onclick="updateStatus(${order.id}, 'preparing')">Preparar</button>
-                        <button class="bg-blue-500 text-white px-2 py-1 rounded ml-2" onclick="updateStatus(${order.id}, 'ready')">Listo</button>
+                        <button class="bg-green-500 text-white px-2 py-1 rounded" onclick="updateOrderStatus(${order.id}, 'preparing')">Preparar</button>
+                        <button class="bg-blue-500 text-white px-2 py-1 rounded ml-2" onclick="updateOrderStatus(${order.id}, 'ready')">Listo</button>
                     </td>
                 </tr>`;
                 tbody.innerHTML += row;
             });
         }
 
-        function updateStatus(id, status) {
-            const order = orders.find(o => o.id === id);
-            order.status = status;
-            saveData();
-            renderKitchen();
-            renderDashboard();
+        async function updateOrderStatus(id, status) {
+            try {
+                await apiRequest(`{% url 'api_order_status' 0 %}`.replace('0', id), 'PUT', { status });
+                loadAndRenderKitchen();
+                // Consider reloading dashboard stats if needed
+            } catch (error) {
+                alert(`Error actualizando estado: ${error.message}`);
+            }
         }
 
         // Tables
-        function renderTables() {
+        async function loadAndRenderTables() {
+            const tables = await apiRequest("{% url 'api_tables' %}");
             const tbody = document.getElementById('tables-tbody');
             tbody.innerHTML = '';
             tables.forEach(table => {
@@ -534,9 +562,8 @@
         }
 
         document.getElementById('add-table-btn').addEventListener('click', () => {
+            document.getElementById('table-form-element').reset();
             document.getElementById('table-id').value = '';
-            document.getElementById('table-number').value = '';
-            document.getElementById('table-capacity').value = '';
             document.getElementById('table-form-title').textContent = 'Agregar Mesa';
             document.getElementById('table-form').classList.remove('hidden');
         });
@@ -545,41 +572,177 @@
             document.getElementById('table-form').classList.add('hidden');
         });
 
-        document.getElementById('table-form-element').addEventListener('submit', function(e) {
+        document.getElementById('table-form-element').addEventListener('submit', async function(e) {
             e.preventDefault();
             const id = document.getElementById('table-id').value;
             const number = document.getElementById('table-number').value;
             const capacity = document.getElementById('table-capacity').value;
-            if (id) {
-                const table = tables.find(t => t.id === id);
-                table.number = parseInt(number);
-                table.capacity = parseInt(capacity);
-            } else {
-                const newId = tables.length ? Math.max(...tables.map(t => t.id)) + 1 : 1;
-                tables.push({ id: newId, number: parseInt(number), capacity: parseInt(capacity) });
+
+            const url = id ? `{% url 'api_table_detail' 0 %}`.replace('0', id) : `{% url 'api_tables' %}`;
+            const method = id ? 'PUT' : 'POST';
+
+            try {
+                await apiRequest(url, method, { number, capacity });
+                document.getElementById('table-form').classList.add('hidden');
+                loadAndRenderTables();
+            } catch (error) {
+                alert(`Error guardando mesa: ${error.message}`);
             }
-            saveData();
-            renderTables();
-            document.getElementById('table-form').classList.add('hidden');
         });
 
-        function editTable(id) {
-            const table = tables.find(t => t.id === id);
-            document.getElementById('table-id').value = table.id;
-            document.getElementById('table-number').value = table.number;
-            document.getElementById('table-capacity').value = table.capacity;
-            document.getElementById('table-form-title').textContent = 'Editar Mesa';
-            document.getElementById('table-form').classList.remove('hidden');
+        async function editTable(id) {
+            try {
+                const table = await apiRequest(`{% url 'api_table_detail' 0 %}`.replace('0', id));
+                document.getElementById('table-id').value = table.id;
+                document.getElementById('table-number').value = table.number;
+                document.getElementById('table-capacity').value = table.capacity;
+                document.getElementById('table-form-title').textContent = 'Editar Mesa';
+                document.getElementById('table-form').classList.remove('hidden');
+            } catch (error) {
+                alert(`Error cargando mesa: ${error.message}`);
+            }
         }
 
-        function deleteTable(id) {
-            tables = tables.filter(t => t.id !== id);
-            saveData();
-            renderTables();
+        async function deleteTable(id) {
+            if (confirm('¿Estás seguro de que quieres eliminar esta mesa?')) {
+                try {
+                    await apiRequest(`{% url 'api_table_detail' 0 %}`.replace('0', id), 'DELETE');
+                    loadAndRenderTables();
+                } catch (error) {
+                    alert(`Error eliminando mesa: ${error.message}`);
+                }
+            }
         }
 
-        // Initial render
-        renderDashboard();
+        // Menu
+        async function loadAndRenderMenu() {
+            // Esta función recargará la sección del menú.
+            // Por simplicidad, vamos a recargar la página entera para ver los cambios del menú.
+            // Una implementación más avanzada podría reconstruir la tabla como en `loadAndRenderOrders`.
+            // Por ahora, la dejamos vacía ya que el menú se carga desde el servidor.
+        }
+
+        document.getElementById('add-menu-btn').addEventListener('click', () => {
+            document.getElementById('menu-form-element').reset();
+            document.getElementById('menu-item-id').value = '';
+            document.getElementById('menu-form-title').textContent = 'Agregar Plato';
+            document.getElementById('menu-form').classList.remove('hidden');
+        });
+
+        document.getElementById('cancel-menu-btn').addEventListener('click', () => {
+            document.getElementById('menu-form').classList.add('hidden');
+        });
+
+        document.getElementById('menu-form-element').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const id = document.getElementById('menu-item-id').value;
+            const data = {
+                name: document.getElementById('menu-name').value,
+                description: document.getElementById('menu-description').value,
+                price: document.getElementById('menu-price').value,
+                category: document.getElementById('menu-category').value,
+                available: document.getElementById('menu-available').checked,
+            };
+
+            const url = id ? `{% url 'api_menu_item_detail' 0 %}`.replace('0', id) : `{% url 'api_menu_items' %}`;
+            const method = id ? 'PUT' : 'POST';
+
+            try {
+                const response = await apiRequest(url, method, data); // La respuesta es el objeto en sí
+                document.getElementById('menu-form').classList.add('hidden');
+                if (response) {
+                    // Si es un nuevo item, lo agregamos a la tabla
+                    if (method === 'POST') {
+                        const item = response;
+                        const tbody = document.querySelector('#menu-table tbody');
+                        const newRow = `
+                            <tr data-item-id="${item.id}">
+                                <td class="p-2">${item.name}</td>
+                                <td class="p-2">$${item.price.toFixed(2)}</td>
+                                <td class="p-2">${item.category}</td>
+                                <td class="p-2">${item.available ? 'Sí' : 'No'}</td>
+                                <td class="p-2">
+                                    <button class="bg-yellow-500 text-white px-2 py-1 rounded mr-2" onclick="editMenuItem(${item.id})">Editar</button>
+                                    <button class="bg-red-500 text-white px-2 py-1 rounded" onclick="deleteMenuItem(this, ${item.id})">Eliminar</button>
+                                </td>
+                            </tr>
+                        `;
+                        tbody.insertAdjacentHTML('beforeend', newRow);
+                    } else {
+                        // Si se editó, actualizamos la fila existente
+                        const item = response;
+                        const row = document.querySelector(`#menu-table tr[data-item-id="${item.id}"]`);
+                        if (row) {
+                            row.cells[0].textContent = item.name;
+                            row.cells[1].textContent = `$${item.price.toFixed(2)}`;
+                            row.cells[2].textContent = item.category;
+                            row.cells[3].textContent = item.available ? 'Sí' : 'No';
+                        }
+                    }
+                }
+            } catch (error) {
+                alert(`Error guardando el plato: ${error.message}`);
+            }
+        });
+
+        async function editMenuItem(id) {
+            try {
+                const item = await apiRequest(`{% url 'api_menu_item_detail' 0 %}`.replace('0', id));
+                document.getElementById('menu-item-id').value = item.id;
+                document.getElementById('menu-name').value = item.name;
+                document.getElementById('menu-description').value = item.description;
+                document.getElementById('menu-price').value = item.price;
+                document.getElementById('menu-category').value = item.category;
+                document.getElementById('menu-available').checked = item.available;
+                
+                document.getElementById('menu-form-title').textContent = 'Editar Plato';
+                document.getElementById('menu-form').classList.remove('hidden');
+            } catch (error) {
+                alert(`Error cargando el plato: ${error.message}`);
+            }
+        }
+
+        async function deleteMenuItem(button, id) {
+            if (confirm('¿Estás seguro de que quieres eliminar este plato?')) {
+                try {
+                    await apiRequest(`{% url 'api_menu_item_detail' 0 %}`.replace('0', id), 'DELETE');
+                    // Eliminar la fila de la tabla
+                    const row = button.closest('tr');
+                    row.remove();
+                } catch (error) {
+                    alert(`Error eliminando el plato: ${error.message}`);
+                }
+            }
+        }
+
+        /*
+        // Código antiguo que se reemplaza por el de arriba
+        document.getElementById('add-menu-btn').addEventListener('click', () => {
+            document.getElementById('menu-item-id').value = '';
+            document.getElementById('menu-name').value = '';
+            document.getElementById('menu-description').value = '';
+            document.getElementById('menu-price').value = '';
+            document.getElementById('menu-category').value = '';
+            document.getElementById('menu-available').checked = true;
+            document.getElementById('menu-form-title').textContent = 'Agregar Plato';
+            document.getElementById('menu-form').classList.remove('hidden');
+        });
+
+        document.getElementById('cancel-menu-btn').addEventListener('click', () => {
+            document.getElementById('menu-form').classList.add('hidden');
+        });
+        */
+        // Initial setup on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const section = params.get('section') || 'dashboard';
+            
+            // Deactivate all links first
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active', 'bg-amber-100', 'border-r-4', 'border-amber-500', 'text-amber-800'));
+            // Activate the correct one
+            document.querySelector(`.nav-link[data-section="${section}"]`).classList.add('active', 'bg-amber-100', 'border-r-4', 'border-amber-500', 'text-amber-800');
+            showSection(section);
+        });
     </script>
 </body>
 </html>

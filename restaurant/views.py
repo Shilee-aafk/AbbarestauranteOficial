@@ -132,14 +132,15 @@ def waiter_dashboard(request):
     tables = Table.objects.all()
     menu_items = MenuItem.objects.filter(available=True)
     categories = menu_items.values_list('category', flat=True).distinct()
-    orders = Order.objects.filter(~Q(status='served'))  # Active orders
+    active_orders = Order.objects.filter(status__in=['pending', 'preparing', 'ready']).order_by('created_at')
     for table in tables:
-        table.is_available = not orders.filter(table=table).exists()
-        table.current_order = orders.filter(table=table).first() if not table.is_available else None
+        table.is_available = not active_orders.filter(table=table).exists()
+        table.current_order = active_orders.filter(table=table).first() if not table.is_available else None
     user_role = request.user.groups.first().name if request.user.groups.exists() else None
     menu_items_json = json.dumps([{'id': item.id, 'name': item.name, 'price': float(item.price)} for item in menu_items])
     return render(request, 'restaurant/waiter_dashboard.html', {
         'tables': tables,
+        'active_orders': active_orders,
         'menu_items': menu_items,
         'categories': categories,
         'menu_items_json': menu_items_json,
@@ -172,131 +173,43 @@ def save_order(request):
 
 @csrf_exempt
 @login_required
-@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
-def add_menu_item(request):
-    if request.method == 'POST':
-        if request.content_type == 'application/json':
-            data = json.loads(request.body)
-            name = data.get('name')
-            description = data.get('description', '')
-            price = data.get('price')
-            category = data.get('category')
-            available = data.get('available')
+@user_passes_test(lambda u: u.groups.filter(name='Garzón').exists())
+def api_waiter_order_detail(request, pk):
+    """
+    API endpoint for waiters to get and update a specific order.
+    GET: Returns the items of an order.
+    PUT: Updates the items of an order.
+    """
+    try:
+        order = Order.objects.get(pk=pk)
+    except Order.DoesNotExist:
+        return JsonResponse({'error': 'Order not found'}, status=404)
 
-            # Validation
-            if not name or not name.strip():
-                return JsonResponse({'success': False, 'error': 'El nombre es obligatorio.'})
-            name = name.strip()
-            if len(name) > 100:
-                return JsonResponse({'success': False, 'error': 'El nombre no puede exceder 100 caracteres.'})
+    if request.method == 'GET':
+        items = order.orderitem_set.all()
+        data = [{
+            'id': item.menu_item.id,
+            'name': item.menu_item.name,
+            'price': float(item.menu_item.price),
+            'quantity': item.quantity,
+            'note': item.note,
+        } for item in items]
+        return JsonResponse(data, safe=False)
 
-            if price is None:
-                return JsonResponse({'success': False, 'error': 'El precio es obligatorio.'})
-            try:
-                price = float(price)
-                if price <= 0:
-                    return JsonResponse({'success': False, 'error': 'El precio debe ser un número positivo.'})
-            except (ValueError, TypeError):
-                return JsonResponse({'success': False, 'error': 'El precio debe ser un número válido.'})
+    if request.method == 'PUT':
+        data = json.loads(request.body)
+        items_data = data.get('items', [])
 
-            if not category or not category.strip():
-                return JsonResponse({'success': False, 'error': 'La categoría es obligatoria.'})
-            category = category.strip()
-            if len(category) > 50:
-                return JsonResponse({'success': False, 'error': 'La categoría no puede exceder 50 caracteres.'})
+        # Delete old items and create new ones (simpler than diffing)
+        order.orderitem_set.all().delete()
 
-            available = bool(available)
-
-            try:
-                item = MenuItem.objects.create(name=name, description=description, price=price, category=category, available=available)
-                return JsonResponse({'success': True, 'item': {'id': item.id, 'name': item.name, 'description': item.description, 'price': float(item.price), 'category': item.category, 'available': item.available}})
-            except (ValidationError, IntegrityError, ValueError) as e:
-                return JsonResponse({'success': False, 'error': str(e)})
-        else:
-            name = request.POST.get('name')
-            description = request.POST.get('description', '')
-            price = request.POST.get('price')
-            category = request.POST.get('category')
-            available = request.POST.get('available') == 'on'
-
-            # Validation for form POST
-            if not name or not name.strip():
-                messages.error(request, 'El nombre es obligatorio.')
-                return redirect('admin_dashboard')
-            name = name.strip()
-            if len(name) > 100:
-                messages.error(request, 'El nombre no puede exceder 100 caracteres.')
-                return redirect('admin_dashboard')
-
-            if not price:
-                messages.error(request, 'El precio es obligatorio.')
-                return redirect('admin_dashboard')
-            try:
-                price = float(price)
-                if price <= 0:
-                    messages.error(request, 'El precio debe ser un número positivo.')
-                    return redirect('admin_dashboard')
-            except (ValueError, TypeError):
-                messages.error(request, 'El precio debe ser un número válido.')
-                return redirect('admin_dashboard')
-
-            if not category or not category.strip():
-                messages.error(request, 'La categoría es obligatoria.')
-                return redirect('admin_dashboard')
-            category = category.strip()
-            if len(category) > 50:
-                messages.error(request, 'La categoría no puede exceder 50 caracteres.')
-                return redirect('admin_dashboard')
-
-            try:
-                MenuItem.objects.create(name=name, description=description, price=price, category=category, available=available)
-                messages.success(request, 'Plato agregado exitosamente.')
-            except (ValidationError, IntegrityError, ValueError) as e:
-                messages.error(request, f'Error al agregar plato: {str(e)}')
-            return redirect('admin_dashboard')
-    return redirect('admin_dashboard')
-
-@csrf_exempt
-@login_required
-@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
-def edit_menu_item(request, item_id):
-    if request.method == 'POST':
-        if request.content_type == 'application/json':
-            data = json.loads(request.body)
-            item = MenuItem.objects.get(id=item_id)
-            item.name = data.get('name')
-            item.description = data.get('description', '')
-            item.price = data.get('price')
-            item.category = data.get('category')
-            item.available = data.get('available')
-            item.save()
-            return JsonResponse({'success': True, 'item': {'id': item.id, 'name': item.name, 'price': float(item.price), 'category': item.category, 'available': item.available}})
-        else:
-            # Handle form POST
-            item = MenuItem.objects.get(id=item_id)
-            item.name = request.POST.get('name')
-            item.description = request.POST.get('description', '')
-            item.price = request.POST.get('price')
-            item.category = request.POST.get('category')
-            item.available = request.POST.get('available') == 'on'
-            item.save()
-            messages.success(request, 'Plato editado exitosamente.')
-            return redirect('admin_dashboard')
-    return JsonResponse({'success': False})
-
-@csrf_exempt
-@login_required
-@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
-def delete_menu_item(request, item_id):
-    if request.method == 'POST':
-        if request.content_type == 'application/json':
-            MenuItem.objects.get(id=item_id).delete()
-            return JsonResponse({'success': True})
-        else:
-            MenuItem.objects.get(id=item_id).delete()
-            messages.success(request, 'Plato eliminado exitosamente.')
-            return redirect('admin_dashboard')
-    return JsonResponse({'success': False})
+        for item_data in items_data:
+            menu_item = MenuItem.objects.get(id=item_data['id'])
+            OrderItem.objects.create(order=order, menu_item=menu_item, quantity=item_data['quantity'], note=item_data.get('note', ''))
+        
+        # The signal will automatically trigger the real-time update
+        order.save() # Trigger the post_save signal
+        return JsonResponse({'success': True, 'order_id': order.id})
 
 @csrf_exempt
 @login_required
@@ -404,3 +317,247 @@ def update_order_status(request, order_id):
         order.save()
         return redirect('cook_dashboard')
     return redirect('cook_dashboard')
+
+
+def crear_producto(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        name = data.get('name')
+        description = data.get('description')
+        price = data.get('price')
+        category = data.get('category', 'General')
+        available = data.get('available', True)
+
+        producto = MenuItem.objects.create(
+            name=name,
+            description=description,
+            price=price,
+            category=category,
+            available=available
+        )
+        return JsonResponse({'message': 'Producto creado', 'id': producto.id})
+    return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+# --- API Views for Admin Dashboard ---
+
+@csrf_exempt
+@login_required
+@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
+def api_orders(request):
+    """
+    GET: Returns a list of all orders.
+    POST: Creates a new order.
+    """
+    if request.method == 'GET':
+        orders = Order.objects.select_related('table').all().order_by('-created_at')
+        data = [{
+            'id': o.id,
+            'table_number': o.table.number if o.table else 'N/A',
+            'table_id': o.table.id if o.table else None,
+            'status': o.get_status_display(),
+        } for o in orders]
+        return JsonResponse(data, safe=False)
+
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            table_id = data.get('table')
+            status = data.get('status')
+
+            if not table_id:
+                return JsonResponse({'error': 'Table ID is required'}, status=400)
+
+            table = Table.objects.get(id=table_id)
+            order = Order.objects.create(table=table, user=request.user, status=status)
+            
+            return JsonResponse({
+                'id': order.id,
+                'table_id': order.table.id,
+                'table_number': order.table.number,
+                'status': order.get_status_display()
+            }, status=201)
+        except Table.DoesNotExist:
+            return JsonResponse({'error': 'Table not found'}, status=404)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+
+@csrf_exempt
+@login_required
+@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
+def api_order_detail(request, pk):
+    """
+    GET: Returns a single order.
+    PUT: Updates an order.
+    DELETE: Deletes an order.
+    """
+    try:
+        order = Order.objects.get(pk=pk)
+    except Order.DoesNotExist:
+        return JsonResponse({'error': 'Order not found'}, status=404)
+
+    if request.method == 'GET':
+        return JsonResponse({
+            'id': order.id,
+            'table_id': order.table.id,
+            'status': order.status,
+        })
+    
+    if request.method == 'PUT':
+        data = json.loads(request.body)
+        table = Table.objects.get(id=data['table'])
+        order.table = table
+        order.status = data['status']
+        order.save()
+        return JsonResponse({'id': order.id, 'table_id': order.table.id, 'status': order.status})
+
+    if request.method == 'DELETE':
+        order.delete()
+        return JsonResponse({'success': True}, status=204)
+
+@csrf_exempt
+@login_required
+@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
+def api_kitchen_orders(request):
+    if request.method == 'GET':
+        orders = Order.objects.filter(status__in=['pending', 'preparing']).select_related('table')
+        data = [{
+            'id': o.id,
+            'table_number': o.table.number if o.table else 'N/A',
+            'status': o.get_status_display(),
+        } for o in orders]
+        return JsonResponse(data, safe=False)
+
+@csrf_exempt
+@login_required
+@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name__in=['Administrador', 'Garzón']).exists())
+def api_order_status(request, pk):
+    if request.method == 'PUT':
+        data = json.loads(request.body)
+        order = Order.objects.get(pk=pk)
+        order.status = data['status']
+        order.save()
+        return JsonResponse({'success': True, 'status': order.status})
+    return JsonResponse({'error': 'Invalid method'}, status=405)
+
+@csrf_exempt
+@login_required
+@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
+def api_tables(request):
+    """
+    GET: Returns a list of all tables.
+    POST: Creates a new table.
+    """
+    if request.method == 'GET':
+        tables = Table.objects.all().order_by('number')
+        data = [{
+            'id': t.id,
+            'number': t.number,
+            'capacity': t.capacity,
+        } for t in tables]
+        return JsonResponse(data, safe=False)
+
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            table = Table.objects.create(
+                number=data['number'],
+                capacity=data['capacity']
+            )
+            return JsonResponse({
+                'id': table.id,
+                'number': table.number,
+                'capacity': table.capacity
+            }, status=201)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+
+@csrf_exempt
+@login_required
+@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
+def api_table_detail(request, pk):
+    try:
+        table = Table.objects.get(pk=pk)
+    except Table.DoesNotExist:
+        return JsonResponse({'error': 'Table not found'}, status=404)
+
+    if request.method == 'PUT':
+        data = json.loads(request.body)
+        table.number = data.get('number', table.number)
+        table.capacity = data.get('capacity', table.capacity)
+        table.save()
+        return JsonResponse({'id': table.id, 'number': table.number, 'capacity': table.capacity})
+
+    if request.method == 'DELETE':
+        table.delete()
+        return JsonResponse({'success': True}, status=204)
+
+@csrf_exempt
+@login_required
+@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
+def api_menu_items(request):
+    """
+    GET: Returns a list of all menu items.
+    POST: Creates a new menu item.
+    """
+    if request.method == 'GET':
+        menu_items = MenuItem.objects.all().order_by('category', 'name')
+        data = [{
+            'id': m.id, 'name': m.name, 'description': m.description,
+            'price': float(m.price), 'category': m.category, 'available': m.available
+        } for m in menu_items]
+        return JsonResponse(data, safe=False)
+
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            item = MenuItem.objects.create(
+                name=data['name'],
+                description=data.get('description', ''),
+                price=data['price'],
+                category=data['category'],
+                available=data.get('available', True)
+            )
+            return JsonResponse({
+                'id': item.id, 'name': item.name, 'description': item.description,
+                'price': float(item.price), 'category': item.category, 'available': item.available
+            }, status=201)
+        except (ValidationError, IntegrityError, ValueError, KeyError) as e:
+            return JsonResponse({'error': f'Invalid data: {str(e)}'}, status=400)
+
+
+@csrf_exempt
+@login_required
+@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
+def api_menu_item_detail(request, pk):
+    """
+    GET: Returns a single menu item.
+    PUT: Updates a menu item.
+    DELETE: Deletes a menu item.
+    """
+    try:
+        item = MenuItem.objects.get(pk=pk)
+    except MenuItem.DoesNotExist:
+        return JsonResponse({'error': 'Menu item not found'}, status=404)
+
+    if request.method == 'GET':
+        return JsonResponse({
+            'id': item.id, 'name': item.name, 'description': item.description, 
+            'price': float(item.price), 'category': item.category, 'available': item.available
+        })
+    
+    if request.method == 'PUT':
+        data = json.loads(request.body)
+        item.name = data.get('name', item.name)
+        item.description = data.get('description', item.description)
+        item.price = data.get('price', item.price)
+        item.category = data.get('category', item.category)
+        item.available = data.get('available', item.available)
+        item.save()
+        return JsonResponse({
+            'id': item.id, 'name': item.name, 'description': item.description, 
+            'price': float(item.price), 'category': item.category, 'available': item.available
+        })
+
+    if request.method == 'DELETE':
+        item.delete()
+        return JsonResponse({'success': True}, status=204)
