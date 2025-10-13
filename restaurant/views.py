@@ -396,10 +396,24 @@ def api_order_detail(request, pk):
         return JsonResponse({'error': 'Order not found'}, status=404)
 
     if request.method == 'GET':
+        items = order.orderitem_set.all()
+        total = sum(item.menu_item.price * item.quantity for item in items)
         return JsonResponse({
             'id': order.id,
             'table_id': order.table.id,
+            'table_number': order.table.number,
             'status': order.status,
+            'created_at': order.created_at.isoformat(),
+            'user': order.user.username,
+            'items': [{
+                'id': item.id,
+                'menu_item': item.menu_item.name,
+                'price': float(item.menu_item.price),
+                'quantity': item.quantity,
+                'note': item.note,
+                'subtotal': float(item.menu_item.price * item.quantity)
+            } for item in items],
+            'total': float(total)
         })
     
     if request.method == 'PUT':

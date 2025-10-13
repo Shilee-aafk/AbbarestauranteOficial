@@ -221,7 +221,7 @@
                                         <td class="py-4">{{ order.created_at|date:"H:i" }}</td>
                                         <td class="py-4">${{ order.total }}</td>
                                         <td class="py-4">
-                                            <button class="text-blue-600 hover:text-blue-800">Ver</button>
+                                            <button class="text-blue-600 hover:text-blue-800" onclick="viewOrderDetails({{ order.id }})">Ver</button>
                                         </td>
                                     </tr>
                                     {% endfor %}
@@ -368,6 +368,50 @@
             <div id="inventory" class="content-section hidden">
                 <h2 class="text-2xl font-bold mb-4">Inventario</h2>
                 <p>Funcionalidad de inventario próximamente.</p>
+            </div>
+
+            <!-- Order Details Section -->
+            <div id="order-details" class="content-section hidden">
+                <div class="flex items-center mb-4">
+                    <button onclick="showSection('dashboard')" class="text-blue-600 hover:text-blue-800 mr-4">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                        Volver
+                    </button>
+                    <h2 class="text-2xl font-bold">Detalles del Pedido #<span id="order-detail-id"></span></h2>
+                </div>
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <h3 class="text-lg font-semibold mb-2">Información del Pedido</h3>
+                            <p><strong>Mesa:</strong> <span id="order-detail-table"></span></p>
+                            <p><strong>Estado:</strong> <span id="order-detail-status"></span></p>
+                            <p><strong>Usuario:</strong> <span id="order-detail-user"></span></p>
+                            <p><strong>Fecha de Creación:</strong> <span id="order-detail-created"></span></p>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold mb-2">Resumen</h3>
+                            <p><strong>Total:</strong> $<span id="order-detail-total"></span></p>
+                        </div>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-4">Items del Pedido</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full table-auto">
+                            <thead>
+                                <tr class="text-left border-b border-gray-200">
+                                    <th class="pb-3 font-semibold text-gray-900">Producto</th>
+                                    <th class="pb-3 font-semibold text-gray-900">Precio</th>
+                                    <th class="pb-3 font-semibold text-gray-900">Cantidad</th>
+                                    <th class="pb-3 font-semibold text-gray-900">Nota</th>
+                                    <th class="pb-3 font-semibold text-gray-900">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody id="order-detail-items">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
 
             <!-- Reports Section -->
@@ -732,11 +776,41 @@
             document.getElementById('menu-form').classList.add('hidden');
         });
         */
+        // View Order Details
+        async function viewOrderDetails(orderId) {
+            try {
+                const response = await apiRequest(`{% url 'api_order_detail' 0 %}`.replace('0', orderId));
+                document.getElementById('order-detail-id').textContent = response.id;
+                document.getElementById('order-detail-table').textContent = response.table_number;
+                document.getElementById('order-detail-status').textContent = response.status;
+                document.getElementById('order-detail-user').textContent = response.user;
+                document.getElementById('order-detail-created').textContent = new Date(response.created_at).toLocaleString();
+                document.getElementById('order-detail-total').textContent = response.total.toFixed(2);
+
+                const tbody = document.getElementById('order-detail-items');
+                tbody.innerHTML = '';
+                response.items.forEach(item => {
+                    const row = `<tr>
+                        <td class="py-3">${item.menu_item}</td>
+                        <td class="py-3">$${item.price.toFixed(2)}</td>
+                        <td class="py-3">${item.quantity}</td>
+                        <td class="py-3">${item.note || ''}</td>
+                        <td class="py-3">$${item.subtotal.toFixed(2)}</td>
+                    </tr>`;
+                    tbody.innerHTML += row;
+                });
+
+                showSection('order-details');
+            } catch (error) {
+                alert(`Error cargando detalles del pedido: ${error.message}`);
+            }
+        }
+
         // Initial setup on page load
         document.addEventListener('DOMContentLoaded', () => {
             const params = new URLSearchParams(window.location.search);
             const section = params.get('section') || 'dashboard';
-            
+
             // Deactivate all links first
             document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active', 'bg-amber-100', 'border-r-4', 'border-amber-500', 'text-amber-800'));
             // Activate the correct one
