@@ -32,4 +32,8 @@ urlpatterns = [
     path('api/menu-items/', views.api_menu_items, name='api_menu_items'),
     path('api/menu-items/<int:pk>/', views.api_menu_item_detail, name='api_menu_item_detail'),
     path('api/waiter/orders/<int:pk>/', views.api_waiter_order_detail, name='api_waiter_order_detail'),
+    path('api/orders-report/', views.api_orders_report, name='api_orders_report'),
+
+    path('export/orders-csv/', views.export_orders_csv, name='export_orders_csv'),
+    path('api/dashboard-charts/', views.api_dashboard_charts, name='api_dashboard_charts'),
 ]

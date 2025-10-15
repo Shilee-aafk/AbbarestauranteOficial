@@ -9,14 +9,40 @@
     <style>
         body { font-family: 'Inter', sans-serif; }
         .category-filter.active {
-            background-color: #9C7B68;
+            background-color: #b3734e;
             color: #EAE0D9;
+        }
+        /* Custom Toast Notification Styles */
+        .toast {
+            position: fixed;
+            top: 5%;
+            left: 50%;
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            color: white;
+            z-index: 1000;
+            opacity: 0;
+            transform: translate(-50%, -100px);
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translate(-50%, 0);
+        }
+        .toast.success { background-color: #89f3a9; color: #263d2c; } /* green-200, green-900 */
+        .toast.error { background-color: #e98989; color: #631818; } /* red-300, red-900 */
+        .toast.info { background-color: #93c5fd; color: #1e3a8a; } /* blue-300, blue-900 */
+        #welcome-banner { transition: opacity 0.5s ease, transform 0.5s ease; }
+        .banner-hidden {
+            opacity: 0;
         }
     </style>
 </head>
 <body class="bg-gray-50">
     <!-- Sidebar -->
-    <div class="fixed inset-y-0 left-0 w-64 bg-white shadow-md hidden lg:block">
+    <div id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-white shadow-md transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-30">
         <div class="flex items-center justify-center h-16 bg-white border-b border-gray-200">
             <svg class="w-8 h-8 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
@@ -28,39 +54,57 @@
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z"></path></svg>
                 Mesas y Pedidos
             </a>
+            <a href="#" class="nav-link flex items-center px-6 py-3 text-gray-600 hover:bg-gray-100" data-section="monitor">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                Monitor de Pedidos
+            </a>
         </nav>
     </div>
+
+    <!-- Overlay for mobile when sidebar is open -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black opacity-50 hidden z-20 lg:hidden"></div>
 
     <!-- Main Content -->
     <div class="lg:ml-64 bg-gray-50 min-h-screen">
         <!-- Header -->
         <div class="bg-white shadow-sm border-b border-gray-200 px-8 py-4 flex justify-between items-center">
-            <div>
+            <div class="flex items-center">
+                <button id="sidebar-toggle" class="lg:hidden text-gray-500 hover:text-gray-700 mr-4">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
                 <h1 class="text-2xl font-bold text-gray-900">Panel del Garzón</h1>
             </div>
             <div class="flex items-center space-x-4">
-                <span class="text-gray-700">{{ user.username }} ({{ user_role }})</span>
+                <span class="text-gray-700">{{ user.username }}</span>
                 <a href="{% url 'logout' %}" class="text-red-600 hover:text-red-800">Cerrar Sesión</a>
             </div>
         </div>
 
         <div class="p-8">
             <!-- Banner -->
-            <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-8 flex items-center">
-                <svg class="w-6 h-6 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                <span class="text-green-800 font-medium">¡Bienvenido, {{ user.username }}!</span>
+            <div id="welcome-banner" class="bg-green-50 border border-green-200 rounded-lg p-4 mb-8 flex items-center justify-between">
+                <div class="flex items-center">
+                    <svg class="w-6 h-6 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    <span class="text-green-800 font-medium">¡Bienvenido, {{ user.username }}!</span>
+                </div>
+                <button id="close-banner" class="text-green-600 hover:text-green-800">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
             </div>
 
             <!-- Main Grid -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                
-                <!-- Left Column: Tables -->
-                <div class="lg:col-span-1 bg-white rounded-lg shadow-md p-6">
+            <div id="dashboard" class="content-section">
+{% load static %}
+
+                <!-- Tables View (Initially Visible) -->
+                <div id="tables-view" class="bg-white rounded-lg shadow-md p-6 ">
                     <h2 class="text-xl font-semibold text-gray-900 mb-4">Estado de Mesas</h2>
-                    <div class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
                         {% for table in tables %}
                         <div class="table-status p-4 rounded-lg text-center cursor-pointer {% if table.is_available %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}" data-table-id="{{ table.id }}" {% if not table.is_available and table.current_order %}data-order-id="{{ table.current_order.id }}"{% endif %} onclick="handleTableClick(this)">
-                            <p class="font-bold">Mesa {{ table.number }}</p>
+                            <p class="font-bold text-lg">Mesa {{ table.number }}</p>
                             <p class="text-sm">{% if table.is_available %}Disponible{% else %}Ocupada{% endif %}</p>
                         </div>
                         {% empty %}
@@ -69,62 +113,160 @@
                     </div>
                 </div>
 
-                <!-- Right Column: Menu and Order -->
-                <div class="lg:col-span-2 bg-white rounded-lg shadow-md p-6">
-                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Tomar Pedido</h2>
-                    
-                    <!-- Search and Category Filters -->
-                    <div class="mb-6 border-b pb-4">
-                        <div class="mb-4">
-                            <input type="text" id="menu-search-input" placeholder="Buscar producto por nombre..." class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                <!-- Order View (Initially Hidden) -->
+                <div id="order-view" class="hidden bg-white rounded-lg shadow-md">
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-xl font-semibold text-gray-900">Tomar Pedido para <span id="selected-table-display" class="text-amber-800"></span></h2>
+                            <button id="back-to-tables-btn" class="text-gray-500 hover:text-gray-700">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
                         </div>
-                        <div class="flex flex-wrap gap-2" id="category-filters">
-                            <button class="category-filter active px-4 py-2 text-sm font-medium rounded-full border border-gray-300 hover:bg-gray-100" data-category="all">
-                                Todos
-                            </button>
-                            {% for category in categories %}
-                            <button class="category-filter px-4 py-2 text-sm font-medium rounded-full border border-gray-300 hover:bg-gray-100" data-category="{{ category|slugify }}">
-                                {{ category }}
-                            </button>
-                            {% endfor %}
+
+                        <!-- Search and Category Filters -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Left side: Menu -->
+                            <div class="border-r border-gray-200 pr-6">
+                                <div class="mb-4">
+                                    <input type="text" id="menu-search-input" placeholder="Buscar producto por nombre..." class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                                </div>
+                                <div class="flex flex-wrap gap-2 mb-4" id="category-filters">
+                                    <button class="category-filter active px-4 py-2 text-sm font-medium rounded-full border border-gray-300 hover:bg-gray-100" data-category="all">
+                                        Todos
+                                    </button>
+                                    {% for category in categories %}
+                                    <button class="category-filter px-4 py-2 text-sm font-medium rounded-full border border-gray-300 hover:bg-gray-100" data-category="{{ category|slugify }}">
+                                        {{ category }}
+                                    </button>
+                                    {% endfor %}
+                                </div> 
+                                <div id="menu-items-container" class="grid grid-cols-1 gap-2" style="max-height: 50vh; overflow-y: auto;">
+                                    {% for item in menu_items %}
+                                    <div class="menu-item border rounded-lg p-2 flex justify-between items-center" data-category="{{ item.category|slugify }}" data-item-id="{{ item.id }}" data-item-name="{{ item.name }}" data-item-price="{{ item.price }}">
+                                        <div>
+                                            <h3 class="font-semibold text-gray-800 text-sm">{{ item.name }}</h3>
+                                            <p class="text-xs text-gray-500">{{ item.description }}</p>
+                                            <p class="text-gray-700 text-sm font-medium mt-1">${{ item.price|floatformat:0 }}</p>
+                                        </div>
+                                        <button class="add-to-order-btn bg-[#9C7B68] text-white px-3 py-1.5 rounded-md text-xs hover:bg-[#8B6B58]" onclick="addToOrder({{ item.id }}, '{{ item.name }}', {{ item.price }})">
+                                            Agregar
+                                        </button>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <!-- Right side: Current Order -->
+                            <div id="current-order">
+                                <h3 class="text-lg font-semibold mb-2">Pedido Actual</h3>
+                                <div class="bg-gray-50 p-4 rounded-lg" style="max-height: 50vh; overflow-y: auto;">
+                                    <ul id="order-items-list" class="space-y-2 mb-4">
+                                        <!-- Items will be added here by JS -->
+                                    </ul>
+                                </div>
+                                <div class="text-right font-bold text-xl my-4">
+                                    Total: $<span id="order-total">0</span>
+                                </div>
+                                <div class="flex flex-col sm:flex-row sm:justify-center sm:space-x-2 space-y-2 sm:space-y-0">
+                                    <button id="mark-served-btn" class="hidden bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Marcar como Servido</button>
+                                    <button id="clear-order-btn" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 w-full sm:w-auto">Limpiar</button>
+                                    <button id="submit-order-btn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 w-full sm:w-auto">Guardar Pedido</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
 
-                    <!-- Menu Items -->
-                    <div id="menu-items-container" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-6" style="max-height: 400px; overflow-y: auto;">
-                        {% for item in menu_items %}
-                        <div class="menu-item border rounded-lg p-3 flex flex-col items-center text-center" data-category="{{ item.category|slugify }}" data-item-id="{{ item.id }}" data-item-name="{{ item.name }}" data-item-price="{{ item.price }}">
-                            <h3 class="font-semibold text-gray-800">{{ item.name }}</h3><p class="text-gray-600 text-sm">${{ item.price|floatformat:2 }}</p><button class="add-to-order-btn mt-2 bg-[#9C7B68] text-white px-3 py-1 rounded-md text-sm hover:bg-[#8B6B58]" onclick="addToOrder({{ item.id }}, '{{ item.name }}', {{ item.price }})">
-                                Agregar
-                            </button>
-                        </div>
+        <!-- Monitor Section -->
+        <div id="monitor" class="content-section hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Active Orders Monitor -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Monitor de Pedidos Activos</h2>
+                    <ul id="active-orders-list-monitor" class="space-y-3 max-h-[70vh] overflow-y-auto">
+                        {% for order in active_orders %} {# This is a duplicate list, will be populated by JS #}
+                        <li id="active-order-{{ order.id }}" class="bg-gray-50 p-3 rounded-lg border">
+                            <div class="flex justify-between items-center">
+                                <p class="font-semibold">Pedido #{{ order.id }} (Mesa {{ order.table.number }})</p>
+                                <span class="px-2 py-1 text-xs font-medium rounded-full {{ order.status_class }}">{{ order.get_status_display }}</span>
+                            </div>
+                            <div class="text-sm text-gray-600 mt-1">
+                                <p>Total: ${{ order.total|floatformat:0 }}</p>
+                                <ul class="list-disc list-inside pl-1">
+                                    {% for item in order.orderitem_set.all %}
+                                    <li>{{ item.quantity }}x {{ item.menu_item.name }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            <div class="mt-2 text-right">
+                                <div class="flex items-center justify-end space-x-2">
+                                    <select class="status-changer text-xs border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" data-order-id="{{ order.id }}">
+                                        <option value="pending" {% if order.status == 'pending' %}selected{% endif %}>Pendiente</option>
+                                        <option value="preparing" {% if order.status == 'preparing' %}selected{% endif %}>En Preparación</option>
+                                        <option value="ready" {% if order.status == 'ready' %}selected{% endif %}>Listo</option>
+                                    </select>
+                                    <button class="cancel-btn bg-red-500 text-white px-3 py-1 rounded-md text-xs font-medium hover:bg-red-600" data-order-id="{{ order.id }}">
+                                        Cancelar
+                                    </button>
+                                    <button class="mark-served-monitor-btn bg-blue-500 text-white px-3 py-1 rounded-md text-xs font-medium hover:bg-blue-600" data-order-id="{{ order.id }}">
+                                        Servido
+                                    </button>
+                                </div>
+                            </div>
+                        </li>
                         {% endfor %}
-                    </div>
+                    </ul>
+                </div>
 
-                    <!-- Current Order -->
-                    <div id="current-order">
-                        <h3 class="text-lg font-semibold mb-2">Pedido Actual</h3>
-                        <div class="mb-4">
-                            <label for="table-selection" class="block text-sm font-medium text-gray-700">Seleccionar Mesa:</label>
-                            <select id="table-selection" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-                                {% for table in tables %}
-                                    {% if table.is_available %}
-                                        <option value="{{ table.id }}">Mesa {{ table.number }}</option>
-                                    {% endif %}
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <ul id="order-items-list" class="space-y-2 mb-4">
-                            <!-- Items will be added here by JS -->
+                <!-- Served Orders for Payment -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Pedidos Servidos (para Cobrar)</h2>
+                    <ul id="served-orders-list-monitor" class="space-y-3 max-h-[70vh] overflow-y-auto">
+                        {% for order in served_orders %}
+                        <li id="served-order-{{ order.id }}" class="flex justify-between items-center bg-blue-50 p-3 rounded-lg">
+                            <div>
+                                <p class="font-semibold">Mesa {{ order.table.number }} - Pedido #{{ order.id }}</p>
+                                <p class="text-sm text-gray-700">Total: ${{ order.total|floatformat:0 }}</p>
+                            </div>
+                            <button class="charge-btn bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700" data-order-id="{{ order.id }}">
+                                Cobrar
+                            </button>
+                        </li>
+                        {% empty %}
+                        <li id="no-served-orders" class="text-gray-500">No hay pedidos servidos pendientes de cobro.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Confirmation Modal -->
+    <div id="payment-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+        <div class="relative mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <div class="text-center">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Confirmar Cobro</h3>
+                    <div class="mt-2 px-7 py-3 text-left">
+                        <ul id="modal-order-items" class="text-sm text-gray-700 space-y-1 max-h-60 overflow-y-auto">
+                            <!-- Order items will be populated here -->
                         </ul>
-                        <div class="text-right font-bold text-xl mb-4">
-                            Total: $<span id="order-total">0.00</span>
-                        </div>
-                        <div class="flex justify-end">
-                            <button id="clear-order-btn" class="bg-gray-500 text-white px-6 py-2 rounded-lg mr-2 hover:bg-gray-600">Limpiar</button>
-                            <button id="submit-order-btn" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700">Enviar Pedido</button>
-                        </div>
+                        <div class="mt-3 pt-3 border-t text-right">
+                            <p class="text-lg font-bold text-gray-900">Total: $<span id="modal-order-total">0.00</span></p>
+                        </div> 
                     </div>
+                </div>
+                <div class="items-center px-4 py-3">
+                    <button id="modal-confirm-payment-btn" class="px-4 py-2 bg-indigo-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        Confirmar Pago
+                    </button>
+                    <button id="modal-cancel-btn" class="mt-2 px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400">
+                        Cancelar
+                    </button>
                 </div>
             </div>
         </div>
@@ -133,8 +275,50 @@
     <script>
         const csrfToken = '{{ csrf_token }}';
         let editingOrderId = null; // To track if we are editing an order
+        let selectedTableId = null; // To track the selected table without a dropdown
         let currentOrder = [];
 
+        // --- Sidebar Navigation Logic ---
+        document.addEventListener('DOMContentLoaded', function() {
+            const navLinks = document.querySelectorAll('.nav-link');
+            const contentSections = document.querySelectorAll('.content-section');
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const section = this.getAttribute('data-section');
+
+                    navLinks.forEach(l => {
+                        l.classList.remove('active', 'text-amber-800', 'bg-amber-100', 'border-r-4', 'border-amber-500');
+                        l.classList.add('text-gray-600', 'hover:bg-gray-100');
+                    });
+
+                    this.classList.add('active', 'text-amber-800', 'bg-amber-100', 'border-r-4', 'border-amber-500');
+                    this.classList.remove('text-gray-600', 'hover:bg-gray-100');
+
+                    contentSections.forEach(s => s.classList.add('hidden'));
+                    document.getElementById(section).classList.remove('hidden');
+                });
+            });
+
+            // --- Sidebar Toggle Logic for Mobile ---
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+            function toggleSidebar() {
+                sidebar.classList.toggle('-translate-x-full');
+                sidebarOverlay.classList.toggle('hidden');
+            }
+
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', toggleSidebar);
+            }
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', toggleSidebar);
+            }
+
+        });
         // --- Category Filtering Logic ---
         document.addEventListener('DOMContentLoaded', function() {
             const filterButtons = document.querySelectorAll('#category-filters .category-filter');
@@ -142,73 +326,80 @@
             const searchInput = document.getElementById('menu-search-input');
 
             function applyFilters() {
-                // Update active button style
-                const filterButtons = document.querySelectorAll('.category-filter');
-                filterButtons.forEach(button => {
-                    button.addEventListener('click', function() {
-                        filterButtons.forEach(btn => btn.classList.remove('active'));
-                        this.classList.add('active');
-                        applyFilters();
-                    });
-                });
-
-                // Event listener for search input
-                const searchInput = document.getElementById('menu-search-input');
-                searchInput.addEventListener('input', applyFilters);
-
-
-                const selectedCategory = document.querySelector('.category-filter.active').getAttribute('data-category');
+                const selectedCategory = document.querySelector('.category-filter.active')?.getAttribute('data-category') || 'all';
                 const searchTerm = searchInput.value.toLowerCase();
 
                 menuItems.forEach(item => {
                     const itemName = item.querySelector('h3').textContent.toLowerCase();
                     const itemCategory = item.getAttribute('data-category');
-
                     const categoryMatch = (selectedCategory === 'all' || itemCategory === selectedCategory);
                     const searchMatch = itemName.includes(searchTerm);
 
-                    if (categoryMatch && searchMatch) {
-                        item.style.display = 'flex'; // Use flex to match the class styling
-                    } else {
-                        item.style.display = 'none';
-                    }
+                    item.style.display = (categoryMatch && searchMatch) ? 'flex' : 'none';
                 });
             }
 
-            // Event listener for category buttons
             filterButtons.forEach(button => {
-                button.addEventListener('click', applyFilters);
+                button.addEventListener('click', function() {
+                    filterButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    applyFilters();
+                });
             });
+
+            searchInput.addEventListener('input', applyFilters);
+            applyFilters(); // Initial filter application
+        });
+        
+        document.getElementById('back-to-tables-btn').addEventListener('click', () => {
+            clearAndPrepareNewOrder();
+            showTablesView();
         });
 
         async function handleTableClick(tableDiv) {
             const orderId = tableDiv.getAttribute('data-order-id');
-            const tableId = tableDiv.getAttribute('data-table-id');
+            const tableId = tableDiv.dataset.tableId;
 
             if (orderId) { // If the table is occupied, load the order for editing
                 try {
-                    const response = await fetch(`/api/waiter/orders/${orderId}/`);
-                    const items = await response.json();
-                    
-                    currentOrder = items.map(item => ({
+                    const response = await fetch(`/restaurant/api/waiter/orders/${orderId}/`);
+                    const orderData = await response.json();
+
+                    currentOrder = orderData.items.map(item => ({
                         ...item,
                         lineItemId: Date.now() + Math.random() // Assign a new unique ID for frontend editing
                     }));
 
                     editingOrderId = orderId;
                     document.getElementById('submit-order-btn').textContent = 'Actualizar Pedido';
-                    document.getElementById('table-selection').value = tableId;
-                    document.getElementById('table-selection').disabled = true; // Disable changing table when editing
+
+                    const markServedBtn = document.getElementById('mark-served-btn');
+                    markServedBtn.classList.toggle('hidden', orderData.status !== 'ready');
+
+                    selectedTableId = tableId;
+                    document.getElementById('selected-table-display').textContent = `Mesa ${tableDiv.querySelector('.font-bold').textContent.split(' ')[1]}`;
                     renderOrder();
+                    showOrderView();
 
                 } catch (error) {
                     console.error('Error loading order for editing:', error);
-                    alert('No se pudo cargar el pedido para editar.');
+                    showToast('No se pudo cargar el pedido para editar.', 'error');
                 }
             } else { // If the table is free, prepare for a new order
                 clearAndPrepareNewOrder();
-                document.getElementById('table-selection').value = tableId;
+                selectedTableId = tableId;
+                document.getElementById('selected-table-display').textContent = `Mesa ${tableDiv.querySelector('.font-bold').textContent.split(' ')[1]}`;
+                showOrderView();
             }
+        }
+
+        function showTablesView() {
+            document.getElementById('tables-view').classList.remove('hidden');
+            document.getElementById('order-view').classList.add('hidden');
+        }
+        function showOrderView() {
+            document.getElementById('tables-view').classList.add('hidden');
+            document.getElementById('order-view').classList.remove('hidden');
         }
 
         // --- Real-time WebSocket Logic ---
@@ -226,6 +417,22 @@
             ws.onclose = function(e) {
                 console.error('Waiter WebSocket closed unexpectedly');
             };
+
+            // Attach event listeners to initially loaded elements
+            document.querySelectorAll('.cancel-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const orderId = e.target.dataset.orderId;
+                    if (confirm(`¿Estás seguro de que quieres cancelar el pedido #${orderId}? Esta acción no se puede deshacer.`)) {
+                        updateOrderStatus(orderId, 'cancelled');
+                    }
+                });
+            });
+    
+            document.querySelectorAll('.status-changer').forEach(select => {
+                select.addEventListener('change', (e) => {
+                    updateOrderStatus(e.target.dataset.orderId, e.target.value);
+                });
+            });
         });
 
         function handleOrderUpdate(order) {
@@ -234,85 +441,270 @@
             
             if (tableDiv) {
                 const tableStatusP = tableDiv.querySelector('p:last-child');
-                if (order.status === 'served' || order.status === 'cancelled') {
-                    tableDiv.classList.remove('bg-red-100', 'text-red-800');
+
+                // Final states: table becomes available
+                if (['paid', 'cancelled'].includes(order.status)) {
+                    tableDiv.classList.remove('bg-red-100', 'text-red-800', 'table-ready', 'animate-pulse');
                     tableDiv.classList.add('bg-green-100', 'text-green-800');
                     tableStatusP.textContent = 'Disponible';
-                    tableDiv.removeAttribute('data-order-id'); // Remove order id as it's now free
-                } else {
-                    tableDiv.setAttribute('data-order-id', order.id); // Add or update order id
-                    tableDiv.classList.remove('bg-green-100', 'text-green-800');
+                    tableDiv.removeAttribute('data-order-id');
+                    removeActiveOrder(order.id);
+                    removeServedOrder(order.id);
+                } 
+                // Intermediate states: table is occupied
+                else if (order.status === 'served') {
+                    tableDiv.classList.remove('table-ready', 'animate-pulse', 'bg-green-100', 'text-green-800');
                     tableDiv.classList.add('bg-red-100', 'text-red-800');
                     tableStatusP.textContent = 'Ocupada';
-                }
-            }
-
-            // 2. Update Active Orders List
-            const ordersContainer = document.getElementById('active-orders-container');
-            const existingCard = document.getElementById(`order-card-${order.id}`);
-            const noOrdersP = document.getElementById('no-active-orders');
-
-            // If order is completed, remove it from the list
-            if (order.status === 'served' || order.status === 'cancelled' || order.status === 'paid') {
-                if (existingCard) {
-                    existingCard.remove();
-                }
-            } else { // If order is active, add or update it
-                if (noOrdersP) noOrdersP.style.display = 'none';
-
-                let statusClass = 'bg-gray-200 text-gray-800';
-                if (order.status === 'preparing') statusClass = 'bg-yellow-200 text-yellow-800';
-                if (order.status === 'ready') statusClass = 'bg-green-200 text-green-800';
-
-                const cardHTML = `
-                    <div class="flex justify-between items-center">
-                        <p class="font-semibold">Pedido #${order.id} (Mesa ${order.table_number})</p>
-                        <span class="px-2 py-1 text-xs font-medium rounded-full ${statusClass}">${order.status_display}</span>
-                    </div>
-                    ${order.status === 'ready' ? 
-                        `<button class="mt-2 w-full bg-blue-500 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-600" onclick="updateOrderStatus(${order.id}, 'served')">
-                            Marcar como Servido
-                        </button>` : ''
-                    }
-                `;
-
-                if (existingCard) {
-                    existingCard.innerHTML = cardHTML;
+                    addOrUpdateServedOrder(order);
+                    removeActiveOrder(order.id);
+                } else if (order.status === 'ready') {
+                    tableDiv.setAttribute('data-order-id', order.id);
+                    tableDiv.classList.add('table-ready', 'animate-pulse'); // Add pulsing animation
+                    tableStatusP.textContent = 'Pedido Listo';
+                    addOrUpdateActiveOrder(order);
+                    removeServedOrder(order.id);
                 } else {
-                    const newCard = document.createElement('div');
-                    newCard.className = 'border rounded-lg p-3';
-                    newCard.id = `order-card-${order.id}`;
-                    newCard.innerHTML = cardHTML;
-                    ordersContainer.prepend(newCard);
+                    // Initial states ('pending', 'preparing'): table is occupied
+                    tableDiv.classList.remove('table-ready', 'animate-pulse', 'bg-green-100', 'text-green-800');
+                    tableDiv.setAttribute('data-order-id', order.id);
+                    tableDiv.classList.add('bg-red-100', 'text-red-800');
+                    tableStatusP.textContent = 'Ocupada';
+                    removeServedOrder(order.id);
+                    addOrUpdateActiveOrder(order);
+                }
+
+                // If the order being updated is the one currently being edited, clear the form.
+                if (editingOrderId == order.id && ['paid', 'cancelled'].includes(order.status)) {
+                    clearAndPrepareNewOrder();
+                    showTablesView();
                 }
             }
+        }
 
-            // Check if there are any orders left
-            if (ordersContainer && noOrdersP) {
-                 if (ordersContainer.querySelectorAll('div[id^="order-card-"]').length === 0) {
-                    noOrdersP.style.display = 'block';
-                 }
+        function addOrUpdateServedOrder(order) {
+            const servedOrdersList = document.getElementById('served-orders-list-monitor');
+            let orderLi = document.getElementById(`served-order-${order.id}`);
+
+            const orderHTML = `
+                <div>
+                    <p class="font-semibold">Mesa ${order.table_number} - Pedido #${order.id}</p>
+                    <p class="text-sm text-gray-700">Total: $${order.total.toFixed(0)}</p>
+                </div>
+                <button class="charge-btn bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700" data-order-id="${order.id}">
+                    Cobrar
+                </button>
+            `;
+
+            if (orderLi) {
+                orderLi.innerHTML = orderHTML;
+            } else {
+                orderLi = document.createElement('li');
+                orderLi.id = `served-order-${order.id}`;
+                orderLi.className = 'flex justify-between items-center bg-blue-50 p-3 rounded-lg';
+                orderLi.innerHTML = orderHTML;
+                servedOrdersList.prepend(orderLi);
             }
+
+            orderLi.querySelector('.charge-btn').addEventListener('click', (e) => {
+                openPaymentModal(e.target.dataset.orderId);
+            });
+            document.getElementById('no-served-orders')?.remove();
+        }
+
+        function removeServedOrder(orderId) {
+            const orderLi = document.getElementById(`served-order-${orderId}`); // This is correct, it's the ID of the li
+            if (orderLi) {
+                orderLi.remove();
+            }
+        }
+
+        function addOrUpdateActiveOrder(order) {
+            const activeOrdersList = document.getElementById('active-orders-list-monitor');
+            let orderLi = document.getElementById(`active-order-${order.id}`);
+
+            const itemsHTML = order.items.map(item => `<li>${item.quantity}x ${item.name}</li>`).join('');
+
+            const statusOptions = `
+                <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pendiente</option>
+                <option value="preparing" ${order.status === 'preparing' ? 'selected' : ''}>En Preparación</option>
+                <option value="ready" ${order.status === 'ready' ? 'selected' : ''}>Listo</option>
+            `;
+
+            const orderHTML = `
+                <div class="flex justify-between items-center">
+                    <p class="font-semibold">Pedido #${order.id} (Mesa ${order.table_number})</p>
+                    <span class="px-2 py-1 text-xs font-medium rounded-full ${order.status_class}">${order.status_display}</span>
+                </div>
+                <div class="text-sm text-gray-600 mt-1">
+                    <p>Total: $${order.total.toFixed(0)}</p>
+                    <ul class="list-disc list-inside pl-1">${itemsHTML}</ul>
+                </div>
+                <div class="mt-2 text-right">
+                    <div class="flex items-center justify-end space-x-2">
+                        <select class="status-changer text-xs border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" data-order-id="${order.id}">
+                            ${statusOptions}
+                        </select>
+                        <button class="cancel-btn bg-red-500 text-white px-3 py-1 rounded-md text-xs font-medium hover:bg-red-600" data-order-id="${order.id}">Cancelar</button>
+                        <button class="mark-served-monitor-btn bg-blue-500 text-white px-3 py-1 rounded-md text-xs font-medium hover:bg-blue-600" data-order-id="${order.id}">Servido</button>
+                    </div>
+                </div>
+            `;
+
+            if (orderLi) {
+                orderLi.innerHTML = orderHTML;
+            } else {
+                orderLi = document.createElement('li');
+                orderLi.id = `active-order-${order.id}`;
+                orderLi.className = 'bg-gray-50 p-3 rounded-lg border';
+                orderLi.innerHTML = orderHTML;
+                activeOrdersList.prepend(orderLi);
+            }
+
+            orderLi.querySelector('.cancel-btn').addEventListener('click', (e) => {
+                const orderId = e.target.dataset.orderId;
+                if (confirm(`¿Estás seguro de que quieres cancelar el pedido #${orderId}? Esta acción no se puede deshacer.`)) {
+                    updateOrderStatus(orderId, 'cancelled');
+                }
+            });
+
+            orderLi.querySelector('.status-changer').addEventListener('change', (e) => {
+                const orderId = e.target.dataset.orderId;
+                updateOrderStatus(orderId, e.target.value);
+            });
+
+            orderLi.querySelector('.mark-served-monitor-btn').addEventListener('click', (e) => {
+                const orderId = e.target.dataset.orderId;
+                updateOrderStatus(orderId, 'served');
+            });
+        }
+
+        function removeActiveOrder(orderId) {
+            const orderLi = document.getElementById(`active-order-${orderId}`);
+            if (orderLi) {
+                orderLi.remove();
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+
+            const icons = {
+                success: `<svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`,
+                error: `<svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`,
+                info: `<svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`
+            };
+
+            const iconHTML = icons[type] || icons['info'];
+
+            const messageSpan = document.createElement('span');
+            messageSpan.textContent = message;
+
+            toast.innerHTML = iconHTML;
+            toast.appendChild(messageSpan);
+
+            document.body.appendChild(toast);
+
+            // Trigger the animation
+            setTimeout(() => toast.classList.add('show'), 100);
+
+            // Hide and remove after 3 seconds
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 500);
+            }, 3000);
+        }
+
+        function getStatusInSpanish(status) {
+            const statuses = {
+                'pending': 'Pendiente',
+                'preparing': 'En Preparación',
+                'ready': 'Listo',
+                'served': 'Servido',
+                'paid': 'Pagado',
+                'cancelled': 'Cancelado'
+            };
+            return statuses[status] || status;
         }
 
         async function updateOrderStatus(orderId, newStatus) {
             try {
-                const response = await fetch(`/api/order/${orderId}/status/`, {
+                const response = await fetch(`/restaurant/api/orders/${orderId}/status/`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
                     body: JSON.stringify({ status: newStatus })
                 });
                 if (response.ok) {
-                    // Remove the order card from the view as it's now served
-                    document.getElementById(`order-card-${orderId}`).remove();
+                    showToast(`Pedido #${orderId} marcado como ${getStatusInSpanish(newStatus)}.`, 'success');
+                    // Forzar la actualización a otros clientes a través del WebSocket
+                    // Esto es crucial para que el recepcionista vea el cambio
+                    const updatedOrderData = await response.json();
+                    if (ws.readyState === WebSocket.OPEN) {
+                        ws.send(JSON.stringify({ type: 'broadcast_order_update', order_id: orderId, status: updatedOrderData.status }));
+                    }
+                    // The websocket will handle the UI update
                 } else {
-                    alert('Error al actualizar el estado del pedido.');
+                    showToast('Error al actualizar el estado del pedido.', 'error');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Error de conexión al actualizar el estado.');
             }
         }
+        
+        document.querySelectorAll('.charge-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                openPaymentModal(e.target.dataset.orderId);
+            });
+        });
+
+        document.querySelectorAll('.mark-served-monitor-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                updateOrderStatus(e.target.dataset.orderId, 'served');
+            });
+        });
+
+        async function openPaymentModal(orderId) {
+            try {
+                const response = await fetch(`/restaurant/api/waiter/orders/${orderId}/`);
+                if (!response.ok) throw new Error('Failed to fetch order details');
+                const data = await response.json();
+
+                // Populate modal
+                document.getElementById('modal-title').textContent = `Confirmar Cobro - Mesa ${data.table_number}`;
+                const itemsList = document.getElementById('modal-order-items');
+                itemsList.innerHTML = '';
+                data.items.forEach(item => {
+                    const li = document.createElement('li');
+                    li.className = 'flex justify-between';
+                    li.innerHTML = `
+                        <span>${item.quantity}x ${item.name}</span> 
+                        <span>$${(item.price * item.quantity).toFixed(0)}</span>
+                    `;
+                    itemsList.appendChild(li); 
+                });
+                document.getElementById('modal-order-total').textContent = data.total.toFixed(0);
+
+                // Set up confirm button
+                const confirmBtn = document.getElementById('modal-confirm-payment-btn');
+                confirmBtn.onclick = () => {
+                    updateOrderStatus(orderId, 'paid');
+                    closePaymentModal();
+                };
+
+                // Show modal
+                document.getElementById('payment-modal').classList.remove('hidden');
+            } catch (error) {
+                console.error('Error opening payment modal:', error);
+                showToast('No se pudo cargar el detalle del pedido.', 'error');
+            }
+        }
+
+        function closePaymentModal() {
+            document.getElementById('payment-modal').classList.add('hidden');
+        }
+
+        document.getElementById('modal-cancel-btn').addEventListener('click', closePaymentModal);
 
         // --- Order Management Logic ---
         function addToOrder(itemId, name, price) {
@@ -380,16 +772,18 @@
                     const li = document.createElement('li');
                     li.className = 'flex flex-col bg-gray-100 p-2 rounded';
                     li.innerHTML = `
-                        <div class="flex justify-between items-center">
-                            <span class="font-medium">${item.name}</span> //
-                            <div class="flex items-center">
-                                <button class="text-gray-600" onclick="decreaseQuantity(${item.lineItemId})"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 10a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1z" clip-rule="evenodd"></path></svg></button> //
-                                <span class="w-8 text-center font-medium">${item.quantity}</span>
-                                <button class="text-gray-600" onclick="increaseQuantity(${item.lineItemId})"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path></svg></button> //
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="font-medium">${item.name}</span>
+                                <span class="block text-sm text-gray-600">$${itemTotal.toFixed(0)}</span>
                             </div>
                             <div class="flex items-center">
-                                <span class="w-20 text-right mr-2">$${itemTotal.toFixed(2)}</span> //
-                                <button class="text-red-500 hover:text-red-700" onclick="removeFromOrder(${item.lineItemId})"> //
+                                <button class="text-gray-600" onclick="decreaseQuantity(${item.lineItemId})"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 10a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1z" clip-rule="evenodd"></path></svg></button>
+                                <span class="w-8 text-center font-medium">${item.quantity}</span>
+                                <button class="text-gray-600" onclick="increaseQuantity(${item.lineItemId})"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path></svg></button>
+                            </div>
+                            <div class="flex items-center">
+                                <button class="text-red-500 hover:text-red-700 ml-2" onclick="removeFromOrder(${item.lineItemId})">
                                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd"></path></svg>
                                 </button>
                             </div>
@@ -399,36 +793,43 @@
                     orderList.appendChild(li);
                 });
             }
-            orderTotalEl.textContent = total.toFixed(2);
+            orderTotalEl.textContent = total.toFixed(0);
         }
 
         function clearAndPrepareNewOrder() {
             currentOrder = [];
             editingOrderId = null;
-            document.getElementById('submit-order-btn').textContent = 'Enviar Pedido';
-            document.getElementById('table-selection').disabled = false;
-            document.getElementById('table-selection').value = '';
+            selectedTableId = null;
+            document.getElementById('submit-order-btn').textContent = 'Guardar Pedido';
+            document.getElementById('mark-served-btn').classList.add('hidden');
+            document.getElementById('selected-table-display').textContent = '';
             renderOrder();
         }
+
+        document.getElementById('mark-served-btn').addEventListener('click', () => {
+            if (editingOrderId) {
+                updateOrderStatus(editingOrderId, 'served');
+            }
+        });
 
         document.getElementById('clear-order-btn').addEventListener('click', () => {
             clearAndPrepareNewOrder();
         });
 
-        document.getElementById('submit-order-btn').addEventListener('click', async () => {
-            const tableId = document.getElementById('table-selection').value;
+        document.getElementById('submit-order-btn').addEventListener('click', async () => {            
+            const tableId = selectedTableId;
             const isEditing = !!editingOrderId;
 
             if (!tableId) {
-                alert('Por favor, seleccione una mesa.');
+                showToast('Por favor, seleccione una mesa.', 'error');
                 return;
             }
             if (currentOrder.length === 0) {
-                alert('El pedido está vacío.');
+                showToast('El pedido está vacío.', 'error');
                 return;
             }
 
-            const url = isEditing ? `/api/waiter/orders/${editingOrderId}/` : "{% url 'save_order' %}";
+            const url = isEditing ? `/restaurant/api/waiter/orders/${editingOrderId}/` : "{% url 'save_order' %}";
             const method = isEditing ? 'PUT' : 'POST';
             const body = { items: currentOrder, table_id: tableId };
 
@@ -444,17 +845,31 @@
                 const result = await response.json();
                 if (result.success) {
                     const message = isEditing ? `Pedido #${result.order_id} actualizado exitosamente.` : `Pedido #${result.order_id} creado exitosamente.`;
-                    alert(message);
+                    showToast(message, 'success');
                     clearAndPrepareNewOrder();
-                    // No need to reload, WebSocket will handle the update.
+                    showTablesView(); // Go back to tables view after submitting
                 } else {
-                    alert(`Hubo un error al ${isEditing ? 'actualizar' : 'guardar'} el pedido.`);
+                    showToast(`Error al ${isEditing ? 'actualizar' : 'guardar'} el pedido.`, 'error');
                 }
             } catch (error) {
                 console.error('Error submitting order:', error);
-                alert('Error de conexión al enviar el pedido.');
             }
         });
+
+        // Close banner functionality
+        document.getElementById('close-banner').addEventListener('click', () => {
+            const banner = document.getElementById('welcome-banner');
+            banner.classList.add('banner-hidden');
+            localStorage.setItem('welcomeBannerClosed', 'true');
+            setTimeout(() => {
+                banner.style.display = 'none';
+            }, 500); // Match CSS transition duration
+        });
+
+        // Check if welcome banner was previously closed on page load
+        if (localStorage.getItem('welcomeBannerClosed') === 'true') {
+            document.getElementById('welcome-banner').style.display = 'none';
+        }
 
         renderOrder();
     </script>

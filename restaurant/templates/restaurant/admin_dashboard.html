@@ -3,16 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Administrador - AbbaHotel- Restaurante</title>
+    <title>Administrador - Restaurante</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
+        #welcome-banner { transition: opacity 0.5s ease, transform 0.5s ease; }
+        .banner-hidden {
+            opacity: 0;
+        }
     </style>
 </head>
 <body class="bg-gray-50">
     <!-- Sidebar -->
-    <div class="fixed inset-y-0 left-0 w-64 bg-white shadow-md">
+    <div id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-white shadow-md transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-30">
         <div class="flex items-center justify-center h-16 bg-white border-b border-gray-200">
             <svg class="w-8 h-8 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
@@ -48,8 +54,8 @@
             </a>
 
             <a href="{% url 'admin_dashboard' %}?section=menu" class="nav-link flex items-center px-6 py-3 text-gray-600 hover:bg-gray-100" data-section="menu">
-                <svg class="w-5 h-5 mr-3" ...>
-
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                 </svg>
              Menú y Platos
             </a>
@@ -69,24 +75,39 @@
         </nav>
     </div>
 
+    <!-- Overlay for mobile when sidebar is open -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black opacity-50 hidden z-20 lg:hidden"></div>
+
     <!-- Main Content -->
-    <div class="ml-64 bg-gray-50 min-h-screen">
+    <div class="lg:ml-64 bg-gray-50 min-h-screen">
         <!-- Header -->
         <div class="bg-white shadow-sm border-b border-gray-200 px-8 py-4 flex justify-between items-center">
-            <div></div>
+            <div class="flex items-center">
+                <button id="sidebar-toggle" class="lg:hidden text-gray-500 hover:text-gray-700 mr-4">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+                <h1 class="text-2xl font-bold text-gray-900 hidden sm:block">Panel de Administración</h1>
+            </div>
             <div class="flex items-center space-x-4">
-                <span class="text-gray-700">Admin</span>
+                <span class="text-gray-700">{{ user.username }} (Admin)</span>
                 <a href="{% url 'logout' %}" class="text-red-600 hover:text-red-800">Cerrar Sesión</a>
             </div>
         </div>
 
         <div class="p-8">
             <!-- Banner -->
-            <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-8 flex items-center">
-                <svg class="w-6 h-6 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                </svg>
-                <span class="text-green-800 font-medium">¡Bienvenido, {{ user.username }}!</span>
+            <div id="welcome-banner" class="bg-green-50 border border-green-200 rounded-lg p-4 mb-8 flex items-center justify-between">
+                <div class="flex items-center">
+                    <svg class="w-6 h-6 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    <span class="text-green-800 font-medium">¡Bienvenido, {{ user.username }}!</span>
+                </div>
+                <button id="close-banner" class="text-green-600 hover:text-green-800">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
             </div>
 
             <!-- Dashboard Section -->
@@ -103,7 +124,7 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-gray-600 text-sm">Pedidos de Hoy</p>
-                                <p class="text-3xl font-bold text-gray-900">{{ total_orders_today }}</p>
+                                <p id="total-orders-today" class="text-3xl font-bold text-gray-900">{{ total_orders_today }}</p>
                             </div>
                             <div class="bg-blue-100 rounded-full p-3">
                                 <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -116,7 +137,7 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-gray-600 text-sm">En Preparación</p>
-                                <p class="text-3xl font-bold text-gray-900">{{ preparing_count }}</p>
+                                <p id="preparing-count" class="text-3xl font-bold text-gray-900">{{ preparing_count }}</p>
                             </div>
                             <div class="bg-yellow-100 rounded-full p-3">
                                 <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -129,7 +150,7 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-gray-600 text-sm">Listos para Servir</p>
-                                <p class="text-3xl font-bold text-gray-900">{{ ready_count }}</p>
+                                <p id="ready-count" class="text-3xl font-bold text-gray-900">{{ ready_count }}</p>
                             </div>
                             <div class="bg-green-100 rounded-full p-3">
                                 <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -142,7 +163,7 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-gray-600 text-sm">Pedidos Completados</p>
-                                <p class="text-3xl font-bold text-gray-900">{{ completed_count }}</p>
+                                <p id="completed-count" class="text-3xl font-bold text-gray-900">{{ completed_count }}</p>
                             </div>
                             <div class="bg-gray-100 rounded-full p-3">
                                 <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -152,6 +173,21 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Charts Section -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Ventas de los Últimos 7 Días</h3>
+                        <canvas id="salesChart"></canvas>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Top 5 Platos Más Vendidos</h3>
+                        <div class="max-w-xs mx-auto">
+                            <canvas id="topDishesChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
 
                 <!-- Recent Orders Section -->
                 <div class="bg-white rounded-lg shadow-md">
@@ -204,7 +240,7 @@
                                 </thead>
                                 <tbody>
                                     {% for order in recent_orders %}
-                                    <tr class="border-b border-gray-100">
+                                    <tr class="border-b border-gray-100" id="recent-order-{{ order.id }}">
                                         <td class="py-4">{{ order.id }}</td>
                                         <td class="py-4">{{ order.table.number }} / {{ order.user.username }}</td>
                                         <td class="py-4">
@@ -219,9 +255,9 @@
                                             {% endif %}
                                         </td>
                                         <td class="py-4">{{ order.created_at|date:"H:i" }}</td>
-                                        <td class="py-4">${{ order.total }}</td>
+                                        <td class="py-4">${{ order.total|floatformat:0 }}</td>
                                         <td class="py-4">
-                                            <button class="text-blue-600 hover:text-blue-800">Ver</button>
+                                            <button class="text-blue-600 hover:text-blue-800" onclick="viewOrderDetails({{ order.id }})">Ver</button>
                                         </td>
                                     </tr>
                                     {% endfor %}
@@ -337,7 +373,7 @@
                         {% for item in menu_items %}
                         <tr>
                             <td class="p-2">{{ item.name }}</td>
-                            <td class="p-2">${{ item.price }}</td>
+                            <td class="p-2">${{ item.price|floatformat:0 }}</td>
                             <td class="p-2">{{ item.category }}</td>
                             <td class="p-2">{{ item.available|yesno:"Sí,No" }}</td>
                             <td class="p-2">
@@ -378,11 +414,56 @@
         </div>
     </div>
 
+    <!-- Order Details Modal -->
+    <div id="order-details-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+        <div class="relative mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Detalles del Pedido</h3>
+                    <button id="modal-close-btn" class="text-gray-500 hover:text-gray-700">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div id="modal-content" class="mt-2 px-7 py-3 text-left">
+                    <!-- Content will be populated by JS -->
+                    <div class="text-center">Cargando...</div>
+                </div>
+                <div class="items-center px-4 py-3">
+                    <button id="modal-ok-btn" class="px-4 py-2 bg-gray-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         /* eslint-disable */
         const csrfToken = '{{ csrf_token }}';
 
         // Navigation
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- Sidebar Toggle Logic for Mobile ---
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+            function toggleSidebar() {
+                sidebar.classList.toggle('-translate-x-full');
+                sidebarOverlay.classList.toggle('hidden');
+            }
+
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', toggleSidebar);
+            }
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', toggleSidebar);
+            }
+        });
+
+
         document.querySelectorAll('.nav-link').forEach(link => {
             link.addEventListener('click', function(e) {
                 // Prevent full page reload but update URL for history
@@ -437,7 +518,7 @@
         // Orders
         async function loadAndRenderOrders() {
             // Assumes you have a URL named 'api_orders' that returns JSON
-            try {
+            try { 
                 const orders = await apiRequest("{% url 'api_orders' %}");
                 const tbody = document.getElementById('orders-tbody');
                 tbody.innerHTML = '';
@@ -476,7 +557,7 @@
             const table = document.getElementById('order-table').value;
             const status = document.getElementById('order-status').value;
             
-            const url = id ? `{% url 'api_order_detail' 0 %}`.replace('0', id) : `{% url 'api_orders' %}`;
+            const url = id ? `/restaurant/api/orders/${id}/` : "{% url 'api_orders' %}";
             const method = id ? 'PUT' : 'POST';
 
             try {
@@ -491,7 +572,7 @@
 
         async function editOrder(id) {
             try {
-                const order = await apiRequest(`{% url 'api_order_detail' 0 %}`.replace('0', id));
+                const order = await apiRequest(`/restaurant/api/orders/${id}/`);
                 document.getElementById('order-id').value = order.id;
                 document.getElementById('order-table').value = order.table_id; // Assuming you get table_id
                 document.getElementById('order-status').value = order.status;
@@ -505,7 +586,7 @@
         async function deleteOrder(id) {
             if (confirm('¿Estás seguro de que quieres eliminar este pedido?')) {
                 try {
-                    await apiRequest(`{% url 'api_order_detail' 0 %}`.replace('0', id), 'DELETE');
+                    await apiRequest(`/restaurant/api/orders/${id}/`, 'DELETE');
                     loadAndRenderOrders(); 
                 } catch (error) {
                     alert(`Error eliminando pedido: ${error.message}`);
@@ -516,26 +597,31 @@
         // Kitchen
         async function loadAndRenderKitchen() {
             // Assumes a URL 'api_kitchen_orders'
-            const kitchenOrders = await apiRequest("{% url 'api_kitchen_orders' %}");
-            const tbody = document.getElementById('orders-tbody');
-            tbody.innerHTML = '';
-            kitchenOrders.forEach(order => {
-                const row = `<tr>
-                    <td class="p-2">${order.id}</td>
-                    <td class="p-2">${order.table_number}</td>
-                    <td class="p-2">${order.status}</td>
-                    <td class="p-2">
-                        <button class="bg-green-500 text-white px-2 py-1 rounded" onclick="updateOrderStatus(${order.id}, 'preparing')">Preparar</button>
-                        <button class="bg-blue-500 text-white px-2 py-1 rounded ml-2" onclick="updateOrderStatus(${order.id}, 'ready')">Listo</button>
-                    </td>
-                </tr>`;
-                tbody.innerHTML += row;
-            });
+            try {
+                const kitchenOrders = await apiRequest("{% url 'api_kitchen_orders' %}");
+                const tbody = document.getElementById('kitchen-tbody');
+                tbody.innerHTML = '';
+                kitchenOrders.forEach(order => {
+                    const row = `<tr>
+                        <td class="p-2">${order.id}</td>
+                        <td class="p-2">${order.table_number}</td>
+                        <td class="p-2">${order.status}</td>
+                        <td class="p-2">
+                            <button class="bg-green-500 text-white px-2 py-1 rounded" onclick="updateOrderStatus(${order.id}, 'preparing')">Preparar</button>
+                            <button class="bg-blue-500 text-white px-2 py-1 rounded ml-2" onclick="updateOrderStatus(${order.id}, 'ready')">Listo</button>
+                        </td>
+                    </tr>`;
+                    tbody.innerHTML += row;
+                });
+            } catch (error) {
+                console.error('Failed to load kitchen orders:', error);
+                document.getElementById('kitchen-tbody').innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500">${error.message}</td></tr>`;
+            }
         }
 
         async function updateOrderStatus(id, status) {
             try {
-                await apiRequest(`{% url 'api_order_status' 0 %}`.replace('0', id), 'PUT', { status });
+                await apiRequest(`/restaurant/api/orders/${id}/status/`, 'PUT', { status });
                 loadAndRenderKitchen();
                 // Consider reloading dashboard stats if needed
             } catch (error) {
@@ -578,7 +664,7 @@
             const number = document.getElementById('table-number').value;
             const capacity = document.getElementById('table-capacity').value;
 
-            const url = id ? `{% url 'api_table_detail' 0 %}`.replace('0', id) : `{% url 'api_tables' %}`;
+            const url = id ? `/restaurant/api/tables/${id}/` : `{% url 'api_tables' %}`;
             const method = id ? 'PUT' : 'POST';
 
             try {
@@ -592,7 +678,7 @@
 
         async function editTable(id) {
             try {
-                const table = await apiRequest(`{% url 'api_table_detail' 0 %}`.replace('0', id));
+                const table = await apiRequest(`/restaurant/api/tables/${id}/`);
                 document.getElementById('table-id').value = table.id;
                 document.getElementById('table-number').value = table.number;
                 document.getElementById('table-capacity').value = table.capacity;
@@ -606,7 +692,7 @@
         async function deleteTable(id) {
             if (confirm('¿Estás seguro de que quieres eliminar esta mesa?')) {
                 try {
-                    await apiRequest(`{% url 'api_table_detail' 0 %}`.replace('0', id), 'DELETE');
+                    await apiRequest(`/restaurant/api/tables/${id}/`, 'DELETE');
                     loadAndRenderTables();
                 } catch (error) {
                     alert(`Error eliminando mesa: ${error.message}`);
@@ -644,7 +730,7 @@
                 available: document.getElementById('menu-available').checked,
             };
 
-            const url = id ? `{% url 'api_menu_item_detail' 0 %}`.replace('0', id) : `{% url 'api_menu_items' %}`;
+            const url = id ? `/restaurant/api/menu-items/${id}/` : `{% url 'api_menu_items' %}`;
             const method = id ? 'PUT' : 'POST';
 
             try {
@@ -658,7 +744,7 @@
                         const newRow = `
                             <tr data-item-id="${item.id}">
                                 <td class="p-2">${item.name}</td>
-                                <td class="p-2">$${item.price.toFixed(2)}</td>
+                                <td class="p-2">$${item.price.toFixed(0)}</td>
                                 <td class="p-2">${item.category}</td>
                                 <td class="p-2">${item.available ? 'Sí' : 'No'}</td>
                                 <td class="p-2">
@@ -674,7 +760,7 @@
                         const row = document.querySelector(`#menu-table tr[data-item-id="${item.id}"]`);
                         if (row) {
                             row.cells[0].textContent = item.name;
-                            row.cells[1].textContent = `$${item.price.toFixed(2)}`;
+                            row.cells[1].textContent = `$${item.price.toFixed(0)}`;
                             row.cells[2].textContent = item.category;
                             row.cells[3].textContent = item.available ? 'Sí' : 'No';
                         }
@@ -687,7 +773,7 @@
 
         async function editMenuItem(id) {
             try {
-                const item = await apiRequest(`{% url 'api_menu_item_detail' 0 %}`.replace('0', id));
+                const item = await apiRequest(`/restaurant/api/menu-items/${id}/`);
                 document.getElementById('menu-item-id').value = item.id;
                 document.getElementById('menu-name').value = item.name;
                 document.getElementById('menu-description').value = item.description;
@@ -705,7 +791,7 @@
         async function deleteMenuItem(button, id) {
             if (confirm('¿Estás seguro de que quieres eliminar este plato?')) {
                 try {
-                    await apiRequest(`{% url 'api_menu_item_detail' 0 %}`.replace('0', id), 'DELETE');
+                    await apiRequest(`/restaurant/api/menu-items/${id}/`, 'DELETE');
                     // Eliminar la fila de la tabla
                     const row = button.closest('tr');
                     row.remove();
@@ -715,33 +801,274 @@
             }
         }
 
-        /*
-        // Código antiguo que se reemplaza por el de arriba
-        document.getElementById('add-menu-btn').addEventListener('click', () => {
-            document.getElementById('menu-item-id').value = '';
-            document.getElementById('menu-name').value = '';
-            document.getElementById('menu-description').value = '';
-            document.getElementById('menu-price').value = '';
-            document.getElementById('menu-category').value = '';
-            document.getElementById('menu-available').checked = true;
-            document.getElementById('menu-form-title').textContent = 'Agregar Plato';
-            document.getElementById('menu-form').classList.remove('hidden');
+        // Order Details Modal
+        async function viewOrderDetails(orderId) {
+            const modal = document.getElementById('order-details-modal');
+            const modalContent = document.getElementById('modal-content');
+            modal.classList.remove('hidden');
+            modalContent.innerHTML = '<div class="text-center">Cargando...</div>';
+
+            try {
+                // Asumimos que tienes una URL para obtener detalles de un pedido.
+                // Si no la tienes, necesitarás crearla. Usaré una URL genérica.
+                const order = await apiRequest(`/restaurant/api/orders/${orderId}/`);
+
+                let itemsHtml = '<li class="text-gray-500">No se encontraron items para este pedido.</li>';
+                if (order.items && Array.isArray(order.items)) {
+                    itemsHtml = order.items.map(item => `
+                        <li class="flex justify-between">
+                            <span>${item.quantity}x ${item.menu_item_name}</span>
+                            <span>$${(item.price * item.quantity).toFixed(0)}</span>
+                        </li>
+                    `).join('');
+                }
+
+                modalContent.innerHTML = `
+                    <p><strong>Pedido ID:</strong> ${order.id}</p>
+                    <p><strong>Mesa:</strong> ${order.table_number}</p>
+                    <p><strong>Estado:</strong> ${order.status_display}</p>
+                    <p><strong>Hora:</strong> ${new Date(order.created_at).toLocaleTimeString()}</p>
+                    <h4 class="font-semibold mt-4 mb-2">Items:</h4>
+                    <ul class="space-y-1 max-h-60 overflow-y-auto">${itemsHtml}</ul>
+                    <div class="mt-3 pt-3 border-t text-right">
+                        <p class="text-lg font-bold text-gray-900">Total: $${order.total.toFixed(0)}</p>
+                    </div>
+                `;
+            } catch (error) {
+                modalContent.innerHTML = `<div class="text-center text-red-500">Error al cargar los detalles: ${error.message}</div>`;
+            }
+        }
+
+        function closeOrderDetailsModal() {
+            document.getElementById('order-details-modal').classList.add('hidden');
+        }
+
+        document.getElementById('modal-close-btn').addEventListener('click', closeOrderDetailsModal);
+        document.getElementById('modal-ok-btn').addEventListener('click', closeOrderDetailsModal);
+
+        // Close banner functionality
+        document.getElementById('close-banner').addEventListener('click', function() {
+            const banner = document.getElementById('welcome-banner');
+            banner.classList.add('banner-hidden');
+            localStorage.setItem('welcomeBannerClosed', 'true');
+            setTimeout(() => {
+                banner.style.display = 'none';
+            }, 500); // Match CSS transition duration
         });
 
-        document.getElementById('cancel-menu-btn').addEventListener('click', () => {
-            document.getElementById('menu-form').classList.add('hidden');
-        });
-        */
         // Initial setup on page load
         document.addEventListener('DOMContentLoaded', () => {
+            // Check if welcome banner was previously closed
+            if (localStorage.getItem('welcomeBannerClosed') === 'true') {
+                document.getElementById('welcome-banner').style.display = 'none';
+            }
+
             const params = new URLSearchParams(window.location.search);
             const section = params.get('section') || 'dashboard';
-            
+
             // Deactivate all links first
             document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active', 'bg-amber-100', 'border-r-4', 'border-amber-500', 'text-amber-800'));
             // Activate the correct one
             document.querySelector(`.nav-link[data-section="${section}"]`).classList.add('active', 'bg-amber-100', 'border-r-4', 'border-amber-500', 'text-amber-800');
             showSection(section);
+
+            // Real-time WebSocket for admin updates
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const ws = new WebSocket(`${protocol}//${window.location.host}/ws/admin-updates/`);
+
+            ws.onmessage = function(e) {
+                const data = JSON.parse(e.data);
+                handleAdminUpdate(data);
+            };
+
+            ws.onclose = function(e) {
+                console.error('Admin WebSocket closed unexpectedly');
+            };
+
+            function handleAdminUpdate(update) {
+                if (update.model === 'order') {
+                    // Update dashboard stats
+                    updateDashboardStats(update.stats);
+                    // Update recent orders table on dashboard
+                    updateRecentOrderInUI(update.data, update.action);
+                    // Update the "Gestión de Pedidos" table if it's visible
+                    updateOrderInUI(update.data, update.action);
+                } else if (update.model === 'menu_item') {
+                    updateMenuItemInUI(update.data, update.action);
+                } else if (update.model === 'table') {
+                    updateTableInUI(update.data, update.action);
+                }
+            }
+
+            function updateDashboardStats(stats) {
+                if (!stats) return;
+                document.getElementById('total-orders-today').textContent = stats.total_orders_today;
+                document.getElementById('preparing-count').textContent = stats.preparing_count;
+                document.getElementById('ready-count').textContent = stats.ready_count;
+                document.getElementById('completed-count').textContent = stats.completed_count;
+            }
+
+            function updateRecentOrderInUI(order, action) {
+                const tbody = document.querySelector('#dashboard tbody');
+                if (!tbody) return;
+
+                const existingRow = document.getElementById(`recent-order-${order.id}`);
+
+                if (action === 'created' && !existingRow) {
+                    const newRow = document.createElement('tr');
+                    newRow.className = 'border-b border-gray-100'; //
+                    newRow.id = `recent-order-${order.id}`;
+                    newRow.innerHTML = `
+                        <td class="py-4">${order.id}</td>
+                        <td class="py-4">${order.table_number} / ${order.user}</td>
+                        <td class="py-4"><span class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">${order.status}</span></td>
+                        <td class="py-4">${new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
+                        <td class="py-4">$${order.total.toFixed(0)}</td>
+                        <td class="py-4"><button class="text-blue-600 hover:text-blue-800">Ver</button></td>
+                    `;
+                    tbody.prepend(newRow);
+                } else if (action === 'updated' && existingRow) {
+                    existingRow.cells[2].innerHTML = `<span class="px-2 py-1 text-xs font-medium ${order.status_class} rounded-full">${order.status_display}</span>`;
+                }
+            }
+
+            function updateOrderInUI(order, action) {
+                const tbody = document.querySelector('#orders-table tbody');
+                if (!tbody) return;
+
+                const existingRow = document.querySelector(`#orders-table tr[data-order-id="${order.id}"]`);
+
+                if (action === 'created') {
+                    if (!existingRow) {
+                        const row = `<tr data-order-id="${order.id}">
+                            <td class="p-2">${order.id}</td>
+                            <td class="p-2">${order.table_number}</td>
+                            <td class="p-2">${order.status}</td>
+                            <td class="p-2">
+                                <button class="bg-yellow-500 text-white px-2 py-1 rounded mr-2" onclick="editOrder(${order.id})">Editar</button>
+                                <button class="bg-red-500 text-white px-2 py-1 rounded" onclick="deleteOrder(${order.id})">Eliminar</button>
+                            </td>
+                        </tr>`;
+                        tbody.insertAdjacentHTML('afterbegin', row);
+                    }
+                } else if (action === 'updated') {
+                    if (existingRow) {
+                        existingRow.cells[1].textContent = order.table_number;
+                        existingRow.cells[2].textContent = order.status;
+                    }
+                }
+            }
+
+            function updateMenuItemInUI(item, action) {
+                const tbody = document.querySelector('#menu-table tbody');
+                if (!tbody) return;
+
+                const existingRow = document.querySelector(`#menu-table tr[data-item-id="${item.id}"]`);
+
+                if (action === 'created') {
+                    if (!existingRow) {
+                        const row = `<tr data-item-id="${item.id}">
+                            <td class="p-2">${item.name}</td>
+                            <td class="p-2">$${item.price.toFixed(0)}</td>
+                            <td class="p-2">${item.category}</td>
+                            <td class="p-2">${item.available ? 'Sí' : 'No'}</td>
+                            <td class="p-2">
+                                <button class="bg-yellow-500 text-white px-2 py-1 rounded mr-2" onclick="editMenuItem(${item.id})">Editar</button>
+                                <button class="bg-red-500 text-white px-2 py-1 rounded" onclick="deleteMenuItem(this, ${item.id})">Eliminar</button>
+                            </td>
+                        </tr>`;
+                        tbody.insertAdjacentHTML('beforeend', row);
+                    }
+                } else if (action === 'updated') {
+                    if (existingRow) {
+                        existingRow.cells[0].textContent = item.name;
+                        existingRow.cells[1].textContent = `$${item.price.toFixed(0)}`;
+                        existingRow.cells[2].textContent = item.category;
+                        existingRow.cells[3].textContent = item.available ? 'Sí' : 'No';
+                    }
+                }
+            }
+
+            function updateTableInUI(table, action) {
+                const tbody = document.querySelector('#tables-table tbody');
+                if (!tbody) return;
+
+                const existingRow = document.querySelector(`#tables-table tr[data-table-id="${table.id}"]`);
+
+                if (action === 'created') {
+                    if (!existingRow) {
+                        const row = `<tr data-table-id="${table.id}">
+                            <td class="p-2">${table.number}</td>
+                            <td class="p-2">${table.capacity}</td>
+                            <td class="p-2">
+                                <button class="bg-yellow-500 text-white px-2 py-1 rounded mr-2" onclick="editTable(${table.id})">Editar</button>
+                                <button class="bg-red-500 text-white px-2 py-1 rounded" onclick="deleteTable(${table.id})">Eliminar</button>
+                            </td>
+                        </tr>`;
+                        tbody.insertAdjacentHTML('beforeend', row);
+                    }
+                } else if (action === 'updated') {
+                    if (existingRow) {
+                        existingRow.cells[0].textContent = table.number;
+                        existingRow.cells[1].textContent = table.capacity;
+                    }
+                }
+            }
+
+            // --- Chart Rendering ---
+            async function renderCharts() {
+                try {
+                    // Fetch sales data
+                    const salesResponse = await fetch(`/restaurant/api/dashboard-charts/?chart=sales_by_day`);
+                    const salesChartData = await salesResponse.json();
+                    
+                    // Render sales chart
+                    const salesCtx = document.getElementById('salesChart').getContext('2d');
+                    new Chart(salesCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: salesChartData.labels,
+                            datasets: [{
+                                label: 'Ventas ($)',
+                                data: salesChartData.data,
+                                backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                                borderColor: 'rgba(59, 130, 246, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            scales: { y: { beginAtZero: true } },
+                            responsive: true,
+                            plugins: { legend: { display: false } }
+                        }
+                    });
+
+                    // Fetch top dishes data
+                    const dishesResponse = await fetch(`/restaurant/api/dashboard-charts/?chart=top_dishes`);
+                    const dishesChartData = await dishesResponse.json();
+
+                    // Render top dishes chart
+                    const dishesCtx = document.getElementById('topDishesChart').getContext('2d');
+                    new Chart(dishesCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: dishesChartData.labels,
+                            datasets: [{
+                                label: 'Cantidad Vendida',
+                                data: dishesChartData.data,
+                                backgroundColor: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'],
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: { legend: { position: 'top' } }
+                        }
+                    });
+
+                } catch (error) {
+                    console.error("Error rendering charts:", error);
+                }
+            }
         });
     </script>
 </body>

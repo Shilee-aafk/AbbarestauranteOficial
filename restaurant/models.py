@@ -34,6 +34,8 @@ class Order(models.Model):
         ('preparing', 'Preparing'),
         ('ready', 'Ready'),
         ('served', 'Served'),
+        ('paid', 'Paid'),
+        ('cancelled', 'Cancelled'),
     ]
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     table = models.ForeignKey(Table, on_delete=models.CASCADE)
@@ -43,6 +45,18 @@ class Order(models.Model):
 
     def __str__(self):
         return f"Order {self.id} by {self.user.username}"
+
+    @property
+    def status_class(self):
+        return {
+            'pending': 'bg-gray-100 text-gray-800',
+            'preparing': 'bg-yellow-100 text-yellow-800',
+            'ready': 'bg-green-100 text-green-800',
+            'served': 'bg-blue-100 text-blue-800',
+            'paid': 'bg-indigo-100 text-indigo-800',
+            'cancelled': 'bg-red-100 text-red-800',
+        }.get(self.status, 'bg-gray-100 text-gray-800')
+
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
