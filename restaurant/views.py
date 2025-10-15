@@ -413,86 +413,7 @@ def api_orders(request):
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
 
-@csrf_exempt
-@login_required
-@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name__in=['Administrador', 'Recepcionista']).exists())
-def api_order_detail(request, pk):
-    """
-    GET: Returns a single order.
-    PUT: Updates an order.
-    DELETE: Deletes an order.
-    """
-    try:
-        order = Order.objects.get(pk=pk)
-    except Order.DoesNotExist:
-        return JsonResponse({'error': 'Order not found'}, status=404)
 
-    if request.method == 'GET':
-<<<<<<< HEAD
-        # Serializa los items del pedido
-        order_items = order.orderitem_set.all()
-        items_data = []
-        for item in order_items:
-            items_data.append({
-                'id': item.id,
-                'menu_item_id': item.menu_item.id,
-                'menu_item_name': item.menu_item.name,
-                'quantity': item.quantity,
-                'price': float(item.menu_item.price), # Precio actual del item
-                'note': item.note,
-            })
-
-        # Calcula el total basado en los precios actuales
-        total = sum(item['price'] * item['quantity'] for item in items_data)
-
-        # Prepara la respuesta JSON completa
-        data = {
-            'id': order.id,
-            'table_id': order.table.id,
-            'table_number': order.table.number,
-            'user_id': order.user.id,
-            'user_username': order.user.username,
-            'status': order.status,
-            'status_display': order.get_status_display(),
-            'created_at': order.created_at,
-            'total': total,
-            'items': items_data,  # Aquí incluimos la lista de items
-        }
-        return JsonResponse(data)
-=======
-        items = order.orderitem_set.all()
-        total = sum(item.menu_item.price * item.quantity for item in items)
-        return JsonResponse({
-            'id': order.id,
-            'table_id': order.table.id,
-            'table_number': order.table.number,
-            'status': order.status,
-            'created_at': order.created_at.isoformat(),
-            'user': order.user.username,
-            'items': [{
-                'id': item.id,
-                'menu_item': item.menu_item.name,
-                'price': float(item.menu_item.price),
-                'quantity': item.quantity,
-                'note': item.note,
-                'subtotal': float(item.menu_item.price * item.quantity)
-            } for item in items],
-            'total': float(total)
-        })
->>>>>>> a8e8363e154178963ea9ba642cc278d8c7122b17
-    
-    if request.method == 'PUT':
-        data = json.loads(request.body)
-        if 'table' in data:
-            order.table = get_object_or_404(Table, pk=data['table'])
-        if 'status' in data:
-            order.status = data['status']
-        order.save()
-        return JsonResponse({'success': True, 'id': order.id})
-
-    if request.method == 'DELETE':
-        order.delete()
-        return JsonResponse({'success': True}, status=204)
 
 @csrf_exempt
 @login_required
@@ -506,6 +427,57 @@ def api_kitchen_orders(request):
             'status': o.get_status_display(),
         } for o in orders]
         return JsonResponse(data, safe=False)
+
+@csrf_exempt
+@login_required
+@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
+def api_order_detail(request, pk):
+    """
+    API endpoint for admin to get and update a specific order.
+    GET: Returns the details of an order.
+    PUT: Updates the order details.
+    DELETE: Deletes the order.
+    """
+    try:
+        order = Order.objects.get(pk=pk)
+    except Order.DoesNotExist:
+        return JsonResponse({'error': 'Order not found'}, status=404)
+
+    if request.method == 'GET':
+        items = order.orderitem_set.all()
+        items_data = [{
+            'id': item.menu_item.id,
+            'name': item.menu_item.name,
+            'price': float(item.menu_item.price),
+            'quantity': item.quantity,
+            'note': item.note,
+        } for item in items]
+
+        total = sum(item['price'] * item['quantity'] for item in items_data)
+
+        data = {
+            'id': order.id,
+            'table_number': order.table.number,
+            'status': order.status,
+            'status_display': order.get_status_display(),
+            'created_at': order.created_at.isoformat(),
+            'user': order.user.username,
+            'items': items_data,
+            'total': total,
+        }
+        return JsonResponse(data)
+
+    if request.method == 'PUT':
+        data = json.loads(request.body)
+        order.status = data.get('status', order.status)
+        order.save()
+        return JsonResponse({'success': True, 'order_id': order.id})
+
+    if request.method == 'DELETE':
+        order.delete()
+        return JsonResponse({'success': True}, status=204)
+
+    return JsonResponse({'error': 'Invalid method'}, status=405)
 
 @csrf_exempt
 @login_required
@@ -740,51 +712,6 @@ def export_orders_csv(request):
         for item in order.orderitem_set.all():
             if item.menu_item: # Asegurarse de que menu_item existe antes de acceder a sus propiedades
                 total += item.menu_item.price * item.quantity
-        writer.writerow([order.id, order.table.number, order.get_status_display(), order.created_at.strftime('%Y-%m-%d %H:%M'), total])
-
-    return JsonResponse({'error': 'Invalid method'}, status=405)
-
-    return response
-
-@login_required
-@user_passes_test(lambda u: u.groups.filter(name__in=['Administrador', 'Recepcionista']).exists())
-def export_orders_csv(request):
-    """
-    Exports a filtered list of orders to a CSV file.
-    """
-    import csv
-    from django.http import HttpResponse
-    from django.utils import timezone
-
-    orders = Order.objects.select_related('table').all()
-
-    # Filtering (same logic as api_orders_report)
-    search_query = request.GET.get('search', '')
-    if search_query:
-        orders = orders.filter(Q(id__icontains=search_query) | Q(table__number__icontains=search_query))
-
-    status_query = request.GET.get('status', '')
-    if status_query:
-        orders = orders.filter(status=status_query)
-
-    date_from_query = request.GET.get('date_from', '')
-    if date_from_query:
-        orders = orders.filter(created_at__date__gte=date_from_query)
-
-    date_to_query = request.GET.get('date_to', '')
-    if date_to_query:
-        orders = orders.filter(created_at__date__lte=date_to_query)
-
-    orders = orders.order_by('-created_at')
-
-    response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
-    response['Content-Disposition'] = f'attachment; filename="reporte_pedidos_{timezone.now().strftime("%Y-%m-%d")}.csv"'
-
-    writer = csv.writer(response, delimiter=';')
-    writer.writerow(['ID Pedido', 'Mesa', 'Estado', 'Fecha y Hora', 'Total'])
-
-    for order in orders:
-        total = sum(item.menu_item.price * item.quantity for item in order.orderitem_set.all())
         writer.writerow([order.id, order.table.number, order.get_status_display(), order.created_at.strftime('%Y-%m-%d %H:%M'), total])
 
     return response
