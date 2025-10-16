@@ -38,8 +38,9 @@ urlpatterns = [
     path('api/inventory/<int:pk>/', views.api_inventory_detail, name='api_inventory_detail'),
     path('api/waiter/orders/<int:pk>/', views.api_waiter_order_detail, name='api_waiter_order_detail'),
     path('api/orders-report/', views.api_orders_report, name='api_orders_report'),
+    # La ruta general va PRIMERO, la específica DESPUÉS.
     path('api/pins/', views.api_registration_pins, name='api_registration_pins'),
-    path('api/pins/<int:pk>/', views.api_registration_pins, name='api_pin_detail'),
+    path('api/pins/', views.api_registration_pins, name='api_registration_pins'),
 
     path('export/orders-csv/', views.export_orders_csv, name='export_orders_csv'),
     path('api/dashboard-charts/', views.api_dashboard_charts, name='api_dashboard_charts'),

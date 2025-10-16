@@ -149,12 +149,10 @@ def cook_dashboard(request):
     import json
     from django.utils import timezone
 
-    # Consulta optimizada para obtener pedidos y sus items
     orders = Order.objects.filter(status__in=['pending', 'preparing']).annotate(
         total=Sum(F('orderitem__menu_item__price') * F('orderitem__quantity'))
     ).select_related('table', 'user').prefetch_related('orderitem_set__menu_item').order_by('created_at')
 
-    # Preparar datos JSON para el frontend
     orders_data = []
     for order in orders:
         orders_data.append({
@@ -966,29 +964,22 @@ def api_dashboard_charts(request):
 def api_registration_pins(request, pk=None):
     """
     API para gestionar los PINs de registro.
-    - GET /api/pins/ -> Devuelve todos los PINs.
-    - POST /api/pins/ -> Crea un nuevo PIN para un grupo.
-    - DELETE /api/pins/<pk>/ -> Elimina un PIN específico.
+    GET: Devuelve todos los PINs.
+    POST: Crea un nuevo PIN para un grupo específico.
+    DELETE: Elimina un PIN específico.
     """
-    from django.utils import timezone
-    import string
-    import random
+    if request.method == 'DELETE':
+        if pk is None:
+            return JsonResponse({'error': 'PIN ID not provided'}, status=400)
+        try:
+            pin = RegistrationPin.objects.get(pk=pk)
+            pin.delete()
+            return JsonResponse({'success': True}, status=204)
+        except RegistrationPin.DoesNotExist:
+            return JsonResponse({'error': 'PIN not found'}, status=404)
 
-    # --- Manejo de un PIN específico (DELETE) ---
-    if pk is not None:
-        if request.method == 'DELETE':
-            try:
-                pin = RegistrationPin.objects.get(pk=pk)
-                pin.delete()
-                return JsonResponse({'success': True, 'message': 'PIN eliminado'}, status=204) # 204 No Content
-            except RegistrationPin.DoesNotExist:
-                return JsonResponse({'error': 'PIN no encontrado'}, status=404)
-        else:
-            # No se permite GET o POST a un PIN específico por ahora
-            return JsonResponse({'error': f'Método {request.method} no permitido para esta URL.'}, status=405)
-
-    # --- Manejo de la colección de PINs (GET, POST) ---
     if request.method == 'GET':
+        from django.utils import timezone
         pins = RegistrationPin.objects.select_related('group', 'used_by').order_by('-created_at')
         data = [{
             'id': pin.id,
@@ -1000,7 +991,9 @@ def api_registration_pins(request, pk=None):
         } for pin in pins]
         return JsonResponse(data, safe=False)
 
-    elif request.method == 'POST':
+    if request.method == 'POST':
+        import string
+        import random
         data = json.loads(request.body)
         group_id = data.get('group_id')
         if not group_id:
@@ -1016,9 +1009,6 @@ def api_registration_pins(request, pk=None):
             return JsonResponse({'success': True, 'pin': pin.pin, 'group': group.name}, status=201)
         except Group.DoesNotExist:
             return JsonResponse({'error': 'El grupo seleccionado no existe.'}, status=400)
-    
-    # Si llega aquí, es un método no manejado para la URL base
-    return JsonResponse({'error': f'Método {request.method} no permitido.'}, status=405)
 
 @login_required
 @user_passes_test(lambda u: u.groups.filter(name__in=['Administrador', 'Recepcionista']).exists())
