@@ -554,7 +554,7 @@ def api_kitchen_orders(request):
 
 @csrf_exempt
 @login_required
-@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
+@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name__in=['Administrador', 'Recepcionista']).exists())
 def api_order_detail(request, pk):
     """
     API endpoint for admin to get and update a specific order.
