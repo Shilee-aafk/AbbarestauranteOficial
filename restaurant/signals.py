@@ -66,7 +66,7 @@ def order_post_save_handler(sender, instance, created, **kwargs):
     async_to_sync(channel_layer.group_send)(
         'cocina',
         {
-            'type': 'order_message',
+            'type': 'order_update', # Cambiado para coincidir con el handler del consumer
             'message': kitchen_payload,
         },
     )

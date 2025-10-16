@@ -286,7 +286,9 @@
 
             ws.onmessage = function(e) {
                 const data = JSON.parse(e.data);
-                if (data.type === 'order_update') {
+                // Escucha el tipo 'admin_update' que ahora también recibe
+                if (data.type === 'admin_update' && data.order) {
+                    // El payload ahora está anidado dentro de 'order'
                     handleOrderUpdate(data.order);
                 }
             };

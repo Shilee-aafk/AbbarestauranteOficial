@@ -334,18 +334,6 @@ def add_table(request):
 @csrf_exempt
 @login_required
 @user_passes_test(lambda u: u.groups.filter(name='Administrador').exists())
-def edit_table(request, table_id):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        table = Table.objects.get(id=table_id)
-        table.number = data.get('number')
-        table.save()
-        return JsonResponse({'success': True, 'table': {'id': table.id, 'number': table.number, 'capacity': data.get('capacity', 4)}})
-    return JsonResponse({'success': False})
-
-@csrf_exempt
-@login_required
-@user_passes_test(lambda u: u.groups.filter(name='Administrador').exists())
 def delete_table(request, table_id):
     if request.method == 'POST':
         Table.objects.get(id=table_id).delete()
@@ -657,16 +645,26 @@ def api_table_detail(request, pk):
     except Table.DoesNotExist:
         return JsonResponse({'error': 'Table not found'}, status=404)
 
-    if request.method == 'PUT':
+    if request.method == 'GET':
+        data = {
+            'id': table.id,
+            'number': table.number,
+            'capacity': table.capacity,
+        }
+        return JsonResponse(data)
+
+    if request.method == 'PUT': # El frontend envía PUT para editar
         data = json.loads(request.body)
         table.number = data.get('number', table.number)
         table.capacity = data.get('capacity', table.capacity)
         table.save()
         return JsonResponse({'id': table.id, 'number': table.number, 'capacity': table.capacity})
 
-    if request.method == 'DELETE':
+    elif request.method == 'DELETE':
         table.delete()
         return JsonResponse({'success': True}, status=204)
+
+    return JsonResponse({'error': 'Invalid method'}, status=405)
 
 @csrf_exempt
 @login_required

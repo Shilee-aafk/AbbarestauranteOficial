@@ -15,7 +15,6 @@ urlpatterns = [
     # Old form-based views (can be removed if fully migrated to API)
     path('save_order/', views.save_order, name='save_order'),
      path('add_table/', views.add_table, name='add_table'),
-    path('edit_table/<int:table_id>/', views.edit_table, name='edit_table'),
     path('delete_table/<int:table_id>/', views.delete_table, name='delete_table'),
     path('update_order_status_json/<int:order_id>/', views.update_order_status_json, name='update_order_status_json'),
     path('add_reservation/', views.add_reservation, name='add_reservation'),
