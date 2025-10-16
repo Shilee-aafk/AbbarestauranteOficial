@@ -2,6 +2,9 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    # Auth
+    path('signup/', views.signup_view, name='signup'),
+
     path('', views.home, name='home'),
     # Dashboards
     path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
@@ -31,8 +34,13 @@ urlpatterns = [
     path('api/tables/<int:pk>/', views.api_table_detail, name='api_table_detail'),
     path('api/menu-items/', views.api_menu_items, name='api_menu_items'),
     path('api/menu-items/<int:pk>/', views.api_menu_item_detail, name='api_menu_item_detail'),
+    path('api/menu-items/<int:menu_item_pk>/recipe/', views.api_recipe_detail, name='api_recipe_detail'),
+    path('api/inventory/', views.api_inventory, name='api_inventory'),
+    path('api/inventory/<int:pk>/', views.api_inventory_detail, name='api_inventory_detail'),
     path('api/waiter/orders/<int:pk>/', views.api_waiter_order_detail, name='api_waiter_order_detail'),
     path('api/orders-report/', views.api_orders_report, name='api_orders_report'),
+    path('api/pins/', views.api_registration_pins, name='api_registration_pins'),
+    path('api/pins/<int:pk>/', views.api_registration_pins, name='api_pin_detail'),
 
     path('export/orders-csv/', views.export_orders_csv, name='export_orders_csv'),
     path('api/dashboard-charts/', views.api_dashboard_charts, name='api_dashboard_charts'),

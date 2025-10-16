@@ -1,0 +1,35 @@
+<div class="order-card bg-gray-800 rounded-lg shadow-lg p-4 mb-4" data-order-id="{{ order.id }}" data-created-at="{{ order.created_at|date:'c' }}">
+    <div class="flex justify-between items-center mb-3">
+        <div>
+            <h3 class="text-3xl font-bold">Mesa {{ order.table.number }}</h3>
+            <p class="text-sm text-gray-400">Pedido #{{ order.id }} por {{ order.user.username }}</p>
+        </div>
+        <div class="timer text-2xl font-bold text-right">
+            <span class="countdown">00:00</span>
+        </div>
+    </div>
+
+    <div class="space-y-2 my-4">
+        {% for item in order.orderitem_set.all %}
+            <div class="flex items-start text-xl border-b border-gray-700 py-2">
+                <span class="font-bold text-2xl w-12">{{ item.quantity }}x</span>
+                <div class="flex-1">
+                    <p class="font-semibold">{{ item.menu_item.name }}</p>
+                    <p class="text-sm text-amber-300 font-light">{{ item.note|default:'' }}</p>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="mt-4">
+        {% if order.status == 'pending' %}
+            <button class="w-full text-xl font-bold py-3 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors" onclick="updateOrderStatus({{ order.id }}, 'preparing')">
+                Empezar Preparación
+            </button>
+        {% elif order.status == 'preparing' %}
+            <button class="w-full text-xl font-bold py-3 rounded-lg bg-green-600 hover:bg-green-700 transition-colors" onclick="updateOrderStatus({{ order.id }}, 'ready')">
+                Marcar como Listo
+            </button>
+        {% endif %}
+    </div>
+</div>

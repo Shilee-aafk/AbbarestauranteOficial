@@ -1,5 +1,20 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
+
+class Ingredient(models.Model):
+    """Representa un ingrediente en el inventario."""
+    name = models.CharField(max_length=100, unique=True)
+    stock_quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
+    unit = models.CharField(max_length=20, help_text="Ej: kg, litros, unidades")
+    low_stock_threshold = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
+
+    def __str__(self):
+        return f"{self.name} ({self.stock_quantity} {self.unit})"
+
+    @property
+    def is_low_stock(self):
+        return self.stock_quantity <= self.low_stock_threshold
+
 
 class MenuItem(models.Model):
     name = models.CharField(max_length=100)
@@ -7,9 +22,19 @@ class MenuItem(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     category = models.CharField(max_length=50, default='General')
     available = models.BooleanField(default=True)
+    ingredients = models.ManyToManyField(Ingredient, through='RecipeIngredient', related_name='menu_items')
 
     def __str__(self):
         return self.name
+
+class RecipeIngredient(models.Model):
+    """Modelo intermedio para la receta de un MenuItem."""
+    menu_item = models.ForeignKey(MenuItem, on_delete=models.CASCADE)
+    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
+    quantity_required = models.DecimalField(max_digits=10, decimal_places=3)
+
+    class Meta:
+        unique_together = ('menu_item', 'ingredient')
 
 class Table(models.Model):
     number = models.IntegerField(unique=True)
@@ -66,3 +91,16 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"{self.quantity} x {self.menu_item.name}"
+
+class RegistrationPin(models.Model):
+    """
+    Un PIN de un solo uso para registrar nuevos usuarios con un rol específico.
+    """
+    pin = models.CharField(max_length=10, unique=True, help_text="PIN de registro de 10 caracteres.")
+    group = models.ForeignKey(Group, on_delete=models.CASCADE, help_text="El rol que se asignará al usuario.")
+    created_at = models.DateTimeField(auto_now_add=True)
+    used_by = models.OneToOneField(User, on_delete=models.SET_NULL, null=True, blank=True, help_text="Usuario que usó este PIN.")
+
+    def __str__(self):
+        status = "Usado" if self.used_by else "Activo"
+        return f"PIN para '{self.group.name}' ({status})"

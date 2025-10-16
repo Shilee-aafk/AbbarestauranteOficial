@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrarse - Abba Hotel Restaurante</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-amber-50">
+
+    <div class="flex min-h-screen items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="w-full max-w-md space-y-8 p-8">
+            
+            <!-- Logo y Título -->
+            <div>
+                <div class="flex items-center justify-center text-amber-900">
+                    <svg class="w-10 h-10 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                    <span class="text-3xl font-bold">Abba Hotel Restaurante</span>
+                </div>
+                <h2 class="mt-6 text-center text-2xl font-bold tracking-tight text-gray-900">
+                    Crea una nueva cuenta
+                </h2>
+            </div>
+
+            <!-- Formulario de Registro -->
+            <form class="mt-8 space-y-6" method="post">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                        {% for error in form.non_field_errors %}
+                            <span class="block sm:inline">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                {% for field in form %}
+                    {% if field.errors %}
+                        <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-2" role="alert">
+                            <p class="font-bold">{{ field.label }}</p>
+                            {% for error in field.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+
+                <div class="rounded-md shadow-sm -space-y-px">
+                    <div>
+                        {{ form.username }}
+                    </div>
+                    <div>
+                        {{ form.pin }}
+                    </div>
+                    <div>
+                        {{ form.password1 }}
+                    </div>
+                    <div>
+                        {{ form.password2 }}
+                    </div>
+                </div>
+
+                <!-- Botón de envío -->
+                <div>
+                    <button type="submit" 
+                            class="group relative flex w-full justify-center rounded-md border border-transparent bg-amber-800 py-3 px-4 text-sm font-medium text-white hover:bg-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2">
+                        Registrarse
+                    </button>
+                </div>
+            </form>
+
+            <p class="mt-4 text-center text-sm text-gray-600">
+                ¿Ya tienes una cuenta?
+                <a href="{% url 'login' %}" class="font-medium text-amber-700 hover:text-amber-600">
+                    Inicia sesión aquí
+                </a>
+            </p>
+
+            <p class="mt-2 text-center text-sm text-gray-600">
+                Abba Restaurante &copy; {% now "Y" %}
+            </p>
+        </div>
+    </div>
+
+</body>
+</html>
