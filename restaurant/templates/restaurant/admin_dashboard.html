@@ -60,12 +60,6 @@
                 </svg>
                 Inventario
             </a>
-            <a href="{% url 'admin_dashboard' %}?section=reports" class="nav-link flex items-center px-6 py-3 text-gray-600 hover:bg-gray-100" data-section="reports">
-                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                </svg>
-                Reportes
-            </a>
             <a href="{% url 'admin_dashboard' %}?section=users" class="nav-link flex items-center px-6 py-3 text-gray-600 hover:bg-gray-100" data-section="users">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M15 21a6 6 0 00-9-5.197M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -326,7 +320,7 @@
                 <!-- Order Form Modal -->
                 <div id="order-form-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div class="modal-container bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-                        <div class="modal-header">
+                        <div class="modal-header flex justify-between items-center mb-4">
                             <h3 id="form-title" class="modal-title">Agregar Pedido</h3>
                             <button id="cancel-order-btn" class="modal-close-btn">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -369,7 +363,7 @@
                 <!-- Table Form Modal -->
                 <div id="table-form-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div class="modal-container bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-                        <div class="modal-header">
+                        <div class="modal-header flex justify-between items-center mb-4">
                             <h3 id="table-form-title" class="modal-title">Agregar Mesa</h3>
                             <button id="cancel-table-btn" class="modal-close-btn">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -428,7 +422,7 @@
                 <!-- Menu Form Modal -->
                 <div id="menu-form-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div class="modal-container bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-                        <div class="modal-header">
+                        <div class="modal-header flex justify-between items-center mb-4">
                             <h3 id="menu-form-title" class="modal-title">Agregar Plato</h3>
                             <button id="cancel-menu-btn" class="modal-close-btn text-2xl leading-none">&times;</button>
                         </div>
@@ -448,7 +442,7 @@
             <!-- Recipe Form Modal -->
             <div id="recipe-form-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                 <div class="modal-container bg-white rounded-lg shadow-xl w-full max-w-lg p-6">
-                    <div class="modal-header">
+                    <div class="modal-header flex justify-between items-center mb-4">
                         <h3 id="recipe-form-title" class="modal-title">Gestionar Receta</h3>
                         <button id="cancel-recipe-btn" class="modal-close-btn text-2xl leading-none">&times;</button>
                     </div>
@@ -505,7 +499,7 @@
                 <!-- Inventory Form Modal -->
                 <div id="inventory-form-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div class="modal-container bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-                        <div class="modal-header">
+                        <div class="modal-header flex justify-between items-center mb-4">
                             <h3 id="inventory-form-title" class="modal-title">Agregar Ingrediente</h3>
                             <button id="cancel-inventory-btn" class="modal-close-btn text-2xl leading-none">&times;</button>
                         </div>
@@ -589,7 +583,7 @@
     <div id="order-details-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div class="modal-container bg-white rounded-lg shadow-xl w-full max-w-md p-6">
             <div class="mt-3">
-                <div class="modal-header">
+                <div class="modal-header flex justify-between items-center mb-4">
                     <h3 class="modal-title" id="modal-title">Detalles del Pedido</h3>
                     <button id="modal-close-btn" class="modal-close-btn">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
