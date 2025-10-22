@@ -10,8 +10,8 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 import json, decimal
 from django.contrib.auth.models import User
-from .forms import CustomUserCreationForm, RegistrationPin
-from .models import Reservation, Order, OrderItem, MenuItem, Table, Group, Ingredient
+from .forms import CustomUserCreationForm
+from .models import Reservation, Order, OrderItem, MenuItem, Table, Group, RegistrationPin
 
 def home(request):
     if request.user.is_authenticated:
@@ -78,11 +78,6 @@ def admin_dashboard(request):
     groups = Group.objects.all()  # Obtener todos los grupos/roles
     user_role = request.user.groups.first().name if request.user.groups.exists() else None
 
-    # 3. Obtener ingredientes con stock bajo para mostrar alertas
-    low_stock_ingredients = Ingredient.objects.filter(
-        stock_quantity__lte=F('low_stock_threshold')
-    ).order_by('name')
-
     # JSON data for JavaScript
     orders_json = json.dumps([{
         'id': o.id,
@@ -118,7 +113,6 @@ def admin_dashboard(request):
         'orders_json': orders_json,
         'tables_json': tables_json,
         'menu_items_json': menu_items_json,
-        'low_stock_ingredients': low_stock_ingredients,
     })
 
 @login_required
@@ -330,98 +324,6 @@ def add_table(request):
             Table.objects.create(number=number)
             return redirect('admin_dashboard')
     return redirect('admin_dashboard')
-
-@csrf_exempt
-@login_required
-@user_passes_test(lambda u: u.groups.filter(name='Administrador').exists())
-def delete_table(request, table_id):
-    if request.method == 'POST':
-        Table.objects.get(id=table_id).delete()
-        return JsonResponse({'success': True})
-    return JsonResponse({'success': False})
-
-@login_required
-@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
-def api_inventory(request):
-    """
-    API para gestionar el inventario.
-    GET: Devuelve todos los ingredientes.
-    """
-    from .models import Ingredient
-    if request.method == 'GET':
-        ingredients = Ingredient.objects.all().order_by('name')
-        data = [{
-            'id': i.id,
-            'name': i.name,
-            'stock_quantity': i.stock_quantity,
-            'unit': i.unit,
-            'is_low_stock': i.is_low_stock,
-        } for i in ingredients]
-        return JsonResponse(data, safe=False)
-    elif request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            ingredient = Ingredient.objects.create(
-                name=data['name'],
-                stock_quantity=decimal.Decimal(data['stock_quantity']),
-                unit=data['unit'],
-                low_stock_threshold=decimal.Decimal(data['low_stock_threshold'])
-            )
-            # Devolvemos el objeto creado para que el frontend pueda actualizar la UI
-            response_data = {
-                'id': ingredient.id,
-                'name': ingredient.name,
-                'stock_quantity': ingredient.stock_quantity,
-                'unit': ingredient.unit,
-                'is_low_stock': ingredient.is_low_stock,
-            }
-            return JsonResponse(response_data, status=201)
-        except (KeyError, decimal.InvalidOperation, IntegrityError) as e:
-            return JsonResponse({'error': f'Datos inválidos o ingrediente ya existe: {str(e)}'}, status=400)
-
-    return JsonResponse({'error': 'Método no válido'}, status=405)
-
-@csrf_exempt
-@login_required
-@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
-def api_inventory_detail(request, pk):
-    """
-    API para gestionar un ingrediente específico.
-    GET: Devuelve un ingrediente.
-    PUT: Actualiza un ingrediente.
-    DELETE: Elimina un ingrediente.
-    """
-    try:
-        ingredient = Ingredient.objects.get(pk=pk)
-    except Ingredient.DoesNotExist:
-        return JsonResponse({'error': 'Ingrediente no encontrado'}, status=404)
-
-    if request.method == 'GET':
-        data = {
-            'id': ingredient.id,
-            'name': ingredient.name,
-            'stock_quantity': ingredient.stock_quantity,
-            'unit': ingredient.unit,
-            'low_stock_threshold': ingredient.low_stock_threshold,
-        }
-        return JsonResponse(data)
-
-    elif request.method == 'PUT':
-        try:
-            data = json.loads(request.body)
-            ingredient.name = data.get('name', ingredient.name)
-            ingredient.stock_quantity = decimal.Decimal(data.get('stock_quantity', ingredient.stock_quantity))
-            ingredient.unit = data.get('unit', ingredient.unit)
-            ingredient.low_stock_threshold = decimal.Decimal(data.get('low_stock_threshold', ingredient.low_stock_threshold))
-            ingredient.save()
-            return JsonResponse({'success': True, 'message': 'Ingrediente actualizado.'})
-        except (KeyError, decimal.InvalidOperation, IntegrityError) as e:
-            return JsonResponse({'error': f'Datos inválidos o ingrediente ya existe: {str(e)}'}, status=400)
-
-    elif request.method == 'DELETE':
-        ingredient.delete()
-        return JsonResponse({'success': True, 'message': 'Ingrediente eliminado.'}, status=204)
-
 
 @csrf_exempt
 @login_required
@@ -716,10 +618,10 @@ def api_menu_item_detail(request, pk):
 
     if request.method == 'GET':
         return JsonResponse({
-            'id': item.id, 'name': item.name, 'description': item.description, 
+            'id': item.id, 'name': item.name, 'description': item.description,
             'price': float(item.price), 'category': item.category, 'available': item.available
         })
-    
+
     if request.method == 'PUT':
         data = json.loads(request.body)
         item.name = data.get('name', item.name)
@@ -729,57 +631,13 @@ def api_menu_item_detail(request, pk):
         item.available = data.get('available', item.available)
         item.save()
         return JsonResponse({
-            'id': item.id, 'name': item.name, 'description': item.description, 
+            'id': item.id, 'name': item.name, 'description': item.description,
             'price': float(item.price), 'category': item.category, 'available': item.available
         })
 
     if request.method == 'DELETE':
         item.delete()
         return JsonResponse({'success': True}, status=204)
-
-@csrf_exempt
-@login_required
-@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
-def api_recipe_detail(request, menu_item_pk):
-    """
-    API para gestionar la receta de un MenuItem.
-    GET: Devuelve los ingredientes de la receta.
-    POST: Actualiza la receta completa.
-    """
-    try:
-        menu_item = MenuItem.objects.get(pk=menu_item_pk)
-    except MenuItem.DoesNotExist:
-        return JsonResponse({'error': 'Menu item not found'}, status=404)
-
-    if request.method == 'GET':
-        recipe_ingredients = menu_item.recipeingredient_set.select_related('ingredient')
-        data = [{
-            'ingredient_id': ri.ingredient.id,
-            'ingredient_name': ri.ingredient.name,
-            'quantity_required': ri.quantity_required,
-            'unit': ri.ingredient.unit,
-        } for ri in recipe_ingredients]
-        return JsonResponse(data, safe=False)
-
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        ingredients_data = data.get('ingredients', [])
-
-        try:
-            with transaction.atomic():
-                # Eliminar la receta anterior
-                menu_item.recipeingredient_set.all().delete()
-                # Crear la nueva receta
-                for item in ingredients_data:
-                    ingredient = Ingredient.objects.get(id=item['ingredient_id'])
-                    menu_item.recipeingredient_set.create(
-                        menu_item=menu_item, 
-                        ingredient=ingredient, 
-                        quantity_required=decimal.Decimal(item['quantity'])
-                    )
-            return JsonResponse({'success': True, 'message': 'Receta actualizada correctamente.'})
-        except (Ingredient.DoesNotExist, KeyError, ValueError, decimal.InvalidOperation) as e:
-            return JsonResponse({'error': f'Dato inválido en la receta: {str(e)}'}, status=400)
 
 @login_required
 @user_passes_test(lambda u: u.groups.filter(name__in=['Administrador', 'Recepcionista']).exists())

@@ -1,6 +1,6 @@
 from django.db.models.signals import post_save, pre_save, post_delete
 from django.dispatch import receiver
-from .models import Order, MenuItem, Table, Reservation, Ingredient, RecipeIngredient
+from .models import Order, MenuItem, Table, Reservation
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.db import transaction, models
@@ -37,17 +37,6 @@ def order_post_save_handler(sender, instance, created, **kwargs):
         'quantity': item.quantity,
         'note': item.note
     } for item in order_items]
-
-    # --- 1. Lógica de Descuento de Inventario ---
-    # Se ejecuta solo si el estado ha cambiado a 'paid' desde otro estado.
-    if not created and instance.status == 'paid' and getattr(instance, '_previous_status', None) != 'paid':
-        with transaction.atomic():
-            for order_item in instance.orderitem_set.select_related('menu_item'):
-                recipe_items = RecipeIngredient.objects.filter(menu_item=order_item.menu_item).select_related('ingredient')
-                for recipe_item in recipe_items:
-                    ingredient = recipe_item.ingredient
-                    quantity_to_deduct = recipe_item.quantity_required * order_item.quantity
-                    Ingredient.objects.filter(id=ingredient.id).update(stock_quantity=models.F('stock_quantity') - quantity_to_deduct)
 
     # --- 2. Lógica de Notificaciones ---
     kitchen_payload = {
@@ -149,26 +138,6 @@ def product_notification(sender, instance, created, **kwargs):
         }
     }
     async_to_sync(channel_layer.group_send)('admin', {'type': 'admin_update', 'message': admin_payload})
-
-@receiver(post_save, sender=Ingredient)
-def ingredient_stock_notification(sender, instance, created, **kwargs):
-    """
-    Envía una notificación al grupo de administradores si el stock de un ingrediente es bajo.
-    También envía una actualización general del inventario.
-    """
-    # Notificación específica de stock bajo
-    if instance.is_low_stock:
-        low_stock_payload = {
-            'type': 'inventory_alert',
-            'ingredient': {
-                'id': instance.id,
-                'name': instance.name,
-                'stock_quantity': float(instance.stock_quantity),
-                'unit': instance.unit,
-                'low_stock_threshold': float(instance.low_stock_threshold)
-            }
-        }
-        async_to_sync(channel_layer.group_send)('admin', {'type': 'admin_update', 'message': low_stock_payload})
 
 
 @receiver(post_save, sender=Reservation)

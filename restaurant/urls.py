@@ -15,7 +15,6 @@ urlpatterns = [
     # Old form-based views (can be removed if fully migrated to API)
     path('save_order/', views.save_order, name='save_order'),
      path('add_table/', views.add_table, name='add_table'),
-    path('delete_table/<int:table_id>/', views.delete_table, name='delete_table'),
     path('update_order_status_json/<int:order_id>/', views.update_order_status_json, name='update_order_status_json'),
     path('add_reservation/', views.add_reservation, name='add_reservation'),
     path('add_order/', views.add_order, name='add_order'),
@@ -33,15 +32,11 @@ urlpatterns = [
     path('api/tables/<int:pk>/', views.api_table_detail, name='api_table_detail'),
     path('api/menu-items/', views.api_menu_items, name='api_menu_items'),
     path('api/menu-items/<int:pk>/', views.api_menu_item_detail, name='api_menu_item_detail'),
-    path('api/menu-items/<int:menu_item_pk>/recipe/', views.api_recipe_detail, name='api_recipe_detail'),
-    path('api/inventory/', views.api_inventory, name='api_inventory'),
-    path('api/inventory/<int:pk>/', views.api_inventory_detail, name='api_inventory_detail'),
     path('api/waiter/orders/<int:pk>/', views.api_waiter_order_detail, name='api_waiter_order_detail'),
     path('api/orders-report/', views.api_orders_report, name='api_orders_report'),
-    # La ruta general va PRIMERO, la específica DESPUÉS.
+    # La ruta general para listar/crear va PRIMERO, la específica para un recurso DESPUÉS.
     path('api/pins/', views.api_registration_pins, name='api_registration_pins'),
-    path('api/pins/', views.api_registration_pins, name='api_registration_pins'),
-
+    path('api/pins/<int:pk>/', views.api_registration_pins, name='api_registration_pin_detail'),
     path('export/orders-csv/', views.export_orders_csv, name='export_orders_csv'),
     path('api/dashboard-charts/', views.api_dashboard_charts, name='api_dashboard_charts'),
 ]
