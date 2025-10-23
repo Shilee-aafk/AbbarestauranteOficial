@@ -182,7 +182,11 @@ def waiter_dashboard(request):
 
     # --- Datos para la toma de pedidos ---
     menu_items = MenuItem.objects.filter(available=True)
-    categories = menu_items.values_list('category', flat=True).distinct()
+    # Obtenemos todas las categorías, las normalizamos en Python y eliminamos duplicados.
+    # Esto asegura que 'Pizzas' y 'pizzas' se traten como una sola categoría en los filtros.
+    all_categories = menu_items.values_list('category', flat=True)
+    normalized_categories = {cat.capitalize() for cat in all_categories}
+    categories = sorted(list(normalized_categories))
     menu_items_json = json.dumps([{'id': item.id, 'name': item.name, 'price': float(item.price)} for item in menu_items])
 
     # --- Datos para el monitor de pedidos (carga inicial) ---
