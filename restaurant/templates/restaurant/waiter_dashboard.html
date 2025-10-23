@@ -122,12 +122,21 @@
 
             <!-- Bar Section -->
             <div id="bar" class="content-section hidden">
-                <div class="bg-white rounded-lg shadow-md p-6 text-center">
-                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Gestión de Bar</h2>
-                    <p class="text-gray-600 mb-6">Inicia un nuevo pedido para un cliente en la barra.</p>
-                    <button id="start-bar-order-btn" class="w-full max-w-xs mx-auto bg-blue-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-blue-700 text-lg">
-                        Crear Pedido para Barra
-                    </button>
+                 <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Nuevo Pedido de Barra</h2>
+                    <div class="max-w-md mx-auto">
+                        <div class="mb-4">
+                            <label for="bar-client-identifier" class="block text-sm font-medium text-gray-700">Identificador del Cliente (Ej: Cliente de la esquina)</label>
+                            <input type="text" id="bar-client-identifier" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Barra 1">
+                        </div>
+                        <div class="mb-4">
+                            <label for="bar-room-number" class="block text-sm font-medium text-gray-700">N° de Habitación (Opcional)</label>
+                            <input type="text" id="bar-room-number" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+                        <button id="start-bar-order-btn" class="w-full bg-amber-700 text-white px-4 py-2 rounded-lg font-medium hover:bg-amber-800">
+                            Iniciar Pedido de Barra
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -382,12 +391,42 @@
         });
 
         document.getElementById('start-bar-order-btn').addEventListener('click', () => {
-            currentClientIdentifier = 'Barra';
-            currentRoomNumber = '';
-            document.getElementById('order-identifier-display').textContent = 'Barra';
+            const clientIdentifier = document.getElementById('bar-client-identifier').value.trim();
+            const roomNumber = document.getElementById('bar-room-number').value.trim();
+
+            if (!clientIdentifier && !roomNumber) {
+                showToast('Debe ingresar un identificador o un número de habitación.', 'error');
+                return;
+            }
+
+            currentClientIdentifier = clientIdentifier || 'Barra'; // Si no hay identificador, se usa 'Barra'
+            currentRoomNumber = roomNumber;
+            
+            document.getElementById('order-identifier-display').textContent = roomNumber || currentClientIdentifier;
             clearAndPrepareNewOrder();
+            document.getElementById('bar-client-identifier').value = ''; // Limpiar campos específicos de la barra
+            document.getElementById('bar-room-number').value = '';            
+            filterBarCategories(true); // true para auto-seleccionar 'Cócteles'
             showOrderView();
         });
+
+        function filterBarCategories(autoSelectCocktails = false) {
+            const barCategories = ['cocteles', 'vinos-y-cervezas', 'bebestibles'];
+            const filterButtons = document.querySelectorAll('#category-filters .category-filter');
+            filterButtons.forEach(button => {
+                const category = button.dataset.category;
+                // Ocultamos los que no son de bar, excepto el botón "Todos"
+                button.style.display = (barCategories.includes(category) || category === 'all') ? 'inline-flex' : 'none';
+            });
+
+            if (autoSelectCocktails) {
+                // Buscamos el botón de la categoría 'cocteles' y lo "clickeamos" para activar el filtro.
+                const cocktailsButton = document.querySelector('.category-filter[data-category="cocteles"]');
+                if (cocktailsButton) {
+                    cocktailsButton.click();
+                }
+            }
+        }
 
         function showMainSectionView() {
             // Muestra la sección principal que estaba activa antes de entrar a tomar pedido
@@ -395,12 +434,23 @@
             document.querySelectorAll('.content-section').forEach(s => s.classList.add('hidden'));
             document.getElementById(activeSectionId).classList.remove('hidden');
             document.getElementById('order-view').classList.add('hidden');
+            resetCategoryFilters(); // Restaura la visibilidad de todos los filtros de categoría
         }
 
         function showOrderView() {
             // Oculta todas las secciones de contenido principal para mostrar solo la de tomar pedido
             document.querySelectorAll('.content-section').forEach(s => s.classList.add('hidden'));
             document.getElementById('order-view').classList.remove('hidden');
+        }
+
+        function resetCategoryFilters() {
+            const filterButtons = document.querySelectorAll('#category-filters .category-filter');
+            filterButtons.forEach(button => {
+                button.style.display = 'inline-flex';
+                // Al resetear, nos aseguramos que 'Todos' sea el activo por defecto
+                const allButton = document.querySelector('.category-filter[data-category="all"]');
+                if(allButton) allButton.click();
+            });
         }
 
         function initializeMonitor() {
@@ -707,8 +757,8 @@
                 };
 
                 // Initialize values and event listeners
-                includeTipCheckbox.checked = true; // Default to include tip
-                customTipInput.value = "0"; // Default 0%
+                includeTipCheckbox.checked = false; // Default to NOT include tip for faster checkout
+                customTipInput.value = "0"; 
                 customTipInput.min = "0"; // Ensure tip cannot be negative
 
                 includeTipCheckbox.onchange = calculateAndDisplayTotals;

@@ -299,7 +299,7 @@ def api_waiter_order_detail(request, pk):
             'subtotal': subtotal, # Se agrega el subtotal para que el modal de pago funcione
             'total': subtotal + float(order.tip_amount), # El total ahora incluye la propina
             'identifier': order.room_number or order.client_identifier,
-            'room_number': order.room_number,
+            'room_number': order.room_number, # Asegurarse de que este campo siempre esté presente
         }
         return JsonResponse(data)
 
