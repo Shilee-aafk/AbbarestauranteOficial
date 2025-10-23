@@ -1,6 +1,6 @@
 from django.db.models.signals import post_save, pre_save, post_delete
 from django.dispatch import receiver
-from .models import Order, MenuItem, Table, Reservation
+from .models import Order, MenuItem, Reservation, Group, RegistrationPin
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.db import transaction, models
@@ -31,7 +31,7 @@ def order_post_save_handler(sender, instance, created, **kwargs):
 
     # Payload for kitchen
     order_items = instance.orderitem_set.all()
-    total = float(sum(item.menu_item.price * item.quantity for item in order_items))
+    # total = float(sum(item.menu_item.price * item.quantity for item in order_items)) # No longer needed, use instance.total_amount
     items_payload = [{
         'name': item.menu_item.name,
         'quantity': item.quantity,
@@ -44,10 +44,10 @@ def order_post_save_handler(sender, instance, created, **kwargs):
         'order': {
             'id': instance.id,
             'status': instance.status,
-            'table_number': instance.table.number if instance.table else 'N/A',
+            'identifier': instance.room_number or instance.client_identifier,
             'user_username': instance.user.username,
             'created_at': instance.created_at.isoformat(),
-            'total': total,
+            'total': float(instance.total_amount), # Usar el nuevo campo total_amount
             'items': items_payload,
         }
     }
@@ -68,40 +68,43 @@ def order_post_save_handler(sender, instance, created, **kwargs):
             'status': instance.status,
             'status_display': instance.get_status_display(),
             'status_class': instance.status_class,
-            'table_id': instance.table.id,
-            'table_number': instance.table.number,
-            'total': total,
+            'identifier': instance.room_number or instance.client_identifier, # No need to change, total is not here
+            'total': float(instance.total_amount), # Usar el nuevo campo total_amount
             'items': items_payload,
         }
     }
-    # Send to waiters group
-    async_to_sync(channel_layer.group_send)('waiters', {'type': 'order_update', 'message': waiter_payload})
 
-    # Send to receptionists group (same payload as waiters is fine)
+    async_to_sync(channel_layer.group_send)('waiters', {'type': 'order_update', 'message': waiter_payload})
+    
+    if instance.status == 'charged_to_room':
+        receptionist_payload = {
+            'type': 'room_charge_update',
+            'order': waiter_payload['order'] 
+        }
+        async_to_sync(channel_layer.group_send)('receptionists', {'type': 'receptionist_message', 'message': receptionist_payload})
+
+    
     async_to_sync(channel_layer.group_send)('receptionists', {'type': 'order_update', 'message': waiter_payload})
 
-    # Payload for admin
-    # Reutilizamos el payload de los garzones y le añadimos la información extra para el admin.
+    
     admin_payload = waiter_payload.copy()
     admin_payload['order']['user_username'] = instance.user.username
     admin_payload['order']['created_at'] = instance.created_at.isoformat()
 
-    # Add overall stats and table status to the admin payload
-    stats = Order.objects.aggregate(
-        total_today=Count('id', filter=Q(created_at__date=timezone.now().date())),
+    
+    today = timezone.now().date()
+    stats_and_sales = Order.objects.aggregate(
+        total_today=Count('id', filter=Q(created_at__date=today)),
         preparing=Count('id', filter=Q(status='preparing')),
         ready=Count('id', filter=Q(status='ready')),
-        completed=Count('id', filter=Q(status__in=['served', 'paid']))
+        completed=Count('id', filter=Q(status__in=['served', 'paid'])),
+        total_sales_today=models.Sum( # Usar el nuevo campo total_amount
+            'total_amount',
+            filter=models.Q(status='paid', created_at__date=today),
+            output_field=models.DecimalField()
+        ) or decimal.Decimal(0)
     )
-    admin_payload['stats'] = stats
-
-    occupied_tables_ids = Order.objects.filter(
-        status__in=['pending', 'preparing', 'ready', 'served']
-    ).values_list('table_id', flat=True)
-    admin_payload['table_status'] = [
-        {'id': t.id, 'is_available': t.id not in occupied_tables_ids}
-        for t in Table.objects.all()
-    ]
+    admin_payload['stats'] = {k: v if v is not None else 0 for k, v in stats_and_sales.items()}
 
 
     async_to_sync(channel_layer.group_send)('admin', {'type': 'admin_update', 'message': admin_payload})
@@ -149,24 +152,10 @@ def reservation_notification(sender, instance, created, **kwargs):
             'reservation': {
                 'id': instance.id,
                 'user': instance.user.username,
-                'table': instance.table.number,
+                'client_name': instance.client_name,
                 'guests': instance.guests,
                 'date': instance.date.isoformat(),
                 'time': instance.time.strftime('%H:%M'),
             }
         }
         async_to_sync(channel_layer.group_send)('admin', {'type': 'admin_update', 'message': admin_payload})
-
-@receiver(post_save, sender=Table)
-def table_notification(sender, instance, created, **kwargs):
-    # Payload for admin
-    admin_payload = {
-        'model': 'table',
-        'action': 'created' if created else 'updated',
-        'data': {
-            'id': instance.id,
-            'number': instance.number,
-            'capacity': instance.capacity,
-        }
-    }
-    async_to_sync(channel_layer.group_send)('admin', {'type': 'admin_update', 'message': admin_payload})

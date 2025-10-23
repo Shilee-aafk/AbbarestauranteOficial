@@ -55,6 +55,10 @@
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z"></path></svg>
                 Mesas y Pedidos
             </a>
+            <a href="#" class="nav-link flex items-center px-6 py-3 text-gray-600 hover:bg-gray-100" data-section="bar">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path><path d="M19 19L12 12"></path></svg>
+                Bar
+            </a>
             <a href="#" class="nav-link flex items-center px-6 py-3 text-gray-600 hover:bg-gray-100" data-section="monitor">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                 Monitor de Pedidos
@@ -97,84 +101,96 @@
 
             <!-- Main Grid -->
             <div id="dashboard" class="content-section">
-{% load static %}
-
-                <!-- Tables View (Initially Visible) -->
-                <div id="tables-view" class="bg-white rounded-lg shadow-md p-6 ">
-                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Estado de Mesas</h2>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                        {% for table in tables %}
-                        <div class="table-status p-4 rounded-lg text-center cursor-pointer {% if table.is_available %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}" data-table-id="{{ table.id }}" {% if not table.is_available and table.current_order %}data-order-id="{{ table.current_order.id }}"{% endif %} onclick="handleTableClick(this)">
-                            <p class="font-bold text-lg">Mesa {{ table.number }}</p>
-                            <p class="text-sm">{% if table.is_available %}Disponible{% else %}Ocupada{% endif %}</p>
+                <!-- New Order Form (Initially Visible) -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Crear Nuevo Pedido</h2>
+                    <div class="max-w-md mx-auto">
+                        <div class="mb-4">
+                            <label for="client-identifier" class="block text-sm font-medium text-gray-700">Identificador del Cliente (Ej: Barra 1, Juan Pérez)</label>
+                            <input type="text" id="client-identifier" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                         </div>
-                        {% empty %}
-                        <p class="text-gray-500 col-span-full">No hay mesas configuradas.</p>
-                        {% endfor %}
+                        <div class="mb-4">
+                            <label for="room-number" class="block text-sm font-medium text-gray-700">N° de Habitación (Opcional)</label>
+                            <input type="text" id="room-number" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+                        <button id="start-table-order-btn" class="w-full bg-amber-700 text-white px-4 py-2 rounded-lg font-medium hover:bg-amber-800">
+                            Iniciar Pedido
+                        </button>
                     </div>
                 </div>
+            </div>
 
-                <!-- Order View (Initially Hidden) -->
-                <div id="order-view" class="hidden bg-white rounded-lg shadow-md">
-                    <div class="p-6">
-                        <div class="flex justify-between items-center mb-4">
-                            <h2 class="text-xl font-semibold text-gray-900">Tomar Pedido para <span id="selected-table-display" class="text-amber-800"></span></h2>
-                            <button id="back-to-tables-btn" class="text-gray-500 hover:text-gray-700">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                </svg>
-                            </button>
+            <!-- Bar Section -->
+            <div id="bar" class="content-section hidden">
+                <div class="bg-white rounded-lg shadow-md p-6 text-center">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Gestión de Bar</h2>
+                    <p class="text-gray-600 mb-6">Inicia un nuevo pedido para un cliente en la barra.</p>
+                    <button id="start-bar-order-btn" class="w-full max-w-xs mx-auto bg-blue-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-blue-700 text-lg">
+                        Crear Pedido para Barra
+                    </button>
+                </div>
+            </div>
+
+            <!-- Order View (now a separate component, initially hidden) -->
+            <div id="order-view" class="hidden bg-white rounded-lg shadow-md">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-semibold text-gray-900">Tomar Pedido para <span id="order-identifier-display" class="text-amber-800"></span></h2>
+                        <button id="back-to-main-view-btn" class="text-gray-500 hover:text-gray-700">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Search and Category Filters -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Left side: Menu -->
+                        <div class="border-r border-gray-200 pr-6">
+                            <div class="mb-4">
+                                <input type="text" id="menu-search-input" placeholder="Buscar producto por nombre..." class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                            </div>
+                            <div class="flex flex-wrap gap-2 mb-4" id="category-filters">
+                                <button class="category-filter active px-4 py-2 text-sm font-medium rounded-full border border-gray-300 hover:bg-gray-100" data-category="all">
+                                    Todos
+                                </button>
+                                {% for category in categories %}
+                                <button class="category-filter px-4 py-2 text-sm font-medium rounded-full border border-gray-300 hover:bg-gray-100" data-category="{{ category|slugify }}">
+                                    {{ category }}
+                                </button>
+                                {% endfor %}
+                            </div> 
+                            <div id="menu-items-container" class="grid grid-cols-1 gap-2" style="max-height: 50vh; overflow-y: auto;">
+                                {% for item in menu_items %}
+                                <div class="menu-item border rounded-lg p-2 flex justify-between items-center" data-category="{{ item.category|slugify }}" data-item-id="{{ item.id }}" data-item-name="{{ item.name }}" data-item-price="{{ item.price }}">
+                                    <div>
+                                        <h3 class="font-semibold text-gray-800 text-sm">{{ item.name }}</h3>
+                                        <p class="text-xs text-gray-500">{{ item.description }}</p>
+                                        <p class="text-gray-700 text-sm font-medium mt-1">${{ item.price|floatformat:0 }}</p>
+                                    </div>
+                                    <button class="add-to-order-btn bg-[#9C7B68] text-white px-3 py-1.5 rounded-md text-xs hover:bg-[#8B6B58]" onclick="addToOrder({{ item.id }}, '{{ item.name }}', {{ item.price }})">
+                                        Agregar
+                                    </button>
+                                </div>
+                                {% endfor %}
+                            </div>
                         </div>
 
-                        <!-- Search and Category Filters -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Left side: Menu -->
-                            <div class="border-r border-gray-200 pr-6">
-                                <div class="mb-4">
-                                    <input type="text" id="menu-search-input" placeholder="Buscar producto por nombre..." class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                                </div>
-                                <div class="flex flex-wrap gap-2 mb-4" id="category-filters">
-                                    <button class="category-filter active px-4 py-2 text-sm font-medium rounded-full border border-gray-300 hover:bg-gray-100" data-category="all">
-                                        Todos
-                                    </button>
-                                    {% for category in categories %}
-                                    <button class="category-filter px-4 py-2 text-sm font-medium rounded-full border border-gray-300 hover:bg-gray-100" data-category="{{ category|slugify }}">
-                                        {{ category }}
-                                    </button>
-                                    {% endfor %}
-                                </div> 
-                                <div id="menu-items-container" class="grid grid-cols-1 gap-2" style="max-height: 50vh; overflow-y: auto;">
-                                    {% for item in menu_items %}
-                                    <div class="menu-item border rounded-lg p-2 flex justify-between items-center" data-category="{{ item.category|slugify }}" data-item-id="{{ item.id }}" data-item-name="{{ item.name }}" data-item-price="{{ item.price }}">
-                                        <div>
-                                            <h3 class="font-semibold text-gray-800 text-sm">{{ item.name }}</h3>
-                                            <p class="text-xs text-gray-500">{{ item.description }}</p>
-                                            <p class="text-gray-700 text-sm font-medium mt-1">${{ item.price|floatformat:0 }}</p>
-                                        </div>
-                                        <button class="add-to-order-btn bg-[#9C7B68] text-white px-3 py-1.5 rounded-md text-xs hover:bg-[#8B6B58]" onclick="addToOrder({{ item.id }}, '{{ item.name }}', {{ item.price }})">
-                                            Agregar
-                                        </button>
-                                    </div>
-                                    {% endfor %}
-                                </div>
+                        <!-- Right side: Current Order -->
+                        <div id="current-order">
+                            <h3 class="text-lg font-semibold mb-2">Pedido Actual</h3>
+                            <div class="bg-gray-50 p-4 rounded-lg" style="max-height: 50vh; overflow-y: auto;">
+                                <ul id="order-items-list" class="space-y-2 mb-4">
+                                    <!-- Items will be added here by JS -->
+                                </ul>
                             </div>
-
-                            <!-- Right side: Current Order -->
-                            <div id="current-order">
-                                <h3 class="text-lg font-semibold mb-2">Pedido Actual</h3>
-                                <div class="bg-gray-50 p-4 rounded-lg" style="max-height: 50vh; overflow-y: auto;">
-                                    <ul id="order-items-list" class="space-y-2 mb-4">
-                                        <!-- Items will be added here by JS -->
-                                    </ul>
-                                </div>
-                                <div class="text-right font-bold text-xl my-4">
-                                    Total: $<span id="order-total">0</span>
-                                </div>
-                                <div class="flex flex-col sm:flex-row sm:justify-center sm:space-x-2 space-y-2 sm:space-y-0">
-                                    <button id="mark-served-btn" class="hidden bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Marcar como Servido</button>
-                                    <button id="clear-order-btn" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 w-full sm:w-auto">Limpiar</button>
-                                    <button id="submit-order-btn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 w-full sm:w-auto">Guardar Pedido</button>
-                                </div>
+                            <div class="text-right font-bold text-xl my-4">
+                                Total: $<span id="order-total">0</span>
+                            </div>
+                            <div class="flex flex-col sm:flex-row sm:justify-center sm:space-x-2 space-y-2 sm:space-y-0">
+                                <button id="mark-served-btn" class="hidden bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Marcar como Servido</button>
+                                <button id="clear-order-btn" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 w-full sm:w-auto">Limpiar</button>
+                                <button id="submit-order-btn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 w-full sm:w-auto">Guardar Pedido</button>
                             </div>
                         </div>
                     </div>
@@ -186,61 +202,12 @@
         <div id="monitor" class="content-section hidden">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <!-- Active Orders Monitor -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Monitor de Pedidos Activos</h2>
-                    <ul id="active-orders-list-monitor" class="space-y-3 max-h-[70vh] overflow-y-auto">
-                        {% for order in active_orders %} {# This is a duplicate list, will be populated by JS #}
-                        <li id="active-order-{{ order.id }}" class="bg-gray-50 p-3 rounded-lg border">
-                            <div class="flex justify-between items-center">
-                                <p class="font-semibold">Pedido #{{ order.id }} (Mesa {{ order.table.number }})</p>
-                                <span class="px-2 py-1 text-xs font-medium rounded-full {{ order.status_class }}">{{ order.get_status_display }}</span>
-                            </div>
-                            <div class="text-sm text-gray-600 mt-1">
-                                <p>Total: ${{ order.total|floatformat:0 }}</p>
-                                <ul class="list-disc list-inside pl-1">
-                                    {% for item in order.orderitem_set.all %}
-                                    <li>{{ item.quantity }}x {{ item.menu_item.name }}</li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                            <div class="mt-2 text-right">
-                                <div class="flex items-center justify-end space-x-2">
-                                    <select class="status-changer text-xs border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" data-order-id="{{ order.id }}">
-                                        <option value="pending" {% if order.status == 'pending' %}selected{% endif %}>Pendiente</option>
-                                        <option value="preparing" {% if order.status == 'preparing' %}selected{% endif %}>En Preparación</option>
-                                        <option value="ready" {% if order.status == 'ready' %}selected{% endif %}>Listo</option>
-                                    </select>
-                                    <button class="cancel-btn bg-red-500 text-white px-3 py-1 rounded-md text-xs font-medium hover:bg-red-600" data-order-id="{{ order.id }}">
-                                        Cancelar
-                                    </button>
-                                    <button class="mark-served-monitor-btn bg-blue-500 text-white px-3 py-1 rounded-md text-xs font-medium hover:bg-blue-600" data-order-id="{{ order.id }}">
-                                        Servido
-                                    </button>
-                                </div>
-                            </div>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                </div>
+                <div class="bg-white rounded-lg shadow-md p-6"><h2 class="text-xl font-semibold text-gray-900 mb-4">Monitor de Pedidos Activos</h2><ul id="active-orders-list-monitor" class="space-y-3 max-h-[70vh] overflow-y-auto"></ul></div>
 
                 <!-- Served Orders for Payment -->
                 <div class="bg-white rounded-lg shadow-md p-6">
                     <h2 class="text-xl font-semibold text-gray-900 mb-4">Pedidos Servidos (para Cobrar)</h2>
-                    <ul id="served-orders-list-monitor" class="space-y-3 max-h-[70vh] overflow-y-auto">
-                        {% for order in served_orders %}
-                        <li id="served-order-{{ order.id }}" class="flex justify-between items-center bg-blue-50 p-3 rounded-lg">
-                            <div>
-                                <p class="font-semibold">Mesa {{ order.table.number }} - Pedido #{{ order.id }}</p>
-                                <p class="text-sm text-gray-700">Total: ${{ order.total|floatformat:0 }}</p>
-                            </div>
-                            <button class="charge-btn bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700" data-order-id="{{ order.id }}">
-                                Cobrar
-                            </button>
-                        </li>
-                        {% empty %}
-                        <li id="no-served-orders" class="text-gray-500">No hay pedidos servidos pendientes de cobro.</li>
-                        {% endfor %}
-                    </ul>
+                    <ul id="served-orders-list-monitor" class="space-y-3 max-h-[70vh] overflow-y-auto"><li id="no-served-orders" class="text-gray-500">No hay pedidos servidos pendientes de cobro.</li></ul>
                 </div>
             </div>
         </div>
@@ -253,17 +220,53 @@
                 <div class="text-center">
                     <h3 class="modal-title p-4" id="modal-title">Confirmar Cobro</h3>
                     <div class="modal-body text-left">
-                        <ul id="modal-order-items" class="text-sm text-gray-700 space-y-1 max-h-60 overflow-y-auto">
+                        <ul id="modal-order-items" class="text-sm text-gray-700 space-y-1 max-h-48 overflow-y-auto">
                             <!-- Order items will be populated here -->
                         </ul>
-                        <div class="mt-3 pt-3 border-t text-right">
-                            <p class="text-lg font-bold text-gray-900">Total: $<span id="modal-order-total">0.00</span></p>
-                        </div> 
+                        <div class="mt-4 pt-4 border-t space-y-2">
+                            <div class="flex justify-between text-md">
+                                <span class="font-semibold">Subtotal:</span>
+                                <span class="font-semibold">$<span id="modal-order-subtotal">0</span></span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label for="include-tip-checkbox" class="flex items-center cursor-pointer">
+                                    <input type="checkbox" id="include-tip-checkbox" class="form-checkbox h-4 w-4 text-blue-600 transition duration-150 ease-in-out">
+                                    <span class="ml-2 text-sm text-gray-600">Incluir Propina</span>
+                                </label>
+                                <div class="flex items-center">
+                                    <input type="number" id="custom-tip-percentage-input" class="w-20 p-1 border border-gray-300 rounded-md text-sm text-right" value="10" min="0">
+                                    <span class="text-sm text-gray-600 ml-1">%</span>
+                                </div>
+                            </div>
+                            <div class="flex justify-between text-sm text-gray-600">
+                                <span>Propina (<span id="tip-percentage-display">10</span>%):</span>
+                                <span>$<span id="modal-order-tip">0</span></span>
+                            </div>
+                            <div class="flex justify-between text-lg font-bold text-gray-900">
+                                <span>Total:</span>
+                                <span>$<span id="modal-order-total">0</span></span>
+                            </div>
+                        </div>
                     </div>
+                </div>
+                <div class="mt-4 p-4 bg-gray-100 rounded-lg">
+                    <label for="split-bill-select" class="block text-sm font-medium text-gray-700 mb-2">Dividir la cuenta:</label>
+                    <select id="split-bill-select" class="w-full p-2 border border-gray-300 rounded-md">
+                        <option value="1">No dividir</option>
+                        <option value="2">Dividir por 2 personas</option>
+                        <option value="3">Dividir por 3 personas</option>
+                        <option value="4">Dividir por 4 personas</option>
+                        <option value="5">Dividir por 5 personas</option>
+                        <option value="6">Dividir por 6 personas</option>
+                    </select>
+                    <p id="split-bill-result" class="mt-2 text-center font-semibold text-blue-600"></p>
                 </div>
                 <div class="modal-footer">
                     <button id="modal-confirm-payment-btn" class="px-4 py-2 bg-indigo-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         Confirmar Pago
+                    </button>
+                    <button id="modal-charge-to-room-btn" class="mt-2 px-4 py-2 bg-purple-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 hidden">
+                        Realizar Cargo a Habitación
                     </button>
                     <button id="modal-cancel-btn" class="mt-2 px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400">
                         Cancelar
@@ -276,6 +279,7 @@
     <script>
         const csrfToken = '{{ csrf_token }}';
         let editingOrderId = null; // To track if we are editing an order
+        const initialOrders = {{ initial_orders_json|safe }};
         let selectedTableId = null; // To track the selected table without a dropdown
         let currentOrder = [];
 
@@ -352,55 +356,55 @@
             applyFilters(); // Initial filter application
         });
         
-        document.getElementById('back-to-tables-btn').addEventListener('click', () => {
-            clearAndPrepareNewOrder();
-            showTablesView();
+        document.getElementById('back-to-main-view-btn').addEventListener('click', () => {
+            showMainSectionView();
         });
 
-        async function handleTableClick(tableDiv) {
-            const orderId = tableDiv.getAttribute('data-order-id');
-            const tableId = tableDiv.dataset.tableId;
+        document.getElementById('start-table-order-btn').addEventListener('click', () => {
+            const clientIdentifier = document.getElementById('client-identifier').value.trim();
+            const roomNumber = document.getElementById('room-number').value.trim();
 
-            if (orderId) { // If the table is occupied, load the order for editing
-                try {
-                    const response = await fetch(`/restaurant/api/waiter/orders/${orderId}/`);
-                    const orderData = await response.json();
-
-                    currentOrder = orderData.items.map(item => ({
-                        ...item,
-                        lineItemId: Date.now() + Math.random() // Assign a new unique ID for frontend editing
-                    }));
-
-                    editingOrderId = orderId;
-                    document.getElementById('submit-order-btn').textContent = 'Actualizar Pedido';
-
-                    const markServedBtn = document.getElementById('mark-served-btn');
-                    markServedBtn.classList.toggle('hidden', orderData.status !== 'ready');
-
-                    selectedTableId = tableId;
-                    document.getElementById('selected-table-display').textContent = `Mesa ${tableDiv.querySelector('.font-bold').textContent.split(' ')[1]}`;
-                    renderOrder();
-                    showOrderView();
-
-                } catch (error) {
-                    console.error('Error loading order for editing:', error);
-                    showToast('No se pudo cargar el pedido para editar.', 'error');
-                }
-            } else { // If the table is free, prepare for a new order
-                clearAndPrepareNewOrder();
-                selectedTableId = tableId;
-                document.getElementById('selected-table-display').textContent = `Mesa ${tableDiv.querySelector('.font-bold').textContent.split(' ')[1]}`;
-                showOrderView();
+            if (!clientIdentifier && !roomNumber) {
+                showToast('Debe ingresar un identificador de cliente o un número de habitación.', 'error');
+                return;
             }
-        }
 
-        function showTablesView() {
-            document.getElementById('tables-view').classList.remove('hidden');
+            currentClientIdentifier = clientIdentifier;
+            currentRoomNumber = roomNumber;
+            
+            document.getElementById('order-identifier-display').textContent = roomNumber || clientIdentifier;
+
+            // Inicializar el estado del pedido para uno nuevo
+            currentOrder = []; // Asegurarse de que la lista de ítems esté vacía
+            editingOrderId = null; // Asegurarse de que no estamos editando
+            renderOrder(); // Renderizar la lista de ítems vacía
+            showOrderView();
+        });
+
+        document.getElementById('start-bar-order-btn').addEventListener('click', () => {
+            currentClientIdentifier = 'Barra';
+            currentRoomNumber = '';
+            document.getElementById('order-identifier-display').textContent = 'Barra';
+            clearAndPrepareNewOrder();
+            showOrderView();
+        });
+
+        function showMainSectionView() {
+            // Muestra la sección principal que estaba activa antes de entrar a tomar pedido
+            const activeSectionId = document.querySelector('.nav-link.active').dataset.section;
+            document.querySelectorAll('.content-section').forEach(s => s.classList.add('hidden'));
+            document.getElementById(activeSectionId).classList.remove('hidden');
             document.getElementById('order-view').classList.add('hidden');
         }
+
         function showOrderView() {
-            document.getElementById('tables-view').classList.add('hidden');
+            // Oculta todas las secciones de contenido principal para mostrar solo la de tomar pedido
+            document.querySelectorAll('.content-section').forEach(s => s.classList.add('hidden'));
             document.getElementById('order-view').classList.remove('hidden');
+        }
+
+        function initializeMonitor() {
+            initialOrders.forEach(order => handleOrderUpdate(order));
         }
 
         // --- Real-time WebSocket Logic ---
@@ -417,6 +421,9 @@
 
             ws.onclose = function(e) {
                 console.error('Waiter WebSocket closed unexpectedly');
+            };
+            ws.onopen = () => {
+                initializeMonitor(); // Cargar los pedidos iniciales cuando el socket esté listo
             };
 
             // Attach event listeners to initially loaded elements
@@ -437,59 +444,30 @@
         });
 
         function handleOrderUpdate(order) {
-            // 1. Update Table Status
-            const tableDiv = document.querySelector(`div[data-table-id="${order.table_id}"]`);
-            
-            if (tableDiv) {
-                const tableStatusP = tableDiv.querySelector('p:last-child');
+            // Si el pedido está finalizado (pagado, cancelado o cargado a habitación), se elimina de ambas listas del monitor.
+            if (order.status === 'paid' || order.status === 'cancelled' || order.status === 'charged_to_room') {
+                removeActiveOrder(order.id);
+                removeServedOrder(order.id);
+                return;
+            }
 
-                // Final states: table becomes available
-                if (['paid', 'cancelled'].includes(order.status)) {
-                    tableDiv.classList.remove('bg-red-100', 'text-red-800', 'table-ready', 'animate-pulse');
-                    tableDiv.classList.add('bg-green-100', 'text-green-800');
-                    tableStatusP.textContent = 'Disponible';
-                    tableDiv.removeAttribute('data-order-id');
-                    removeActiveOrder(order.id);
-                    removeServedOrder(order.id);
-                } 
-                // Intermediate states: table is occupied
-                else if (order.status === 'served') {
-                    tableDiv.classList.remove('table-ready', 'animate-pulse', 'bg-green-100', 'text-green-800');
-                    tableDiv.classList.add('bg-red-100', 'text-red-800');
-                    tableStatusP.textContent = 'Ocupada';
-                    addOrUpdateServedOrder(order);
-                    removeActiveOrder(order.id);
-                } else if (order.status === 'ready') {
-                    tableDiv.setAttribute('data-order-id', order.id);
-                    tableDiv.classList.add('table-ready', 'animate-pulse'); // Add pulsing animation
-                    tableStatusP.textContent = 'Pedido Listo';
-                    addOrUpdateActiveOrder(order);
-                    removeServedOrder(order.id);
-                } else {
-                    // Initial states ('pending', 'preparing'): table is occupied
-                    tableDiv.classList.remove('table-ready', 'animate-pulse', 'bg-green-100', 'text-green-800');
-                    tableDiv.setAttribute('data-order-id', order.id);
-                    tableDiv.classList.add('bg-red-100', 'text-red-800');
-                    tableStatusP.textContent = 'Ocupada';
-                    removeServedOrder(order.id);
-                    addOrUpdateActiveOrder(order);
-                }
-
-                // If the order being updated is the one currently being edited, clear the form.
-                if (editingOrderId == order.id && ['paid', 'cancelled'].includes(order.status)) {
-                    clearAndPrepareNewOrder();
-                    showTablesView();
-                }
+            // Si el pedido está servido, se mueve a la lista de "Servidos" y se quita de "Activos".
+            if (order.status === 'served') {
+                removeActiveOrder(order.id);
+                addOrUpdateServedOrder(order);
+            } else { // Si está pendiente, en preparación o listo, va a la lista de "Activos".
+                removeServedOrder(order.id);
+                addOrUpdateActiveOrder(order);
             }
         }
 
         function addOrUpdateServedOrder(order) {
             const servedOrdersList = document.getElementById('served-orders-list-monitor');
-            let orderLi = document.getElementById(`served-order-${order.id}`);
+            let orderLi = document.getElementById(`served-order-monitor-${order.id}`);
 
             const orderHTML = `
                 <div>
-                    <p class="font-semibold">Mesa ${order.table_number} - Pedido #${order.id}</p>
+                    <p class="font-semibold">${order.identifier} - Pedido #${order.id}</p>
                     <p class="text-sm text-gray-700">Total: $${order.total.toFixed(0)}</p>
                 </div>
                 <button class="charge-btn bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700" data-order-id="${order.id}">
@@ -501,7 +479,7 @@
                 orderLi.innerHTML = orderHTML;
             } else {
                 orderLi = document.createElement('li');
-                orderLi.id = `served-order-${order.id}`;
+                orderLi.id = `served-order-monitor-${order.id}`;
                 orderLi.className = 'flex justify-between items-center bg-blue-50 p-3 rounded-lg';
                 orderLi.innerHTML = orderHTML;
                 servedOrdersList.prepend(orderLi);
@@ -514,7 +492,7 @@
         }
 
         function removeServedOrder(orderId) {
-            const orderLi = document.getElementById(`served-order-${orderId}`); // This is correct, it's the ID of the li
+            const orderLi = document.getElementById(`served-order-monitor-${orderId}`);
             if (orderLi) {
                 orderLi.remove();
             }
@@ -534,7 +512,7 @@
 
             const orderHTML = `
                 <div class="flex justify-between items-center">
-                    <p class="font-semibold">Pedido #${order.id} (Mesa ${order.table_number})</p>
+                    <p class="font-semibold">Pedido #${order.id} (${order.identifier})</p>
                     <span class="px-2 py-1 text-xs font-medium rounded-full ${order.status_class}">${order.status_display}</span>
                 </div>
                 <div class="text-sm text-gray-600 mt-1">
@@ -547,7 +525,9 @@
                             ${statusOptions}
                         </select>
                         <button class="cancel-btn bg-red-500 text-white px-3 py-1 rounded-md text-xs font-medium hover:bg-red-600" data-order-id="${order.id}">Cancelar</button>
-                        <button class="mark-served-monitor-btn bg-blue-500 text-white px-3 py-1 rounded-md text-xs font-medium hover:bg-blue-600" data-order-id="${order.id}">Servido</button>
+                        ${order.status === 'ready' ? 
+                            `<button class="mark-served-monitor-btn bg-blue-500 text-white px-3 py-1 rounded-md text-xs font-medium hover:bg-blue-600" data-order-id="${order.id}">Servido</button>` 
+                            : ''}
                     </div>
                 </div>
             `;
@@ -624,26 +604,31 @@
                 'ready': 'Listo',
                 'served': 'Servido',
                 'paid': 'Pagado',
+                'charged_to_room': 'Cargado a Habitación',
                 'cancelled': 'Cancelado'
             };
             return statuses[status] || status;
         }
 
-        async function updateOrderStatus(orderId, newStatus) {
+        async function updateOrderStatus(orderId, newStatus, statusText = null) {
+            const body = { status: newStatus };
+
+            // Si estamos finalizando el pedido (pagado o cargado a habitación), obtener y añadir la propina.
+            if (newStatus === 'paid' || newStatus === 'charged_to_room') {
+                const tipPercentage = parseFloat(document.getElementById('custom-tip-percentage-input').value) || 0;
+                const subtotal = parseFloat(document.getElementById('modal-order-subtotal').textContent.replace(/\./g, ''));
+                body.tip_amount = (subtotal * (tipPercentage / 100)).toFixed(2);
+            }
+
             try {
                 const response = await fetch(`/restaurant/api/orders/${orderId}/status/`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
-                    body: JSON.stringify({ status: newStatus })
+                    body: JSON.stringify(body)
                 });
                 if (response.ok) {
-                    showToast(`Pedido #${orderId} marcado como ${getStatusInSpanish(newStatus)}.`, 'success');
-                    // Forzar la actualización a otros clientes a través del WebSocket
-                    // Esto es crucial para que el recepcionista vea el cambio
-                    const updatedOrderData = await response.json();
-                    if (ws.readyState === WebSocket.OPEN) {
-                        ws.send(JSON.stringify({ type: 'broadcast_order_update', order_id: orderId, status: updatedOrderData.status }));
-                    }
+                    const text = statusText || getStatusInSpanish(newStatus);
+                    showToast(`Pedido #${orderId} marcado como ${text}.`, 'success');
                     // The websocket will handle the UI update
                 } else {
                     showToast('Error al actualizar el estado del pedido.', 'error');
@@ -672,26 +657,92 @@
                 const data = await response.json();
 
                 // Populate modal
-                document.getElementById('modal-title').textContent = `Confirmar Cobro - Mesa ${data.table_number}`;
+                document.getElementById('modal-title').textContent = `Confirmar Cobro - ${data.identifier || ''}`;
                 const itemsList = document.getElementById('modal-order-items');
-                itemsList.innerHTML = '';
-                data.items.forEach(item => {
-                    const li = document.createElement('li');
-                    li.className = 'flex justify-between';
-                    li.innerHTML = `
+                itemsList.innerHTML = data.items.map(item => `
+                    <li class="flex justify-between">
                         <span>${item.quantity}x ${item.name}</span> 
-                        <span>$${(item.price * item.quantity).toFixed(0)}</span>
-                    `;
-                    itemsList.appendChild(li); 
-                });
-                document.getElementById('modal-order-total').textContent = data.total.toFixed(0);
+                        <span>$${(item.price * item.quantity).toLocaleString('es-CL')}</span>
+                    </li>
+                `).join('');
+
+                const subtotal = data.subtotal; // Use subtotal from API response
+
+                const includeTipCheckbox = document.getElementById('include-tip-checkbox');
+                const customTipInput = document.getElementById('custom-tip-percentage-input');
+                const modalOrderSubtotal = document.getElementById('modal-order-subtotal');
+                const modalOrderTip = document.getElementById('modal-order-tip');
+                const modalOrderTotal = document.getElementById('modal-order-total');
+                const splitSelect = document.getElementById('split-bill-select');
+                const splitResult = document.getElementById('split-bill-result');
+
+                // Function to calculate and display totals
+                const calculateAndDisplayTotals = () => {
+                    modalOrderSubtotal.textContent = subtotal.toLocaleString('es-CL');
+
+                    let currentTip = 0;
+                    if (includeTipCheckbox.checked) {
+                        customTipInput.parentElement.classList.remove('hidden'); // Muestra el input de %
+                        const tipPercentage = parseFloat(customTipInput.value) || 0; // No need to change, total is not here
+                        currentTip = subtotal * (tipPercentage / 100);
+                        document.getElementById('tip-percentage-display').textContent = tipPercentage;
+                    } else {
+                        customTipInput.parentElement.classList.add('hidden'); // Oculta el input de %
+                        currentTip = 0;
+                    }
+
+                    const totalWithTip = subtotal + currentTip;
+
+                    modalOrderTip.textContent = currentTip.toLocaleString('es-CL');
+                    modalOrderTotal.textContent = totalWithTip.toLocaleString('es-CL'); // No need to change, total is not here
+
+                    // Update split bill logic
+                    const numPeople = parseInt(splitSelect.value);
+                    if (numPeople > 1) {
+                        const amountPerPerson = totalWithTip / numPeople;
+                        splitResult.textContent = `${numPeople} pagos de $${amountPerPerson.toLocaleString('es-CL', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+                    } else {
+                        splitResult.textContent = '';
+                    }
+                };
+
+                // Initialize values and event listeners
+                includeTipCheckbox.checked = true; // Default to include tip
+                customTipInput.value = "0"; // Default 0%
+                customTipInput.min = "0"; // Ensure tip cannot be negative
+
+                includeTipCheckbox.onchange = calculateAndDisplayTotals;
+                customTipInput.oninput = calculateAndDisplayTotals;
+                splitSelect.value = "1"; // Reset
+                splitResult.textContent = '';
+
+                splitSelect.onchange = calculateAndDisplayTotals;
+
+                calculateAndDisplayTotals(); // Initial calculation
 
                 // Set up confirm button
                 const confirmBtn = document.getElementById('modal-confirm-payment-btn');
-                confirmBtn.onclick = () => {
-                    updateOrderStatus(orderId, 'paid');
+                // Clonar y reemplazar para eliminar listeners antiguos y evitar ejecuciones múltiples
+                const newConfirmBtn = confirmBtn.cloneNode(true);
+                confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+
+                newConfirmBtn.onclick = () => {
+                    updateOrderStatus(orderId, 'paid', 'Pagado');
                     closePaymentModal();
                 };
+
+                // Lógica para el botón "Cargar a Habitación"
+                const chargeToRoomBtn = document.getElementById('modal-charge-to-room-btn');
+                // Verificamos si el identificador es un número (asumimos que es una habitación)
+                if (data.room_number) {
+                    chargeToRoomBtn.classList.remove('hidden');
+                    chargeToRoomBtn.onclick = () => {
+                        updateOrderStatus(orderId, 'charged_to_room', 'Cargado a Habitación');
+                        closePaymentModal();
+                    };
+                } else {
+                    chargeToRoomBtn.classList.add('hidden');
+                }
 
                 // Show modal
                 document.getElementById('payment-modal').classList.remove('hidden');
@@ -702,6 +753,7 @@
         }
 
         function closePaymentModal() {
+            document.getElementById('modal-charge-to-room-btn').classList.add('hidden');
             document.getElementById('payment-modal').classList.add('hidden');
         }
 
@@ -794,17 +846,22 @@
                     orderList.appendChild(li);
                 });
             }
-            orderTotalEl.textContent = total.toFixed(0);
+
+            // El total ahora solo refleja el subtotal de los productos. La propina se maneja en el modal de pago.
+            orderTotalEl.textContent = total.toLocaleString('es-CL');
         }
 
         function clearAndPrepareNewOrder() {
             currentOrder = [];
             editingOrderId = null;
-            selectedTableId = null;
+            currentClientIdentifier = ''; // Limpiar identificador
+            currentRoomNumber = ''; // Limpiar habitación
+            document.getElementById('client-identifier').value = ''; // Limpiar campo de texto
+            document.getElementById('room-number').value = ''; // Limpiar campo de texto
             document.getElementById('submit-order-btn').textContent = 'Guardar Pedido';
             document.getElementById('mark-served-btn').classList.add('hidden');
-            document.getElementById('selected-table-display').textContent = '';
             renderOrder();
+            document.getElementById('order-identifier-display').textContent = ''; // Limpiar el display del identificador
         }
 
         document.getElementById('mark-served-btn').addEventListener('click', () => {
@@ -818,21 +875,25 @@
         });
 
         document.getElementById('submit-order-btn').addEventListener('click', async () => {            
-            const tableId = selectedTableId;
+            const submitBtn = document.getElementById('submit-order-btn');
+            submitBtn.disabled = true; // Deshabilitar botón para evitar doble clic
+            submitBtn.textContent = 'Guardando...';
             const isEditing = !!editingOrderId;
 
-            if (!tableId) {
-                showToast('Por favor, seleccione una mesa.', 'error');
-                return;
-            }
             if (currentOrder.length === 0) {
                 showToast('El pedido está vacío.', 'error');
+                submitBtn.disabled = false; // Reactivar si hay error
+                submitBtn.textContent = isEditing ? 'Actualizar Pedido' : 'Guardar Pedido';
                 return;
             }
 
             const url = isEditing ? `/restaurant/api/waiter/orders/${editingOrderId}/` : "{% url 'save_order' %}";
             const method = isEditing ? 'PUT' : 'POST';
-            const body = { items: currentOrder, table_id: tableId };
+            const body = { 
+                items: currentOrder, 
+                client_identifier: currentClientIdentifier,
+                room_number: currentRoomNumber,
+            };
 
             try {
                 const response = await fetch(url, {
@@ -847,13 +908,19 @@
                 if (result.success) {
                     const message = isEditing ? `Pedido #${result.order_id} actualizado exitosamente.` : `Pedido #${result.order_id} creado exitosamente.`;
                     showToast(message, 'success');
-                    clearAndPrepareNewOrder();
-                    showTablesView(); // Go back to tables view after submitting
+                    showMainSectionView(); // Volver a la vista principal (Mesas o Bar)
+                    clearAndPrepareNewOrder(); // Resetear el formulario y variables después de guardar
+                    submitBtn.disabled = false; // Reactivar el botón para el próximo pedido
+                    submitBtn.textContent = 'Guardar Pedido';
                 } else {
                     showToast(`Error al ${isEditing ? 'actualizar' : 'guardar'} el pedido.`, 'error');
+                    submitBtn.disabled = false; // Reactivar si hay error
+                    submitBtn.textContent = isEditing ? 'Actualizar Pedido' : 'Guardar Pedido';
                 }
             } catch (error) {
                 console.error('Error submitting order:', error);
+                submitBtn.disabled = false; // Reactivar si hay error
+                submitBtn.textContent = isEditing ? 'Actualizar Pedido' : 'Guardar Pedido';
             }
         });
 

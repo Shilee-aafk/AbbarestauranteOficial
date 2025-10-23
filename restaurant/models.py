@@ -11,22 +11,17 @@ class MenuItem(models.Model):
     def __str__(self):
         return self.name
 
-class Table(models.Model):
-    number = models.IntegerField(unique=True)
-    capacity = models.IntegerField()
-
-    def __str__(self):
-        return f"Table {self.number}"
-
 class Reservation(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    table = models.ForeignKey(Table, on_delete=models.CASCADE)
+    client_name = models.CharField(max_length=100) # This was correct in my previous suggestion
+    phone = models.CharField(max_length=20, blank=True, null=True)
     date = models.DateField()
     time = models.TimeField()
     guests = models.IntegerField()
+    notes = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return f"Reservation for {self.user.username} on {self.date}"
+        return f"Reservation for {self.client_name} on {self.date}" # This was correct in my previous suggestion
 
 class Order(models.Model):
     STATUS_CHOICES = [
@@ -35,13 +30,17 @@ class Order(models.Model):
         ('ready', 'Ready'),
         ('served', 'Served'),
         ('paid', 'Paid'),
+        ('charged_to_room', 'Cargado a Habitación'),
         ('cancelled', 'Cancelled'),
     ]
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    table = models.ForeignKey(Table, on_delete=models.CASCADE)
+    room_number = models.CharField(max_length=10, blank=True, null=True, help_text="Número de habitación del huésped")
+    client_identifier = models.CharField(max_length=100, help_text="Identificador del cliente (ej: 'Barra 1', 'Juan Pérez')", default='Pedido Antiguo')
     items = models.ManyToManyField(MenuItem, through='OrderItem')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
+    tip_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00) # Nuevo campo para almacenar el total incluyendo la propina
 
     def __str__(self):
         return f"Order {self.id} by {self.user.username}"
@@ -54,6 +53,7 @@ class Order(models.Model):
             'ready': 'bg-green-100 text-green-800',
             'served': 'bg-blue-100 text-blue-800',
             'paid': 'bg-indigo-100 text-indigo-800',
+            'charged_to_room': 'bg-purple-100 text-purple-800',
             'cancelled': 'bg-red-100 text-red-800',
         }.get(self.status, 'bg-gray-100 text-gray-800')
 

@@ -39,20 +39,7 @@
                 </svg>
                 Pedidos
             </a>
-            <a href="{% url 'admin_dashboard' %}?section=tables" class="nav-link flex items-center px-6 py-3 text-gray-600 hover:bg-gray-100" data-section="tables">
-                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z"></path>
-                </svg>
-                Gestión de Mesas
-            </a>
-
-            <a href="{% url 'admin_dashboard' %}?section=menu" class="nav-link flex items-center px-6 py-3 text-gray-600 hover:bg-gray-100" data-section="menu">
-                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                </svg>
-             Menú y Platos
-            </a>
+            <a href="{% url 'admin_dashboard' %}?section=menu" class="nav-link flex items-center px-6 py-3 text-gray-600 hover:bg-gray-100" data-section="menu"><svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg> Menú y Platos</a>
             <a href="{% url 'admin_dashboard' %}?section=users" class="nav-link flex items-center px-6 py-3 text-gray-600 hover:bg-gray-100" data-section="users">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M15 21a6 6 0 00-9-5.197M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -76,7 +63,7 @@
                 <h1 class="text-2xl font-bold text-gray-900 hidden sm:block">Panel de Administración</h1>
             </div>
             <div class="flex items-center space-x-4">
-                <span class="text-gray-700">{{ user.username }} (Admin)</span>
+                <span class="text-gray-700">{{ user.username }}</span>
                 <a href="{% url 'logout' %}" class="text-red-600 hover:text-red-800">Cerrar Sesión</a>
             </div>
         </div>
@@ -107,7 +94,7 @@
                 </div>
 
                 <!-- Stats Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
                     <div class="bg-white rounded-lg shadow-md p-6">
                         <div class="flex items-center justify-between">
                             <div>
@@ -117,6 +104,20 @@
                             <div class="bg-blue-100 rounded-full p-3">
                                 <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-600 text-sm">Total Vendido Hoy</p>
+                                <p id="total-sales-today" class="text-3xl font-bold text-gray-900">$0</p>
+                            </div>
+                            <div class="bg-purple-100 rounded-full p-3">
+                                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18.5A6.5 6.5 0 1012 5.5a6.5 6.5 0 000 13z"></path>
                                 </svg>
                             </div>
                         </div>
@@ -184,6 +185,10 @@
                             <canvas id="waiterPerformanceChart"></canvas>
                         </div>
                     </div>
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Ventas de Hoy por Categoría</h3>
+                        <canvas id="salesByCategoryChart"></canvas>
+                    </div>
                 </div>
 
 
@@ -196,7 +201,7 @@
                         <!-- Filters -->
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
                             <div class="relative">
-                                <input type="text" placeholder="Buscar por N° de pedido, mesa, cliente..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <input type="text" placeholder="Buscar por N° pedido, cliente, habitación..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                                 <svg class="absolute left-3 top-2.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                                 </svg>
@@ -229,7 +234,7 @@
                                 <thead>
                                     <tr class="text-left border-b border-gray-200">
                                         <th class="pb-3 font-semibold text-gray-900">N° PEDIDO</th>
-                                        <th class="pb-3 font-semibold text-gray-900">MESA/CLIENTE</th>
+                                        <th class="pb-3 font-semibold text-gray-900">CLIENTE/HAB.</th>
                                         <th class="pb-3 font-semibold text-gray-900">ESTADO</th>
                                         <th class="pb-3 font-semibold text-gray-900">HORA</th>
                                         <th class="pb-3 font-semibold text-gray-900">TOTAL</th>
@@ -239,8 +244,8 @@
                                 <tbody>
                                     {% for order in recent_orders %}
                                     <tr class="border-b border-gray-100" id="recent-order-{{ order.id }}">
-                                        <td class="py-4">{{ order.id }}</td>
-                                        <td class="py-4">{{ order.table.number }} / {{ order.user.username }}</td>
+                                        <td class="py-4 font-medium text-gray-900">{{ order.id }}</td>
+                                        <td class="py-4">{{ order.room_number|default:order.client_identifier }} / {{ order.user.username }}</td>
                                         <td class="py-4">
                                             {% if order.status == 'pending' %}
                                             <span class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">Recibido</span>
@@ -252,8 +257,8 @@
                                             <span class="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">Servido</span>
                                             {% endif %}
                                         </td>
-                                        <td class="py-4">{{ order.created_at|date:"H:i" }}</td>
-                                        <td class="py-4">${{ order.total|floatformat:0 }}</td>
+                                        <td class="py-4">{{ order.created_at|date:"H:i" }}</td> 
+                                        <td class="py-4">${{ order.total_amount|floatformat:0 }}</td>
                                         <td class="py-4">
                                             <div class="flex items-center space-x-2">
                                                 <button class="text-gray-500 hover:text-blue-600 p-1 rounded-full transition-colors" onclick="viewOrderDetails({{ order.id }})" title="Ver detalles">
@@ -280,144 +285,54 @@
 
             <!-- Orders Section -->
             <div id="orders" class="content-section hidden">
-                <h2 class="text-2xl font-bold mb-4">Gestión de Pedidos</h2>
-                <button id="add-order-btn" class="bg-amber-700 text-white px-4 py-2 rounded mb-4 hover:bg-amber-800">Agregar Pedido</button>
-                <table id="orders-table" class="w-full bg-white shadow rounded">
-                    <thead>
-                        <tr class="bg-gray-200">
-                            <th class="p-3 text-left">ID</th>
-                            <th class="p-3 text-left">Mesa</th>
-                            <th class="p-3 text-left">Estado</th>
-                            <th class="p-3 text-left">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="orders-tbody">
-                    </tbody>
-                </table>
-                <!-- Order Form Modal -->
-                <div id="order-form-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div class="modal-container bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-                        <div class="modal-header flex justify-between items-center mb-4">
-                            <h3 id="form-title" class="modal-title">Agregar Pedido</h3>
-                            <button id="cancel-order-btn" class="modal-close-btn">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                            </button>
-                        </div>
-                        <div class="modal-body">
-                            <form id="order-form-element">
-                                <input type="hidden" id="order-id">
-                                <label class="block mb-3 text-sm font-medium text-gray-700">Mesa: <input type="number" id="order-table" class="mt-1 border p-2 w-full rounded-md border-gray-300 focus:ring-blue-500 focus:border-blue-500" required></label>
-                                <label class="block mb-6 text-sm font-medium text-gray-700">Estado:
-                                    <select id="order-status" class="mt-1 border p-2 w-full rounded-md border-gray-300 focus:ring-blue-500 focus:border-blue-500">
-                                        <option value="pending">Pendiente</option>
-                                        <option value="preparing">Preparando</option>
-                                        <option value="ready">Listo</option>
-                                        <option value="served">Servido</option>
-                                    </select>
-                                </label>
-                                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md w-full hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Guardar</button>
-                            </form>
-                        </div>
+                <div class="mb-8">
+                    <h1 class="text-3xl font-bold text-gray-900">Historial de Pedidos</h1>
+                    <p class="text-gray-600 mt-2">Filtra y visualiza todos los pedidos realizados en el sistema.</p>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <!-- Filters -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <input type="text" id="report-search-input" placeholder="Buscar por N° pedido, cliente, hab..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <select id="report-status-filter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Todos los Estados</option>
+                            <option value="pending">Pendiente</option>
+                            <option value="preparing">En preparación</option>
+                            <option value="ready">Listo</option>
+                            <option value="served">Servido</option>
+                            <option value="paid">Pagado</option>
+                            <option value="charged_to_room">Cargado a Habitación</option>
+                            <option value="cancelled">Cancelado</option>
+                        </select>
+                        <input type="date" id="report-date-from-filter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <input type="date" id="report-date-to-filter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div class="flex justify-end mb-6">
+                        <button id="report-filter-btn" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700">Buscar</button>
+                        <button id="report-export-excel-btn" class="ml-2 bg-green-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-green-700">Exportar a Excel</button>
+                    </div>
+
+                    <!-- Table -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full table-auto">
+                            <thead>
+                                <tr class="text-left border-b border-gray-200 bg-gray-50">
+                                    <th class="p-3 font-semibold text-gray-600 text-sm">N° PEDIDO</th>
+                                    <th class="p-3 font-semibold text-gray-600 text-sm">CLIENTE/HAB.</th>
+                                    <th class="p-3 font-semibold text-gray-600 text-sm">ESTADO</th>
+                                    <th class="p-3 font-semibold text-gray-600 text-sm">FECHA Y HORA</th>
+                                    <th class="p-3 font-semibold text-gray-600 text-sm">TOTAL</th>
+                                    <th class="p-3 font-semibold text-gray-600 text-sm">ACCIONES</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orders-report-tbody">
+                                <tr>
+                                    <td colspan="6" class="text-center py-12 text-gray-500">Utilice los filtros para buscar pedidos.</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-            </div>
-
-            <!-- Tables Section -->
-            <div id="tables" class="content-section hidden">
-                <h2 class="text-2xl font-bold mb-4">Gestión de Mesas</h2>
-                <button id="add-table-btn" class="bg-amber-700 text-white px-4 py-2 rounded mb-4 hover:bg-amber-800">Agregar Mesa</button>
-                <table id="tables-table" class="w-full bg-white shadow rounded">
-                    <thead>
-                        <tr class="bg-gray-200">
-                            <th class="p-3 text-left">Número</th>
-                            <th class="p-3 text-left">Capacidad</th>
-                            <th class="p-3 text-left">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tables-tbody">
-                    </tbody>
-                </table>
-                <!-- Table Form Modal -->
-                <div id="table-form-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div class="modal-container bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-                        <div class="modal-header flex justify-between items-center mb-4">
-                            <h3 id="table-form-title" class="modal-title">Agregar Mesa</h3>
-                            <button id="cancel-table-btn" class="modal-close-btn">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                            </button>
-                        </div>
-                        <div class="modal-body">
-                            <form id="table-form-element">
-                                <input type="hidden" id="table-id">
-                                <label class="block mb-3 text-sm font-medium text-gray-700">Número: <input type="number" id="table-number" class="mt-1 border p-2 w-full rounded-md border-gray-300 focus:ring-blue-500 focus:border-blue-500" required></label>
-                                <label class="block mb-6 text-sm font-medium text-gray-700">Capacidad: <input type="number" id="table-capacity" class="mt-1 border p-2 w-full rounded-md border-gray-300 focus:ring-blue-500 focus:border-blue-500" required></label>
-                                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md w-full hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Guardar</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Menu Section -->
-            <div id="menu" class="content-section hidden">
-                <h2 class="text-2xl font-bold mb-4">Menú y Platos</h2>
-                <button id="add-menu-btn" class="bg-amber-700 text-white px-4 py-2 rounded mb-4 hover:bg-amber-800">Agregar Plato</button>
-                <table id="menu-table" class="w-full bg-white shadow rounded">
-                    <thead>
-                        <tr class="bg-gray-200">
-                            <th class="p-3 text-left">Nombre</th>
-                            <th class="p-3 text-left">Precio</th>
-                            <th class="p-3 text-left">Categoría</th>
-                            <th class="p-3 text-left">Disponible</th>
-                            <th class="p-3 text-left">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in menu_items %}
-                        <tr data-item-id="{{ item.id }}">
-                            <td class="p-3">{{ item.name }}</td>
-                            <td class="p-3">${{ item.price|floatformat:0 }}</td>
-                            <td class="p-3">{{ item.category }}</td>
-                            <td class="p-3">{{ item.available|yesno:"Sí,No" }}</td>
-                            <td class="p-3">
-                                <div class="flex items-center space-x-2">
-                                    <button class="text-gray-500 hover:text-yellow-600 p-1 rounded-full transition-colors" onclick="editMenuItem({{ item.id }})" title="Editar">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z"></path></svg>
-                                    </button>
-                                    <button class="text-gray-500 hover:text-red-600 p-1 rounded-full transition-colors" onclick="deleteMenuItem(this, {{ item.id }})" title="Eliminar">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                <!-- Menu Form Modal -->
-                <div id="menu-form-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div class="modal-container bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-                        <div class="modal-header flex justify-between items-center mb-4">
-                            <h3 id="menu-form-title" class="modal-title">Agregar Plato</h3>
-                            <button id="cancel-menu-btn" class="modal-close-btn text-2xl leading-none">&times;</button>
-                        </div>
-                        <form id="menu-form-element" class="modal-body">
-                            <input type="hidden" name="item_id" id="menu-item-id">
-                            <label class="block mb-2">Nombre: <input type="text" name="name" id="menu-name" class="border p-2 w-full rounded" required></label>
-                            <label class="block mb-2">Descripción: <textarea name="description" id="menu-description" class="border p-2 w-full rounded" rows="3"></textarea></label>
-                            <label class="block mb-2">Precio: <input type="number" step="0.01" name="price" id="menu-price" class="border p-2 w-full rounded" required></label>
-                            <label class="block mb-2">Categoría: <input type="text" name="category" id="menu-category" class="border p-2 w-full rounded" required></label>
-                            <label class="block mb-4"><input type="checkbox" name="available" id="menu-available" checked> Disponible</label>
-                            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded w-full">Guardar</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Reports Section -->
-            <div id="reports" class="content-section hidden">
-                <h2 class="text-2xl font-bold mb-4">Reportes</h2>
-                <p>Esta sección se está construyendo. Por ahora, puedes usar el reporte de pedidos en el dashboard de Recepción.</p>
-                <!-- Aquí se podrían añadir más elementos de reporte en el futuro -->
             </div>
 
             <!-- Users/PINs Section -->
@@ -470,9 +385,112 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Existing Users List -->
+                <div class="mt-8 bg-white rounded-lg shadow-md">
+                    <div class="p-6 border-b border-gray-200">
+                        <h3 class="text-xl font-semibold text-gray-900">Usuarios Existentes</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full table-auto">
+                            <thead>
+                                <tr class="text-left border-b border-gray-200 bg-gray-50">
+                                    <th class="p-3 font-semibold text-gray-600 text-sm">Usuario</th>
+                                    <th class="p-3 font-semibold text-gray-600 text-sm">Email</th>
+                                    <th class="p-3 font-semibold text-gray-600 text-sm">Rol</th>
+                                    <th class="p-3 font-semibold text-gray-600 text-sm">Último Acceso</th>
+                                    <th class="p-3 font-semibold text-gray-600 text-sm">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-tbody">
+                                <!-- Las filas se cargarán dinámicamente con JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
+
+            <!-- Menu Section -->
+            <div id="menu" class="content-section hidden">
+                <div class="mb-8 flex justify-between items-center">
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-900">Gestión de Menú y Platos</h1>
+                        <p class="text-gray-600 mt-2">Añade, edita o elimina platos del menú.</p>
+                    </div>
+                    <button id="add-menu-btn" class="bg-amber-700 text-white px-6 py-2 rounded-lg font-medium hover:bg-amber-800">Añadir Plato</button>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-md">
+                    <div class="overflow-x-auto">
+                        <table id="menu-table" class="w-full table-auto">
+                            <thead>
+                                <tr class="text-left border-b border-gray-200 bg-gray-50">
+                                    <th class="p-3 font-semibold text-gray-600 text-sm">Nombre</th>
+                                    <th class="p-3 font-semibold text-gray-600 text-sm">Precio</th>
+                                    <th class="p-3 font-semibold text-gray-600 text-sm">Categoría</th>
+                                    <th class="p-3 font-semibold text-gray-600 text-sm">Disponible</th>
+                                    <th class="p-3 font-semibold text-gray-600 text-sm">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Las filas se cargarán dinámicamente con JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
+
+    <!-- Menu Form Modal -->
+    <div id="menu-form-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="modal-container bg-white rounded-lg shadow-xl w-full max-w-lg p-6">
+            <h3 id="menu-form-title" class="text-xl font-semibold mb-4">Agregar Plato</h3>
+            <form id="menu-form-element">
+                <input type="hidden" id="menu-item-id">
+                <div class="space-y-4">
+                    <input type="text" id="menu-name" placeholder="Nombre del Plato" required class="w-full p-2 border rounded">
+                    <textarea id="menu-description" placeholder="Descripción" class="w-full p-2 border rounded" rows="3"></textarea>
+                    <div class="grid grid-cols-2 gap-4">
+                        <input type="number" id="menu-price" placeholder="Precio" required class="w-full p-2 border rounded" step="0.01">
+                        <input type="text" id="menu-category" placeholder="Categoría" required class="w-full p-2 border rounded">
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="menu-available" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" checked>
+                        <label for="menu-available" class="ml-2 block text-sm text-gray-900">Disponible</for>
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end space-x-3">
+                    <button type="button" id="cancel-menu-btn" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300">Cancelar</button>
+                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- User Edit Modal -->
+    <div id="user-edit-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="modal-container bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+            <h3 id="user-edit-title" class="text-xl font-semibold mb-4">Editar Rol de Usuario</h3>
+            <form id="user-edit-form">
+                <input type="hidden" id="user-edit-id">
+                <div>
+                    <label for="user-role-select" class="block text-sm font-medium text-gray-700 mb-2">Nuevo Rol:</label>
+                    <select id="user-role-select" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        {% for group in groups %}
+                        <option value="{{ group.id }}">{{ group.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mt-6 flex justify-end space-x-3">
+                    <button type="button" id="cancel-user-edit-btn" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300">Cancelar</button>
+                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 
     <!-- Order Details Modal -->
     <div id="order-details-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -502,764 +520,532 @@
     <script>
         /* eslint-disable */
         const csrfToken = '{{ csrf_token }}';
-
-        // Navigation
-        document.addEventListener('DOMContentLoaded', function() {
-            // --- Sidebar Toggle Logic for Mobile ---
-            const sidebar = document.getElementById('sidebar');
-            const sidebarToggle = document.getElementById('sidebar-toggle');
-            const sidebarOverlay = document.getElementById('sidebar-overlay');
-
-            function toggleSidebar() {
-                sidebar.classList.toggle('-translate-x-full');
-                sidebarOverlay.classList.toggle('hidden');
-            }
-
-            if (sidebarToggle) {
-                sidebarToggle.addEventListener('click', toggleSidebar);
-            }
-            if (sidebarOverlay) {
-                sidebarOverlay.addEventListener('click', toggleSidebar);
-            }
-        });
-
-
-        document.querySelectorAll('.nav-link').forEach(link => {
-            link.addEventListener('click', function(e) {
-                // Prevent full page reload but update URL for history
-                e.preventDefault();
-                window.history.pushState({}, '', this.href);
-
-                const section = this.getAttribute('data-section');
-                
-                // Update active navigation
-                document.querySelectorAll('.nav-link').forEach(l => {
-                    l.classList.remove('active', 'bg-amber-100', 'border-r-4', 'border-amber-500', 'text-amber-800');
-                    l.classList.add('text-gray-600', 'hover:bg-gray-100');
-                });
-                this.classList.add('active', 'bg-amber-100', 'border-r-4', 'border-amber-500', 'text-amber-800');
-                this.classList.remove('text-gray-600', 'hover:bg-gray-100');
-                
-                showSection(section);
-            });
-        });
-
-        function showSection(section) {
-            document.querySelectorAll('.content-section').forEach(sec => sec.classList.add('hidden'));
-            document.getElementById(section).classList.remove('hidden');
-            // Data for dashboard is rendered server-side.
-            // Other sections can be loaded on demand.
-            if (section === 'orders') loadAndRenderOrders();
-            if (section === 'tables') loadAndRenderTables();
-            if (section === 'menu') loadAndRenderMenu(); // Cargar menú dinámicamente
-            if (section === 'users') loadAndRenderPins();
-        }
-       
-        // Helper for fetch requests
-        async function apiRequest(url, method = 'GET', body = null) {
-            const options = {
-                method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken,
-                },
-            };
-            if (body) {
-                options.body = JSON.stringify(body);
-            }
-            const response = await fetch(url, options);
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Something went wrong');
-            }
-            if (response.status === 204) { // No Content
-                return null;
-            }
-            return response.json();
-        }
-
-        // Orders
-        async function loadAndRenderOrders() {
-            // Assumes you have a URL named 'api_orders' that returns JSON
-            try { 
-                const orders = await apiRequest("{% url 'api_orders' %}");
-                const tbody = document.getElementById('orders-tbody');
-                tbody.innerHTML = '';
-                orders.forEach(order => {
-                    const row = `<tr data-order-id="${order.id}">
-                        <td class="p-3">${order.id}</td>
-                        <td class="p-3">${order.table_number}</td>
-                        <td class="p-3">${order.status}</td>
-                        <td class="p-3">
-                            <div class="flex items-center space-x-2">
-                                <button class="text-gray-500 hover:text-yellow-600 p-1 rounded-full transition-colors" onclick="editOrder(${order.id})" title="Editar">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z"></path></svg>
-                                </button>
-                                <button class="text-gray-500 hover:text-red-600 p-1 rounded-full transition-colors" onclick="deleteOrder(${order.id})" title="Eliminar">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>`;
-                    tbody.innerHTML += row;
-                });
-            } catch (error) {
-                console.error('Failed to load orders:', error);
-                document.getElementById('orders-tbody').innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500">${error.message}</td></tr>`;
-            }
-        }
-
-        document.getElementById('add-order-btn').addEventListener('click', () => {
-            document.getElementById('order-form-element').reset();
-            document.getElementById('order-id').value = '';
-            document.getElementById('form-title').textContent = 'Agregar Pedido';
-            document.getElementById('order-form-modal').classList.remove('hidden');
-        });
-
-        document.getElementById('cancel-order-btn').addEventListener('click', () => {
-            document.getElementById('order-form-modal').classList.add('hidden');
-        });
-
-        document.getElementById('order-form-element').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const id = document.getElementById('order-id').value;
-            const table = document.getElementById('order-table').value;
-            const status = document.getElementById('order-status').value;
-            
-            const url = id ? `/restaurant/api/orders/${id}/` : "{% url 'api_orders' %}";
-            const method = id ? 'PUT' : 'POST';
-
-            try {
-                await apiRequest(url, method, { table, status });
-                document.getElementById('order-form-modal').classList.add('hidden');
-                loadAndRenderOrders(); // Refresh the list
-                // You might want to refresh dashboard stats too
-            } catch (error) {
-                alert(`Error guardando pedido: ${error.message}`);
-            }
-        });
-
-        async function editOrder(id) {
-            try {
-                const order = await apiRequest(`/restaurant/api/orders/${id}/`);
-                document.getElementById('order-id').value = order.id;
-                document.getElementById('order-table').value = order.table_id; // Assuming you get table_id
-                document.getElementById('order-status').value = order.status;
-                document.getElementById('form-title').textContent = 'Editar Pedido';
-                document.getElementById('order-form-modal').classList.remove('hidden');
-            } catch (error) {
-                alert(`Error cargando pedido: ${error.message}`);
-            }
-        }
-
-        async function deleteOrder(id) {
-            if (confirm('¿Estás seguro de que quieres eliminar este pedido?')) {
-                try {
-                    await apiRequest(`/restaurant/api/orders/${id}/`, 'DELETE');
-                    loadAndRenderOrders(); 
-                } catch (error) {
-                    alert(`Error eliminando pedido: ${error.message}`);
-                }
-            }
-        }
-
-        // Tables
-        async function loadAndRenderTables() {
-            const tables = await apiRequest("{% url 'api_tables' %}");
-            const tbody = document.getElementById('tables-tbody');
-            tbody.innerHTML = '';
-            tables.forEach(table => {
-                const row = `<tr data-table-id="${table.id}">
-                    <td class="p-3">${table.number}</td>
-                    <td class="p-3">${table.capacity}</td>
-                    <td class="p-3">
-                        <div class="flex items-center space-x-2">
-                            <button class="text-gray-500 hover:text-yellow-600 p-1 rounded-full transition-colors" onclick="editTable(${table.id})" title="Editar">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z"></path></svg>
-                            </button>
-                            <button class="text-gray-500 hover:text-red-600 p-1 rounded-full transition-colors" onclick="deleteTable(${table.id})" title="Eliminar">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                            </button>
-                        </div>
-                    </td>
-                </tr>`;
-                tbody.innerHTML += row;
-            });
-        }
-
-        document.getElementById('add-table-btn').addEventListener('click', () => {
-            document.getElementById('table-form-element').reset();
-            document.getElementById('table-id').value = '';
-            document.getElementById('table-form-title').textContent = 'Agregar Mesa';
-            document.getElementById('table-form-modal').classList.remove('hidden');
-        });
-
-        document.getElementById('cancel-table-btn').addEventListener('click', () => {
-            document.getElementById('table-form-modal').classList.add('hidden');
-        });
-
-        document.getElementById('table-form-element').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const id = document.getElementById('table-id').value;
-            const number = document.getElementById('table-number').value;
-            const capacity = document.getElementById('table-capacity').value;
-
-            const url = id ? `/restaurant/api/tables/${id}/` : `{% url 'api_tables' %}`;
-            const method = id ? 'PUT' : 'POST';
-
-            try {
-                await apiRequest(url, method, { number, capacity });
-                document.getElementById('table-form-modal').classList.add('hidden');
-                loadAndRenderTables();
-            } catch (error) {
-                alert(`Error guardando mesa: ${error.message}`);
-            }
-        });
-
-        async function editTable(id) {
-            try {
-                const table = await apiRequest(`/restaurant/api/tables/${id}/`);
-                document.getElementById('table-id').value = table.id;
-                document.getElementById('table-number').value = table.number;
-                document.getElementById('table-capacity').value = table.capacity;
-                document.getElementById('table-form-title').textContent = 'Editar Mesa';
-                document.getElementById('table-form-modal').classList.remove('hidden');
-            } catch (error) {
-                alert(`Error cargando mesa: ${error.message}`);
-            }
-        }
-
-        async function deleteTable(id) {
-            if (confirm('¿Estás seguro de que quieres eliminar esta mesa?')) {
-                try {
-                    await apiRequest(`/restaurant/api/tables/${id}/`, 'DELETE');
-                    loadAndRenderTables();
-                } catch (error) {
-                    alert(`Error eliminando mesa: ${error.message}`);
-                }
-            }
-        }
-
-        // Menu
-        async function loadAndRenderMenu() {
-            // Esta función recargará la sección del menú.
-            // Por simplicidad, vamos a recargar la página entera para ver los cambios del menú.
-            // Una implementación más avanzada podría reconstruir la tabla como en `loadAndRenderOrders`.
-            // Por ahora, la dejamos vacía ya que el menú se carga desde el servidor.
-        }
-
-        document.getElementById('add-menu-btn').addEventListener('click', () => {
-            document.getElementById('menu-form-element').reset();
-            document.getElementById('menu-item-id').value = '';
-            document.getElementById('menu-form-title').textContent = 'Agregar Plato';
-            document.getElementById('menu-form-modal').classList.remove('hidden');
-        });
-
-        document.getElementById('cancel-menu-btn').addEventListener('click', () => {
-            document.getElementById('menu-form-modal').classList.add('hidden');
-        });
-
-        document.getElementById('menu-form-element').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const id = document.getElementById('menu-item-id').value;
-            const data = {
-                name: document.getElementById('menu-name').value,
-                description: document.getElementById('menu-description').value,
-                price: document.getElementById('menu-price').value,
-                category: document.getElementById('menu-category').value,
-                available: document.getElementById('menu-available').checked,
-            };
-
-            const url = id ? `/restaurant/api/menu-items/${id}/` : `{% url 'api_menu_items' %}`;
-            const method = id ? 'PUT' : 'POST';
-
-            try {
-                const response = await apiRequest(url, method, data); // La respuesta es el objeto en sí
-                document.getElementById('menu-form-modal').classList.add('hidden');
-                if (response) {
-                    // Si es un nuevo item, lo agregamos a la tabla
-                    if (method === 'POST') {
-                        const item = response;
-                        const tbody = document.querySelector('#menu-table tbody');
-                        const newRow = `
-                            <tr data-item-id="${item.id}" class="border-b border-gray-100">
-                                <td class="p-3">${item.name}</td>
-                                <td class="p-3">$${item.price.toFixed(0)}</td>
-                                <td class="p-3">${item.category}</td>
-                                <td class="p-3">${item.available ? 'Sí' : 'No'}</td>
-                                <td class="p-3">
-                                    <div class="flex items-center space-x-2">
-                                        <button class="text-gray-500 hover:text-yellow-600 p-1 rounded-full transition-colors" onclick="editMenuItem(${item.id})" title="Editar">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z"></path></svg>
-                                        </button>
-                                        <button class="text-gray-500 hover:text-red-600 p-1 rounded-full transition-colors" onclick="deleteMenuItem(this, ${item.id})" title="Eliminar">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        `;
-                        tbody.insertAdjacentHTML('beforeend', newRow);
-                    } else {
-                        // Si se editó, actualizamos la fila existente
-                        const item = response;
-                        const row = document.querySelector(`#menu-table tr[data-item-id="${item.id}"]`);
-                        if (row) {
-                            row.cells[0].textContent = item.name;
-                            row.cells[1].textContent = `$${item.price.toFixed(0)}`;
-                            row.cells[2].textContent = item.category;
-                            row.cells[3].textContent = item.available ? 'Sí' : 'No';
-                        }
-                    }
-                }
-            } catch (error) {
-                alert(`Error guardando el plato: ${error.message}`);
-            }
-        });
-
-        async function editMenuItem(id) {
-            try {
-                const item = await apiRequest(`/restaurant/api/menu-items/${id}/`);
-                document.getElementById('menu-item-id').value = item.id;
-                document.getElementById('menu-name').value = item.name;
-                document.getElementById('menu-description').value = item.description;
-                document.getElementById('menu-price').value = item.price;
-                document.getElementById('menu-category').value = item.category;
-                document.getElementById('menu-available').checked = item.available;
-                
-                document.getElementById('menu-form-title').textContent = 'Editar Plato';
-                document.getElementById('menu-form-modal').classList.remove('hidden');
-            } catch (error) {
-                alert(`Error cargando el plato: ${error.message}`);
-            }
-        }
-
-        async function deleteMenuItem(button, id) {
-            if (confirm('¿Estás seguro de que quieres eliminar este plato?')) {
-                try {
-                    await apiRequest(`/restaurant/api/menu-items/${id}/`, 'DELETE');
-                    // Eliminar la fila de la tabla
-                    const row = button.closest('tr');
-                    row.remove();
-                } catch (error) {
-                    alert(`Error eliminando el plato: ${error.message}`);
-                }
-            }
-        }
-
-        // PINs Management
-        async function loadAndRenderPins() {
-            try {
-                const pins = await apiRequest("{% url 'api_registration_pins' %}");
-                const tbody = document.getElementById('pins-tbody');
-                tbody.innerHTML = '';
-                pins.forEach(pin => {
-                    const statusClass = pin.is_used ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800';
-                    const statusText = pin.is_used ? `Usado por ${pin.used_by}` : 'Activo';
-                    const row = `
-                        <tr class="border-b border-gray-100" data-pin-id="${pin.id}">
-                            <td class="p-3 font-mono">${pin.pin}</td>
-                            <td class="p-3">${pin.group_name}</td>
-                            <td class="p-3">
-                                <span class="px-2 py-1 text-xs font-medium rounded-full ${statusClass}">${statusText}</span>
-                            </td>
-                            <td class="p-3">
-                                <button class="text-gray-500 hover:text-red-600 p-1 rounded-full transition-colors" onclick="deletePin(${pin.id})" title="Eliminar PIN">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                    tbody.innerHTML += row;
-                });
-            } catch (error) {
-                console.error('Failed to load PINs:', error);
-                document.getElementById('pins-tbody').innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500">${error.message}</td></tr>`;
-            }
-        }
-
-        document.getElementById('generate-pin-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const groupId = document.getElementById('pin-group-select').value;
-            const displayDiv = document.getElementById('new-pin-display');
-            const codeP = document.getElementById('new-pin-code');
-
-            try {
-                const result = await apiRequest("{% url 'api_registration_pins' %}", 'POST', { group_id: groupId });
-                if (result.success) {
-                    codeP.textContent = result.pin;
-                    displayDiv.classList.remove('hidden');
-                    loadAndRenderPins(); // Refresh the list
-                }
-            } catch (error) {
-                alert(`Error generando PIN: ${error.message}`);
-                displayDiv.classList.add('hidden');
-            }
-        });
-
-        async function deletePin(id) {
-            // Nota: La API para eliminar un PIN específico no existe aún.
-            // Se necesitaría crear una URL como /api/pins/<id>/ y una vista que maneje DELETE.
-            // Por ahora, esta función mostrará una alerta.
-            if (confirm('¿Estás seguro de que quieres eliminar este PIN?')) {
-                try {
-                    // Asumimos que la API de PINs aceptará un DELETE en su URL principal con el ID en el body, o una URL específica.
-                    // Por simplicidad, vamos a crear una nueva URL para esto.
-                    await apiRequest(`/restaurant/api/pins/${id}/`, 'DELETE');
-                    loadAndRenderPins();
-                } catch (error) {
-                    alert(`Error eliminando PIN: ${error.message}`);
-                }
-            }
-        }
-
-        // Order Details Modal
-        async function viewOrderDetails(orderId) {
-            const modal = document.getElementById('order-details-modal');
-            const modalContent = document.getElementById('modal-content');
-            modal.classList.remove('hidden');
-            modalContent.innerHTML = '<div class="text-center">Cargando...</div>';
-
-            try {
-                // Asumimos que tienes una URL para obtener detalles de un pedido.
-                // Si no la tienes, necesitarás crearla. Usaré una URL genérica.
-                const order = await apiRequest(`/restaurant/api/orders/${orderId}/`);
-
-                let itemsHtml = '<li class="text-gray-500">No se encontraron items para este pedido.</li>';
-                if (order.items && Array.isArray(order.items)) {
-                    itemsHtml = order.items.map(item => `
-                        <li class="flex justify-between">
-                            <span>${item.quantity}x ${item.menu_item_name}</span>
-                            <span>$${(item.price * item.quantity).toFixed(0)}</span>
-                        </li>
-                    `).join('');
-                }
-
-                modalContent.innerHTML = `
-                    <p><strong>Pedido ID:</strong> ${order.id}</p>
-                    <p><strong>Mesa:</strong> ${order.table_number}</p>
-                    <p><strong>Estado:</strong> ${order.status_display}</p>
-                    <p><strong>Hora:</strong> ${new Date(order.created_at).toLocaleTimeString()}</p>
-                    <h4 class="font-semibold mt-4 mb-2">Items:</h4>
-                    <ul class="space-y-1 max-h-60 overflow-y-auto">${itemsHtml}</ul>
-                    <div class="mt-3 pt-3 border-t text-right">
-                        <p class="text-lg font-bold text-gray-900">Total: $${order.total.toFixed(0)}</p>
-                    </div>
-                `;
-            } catch (error) {
-                modalContent.innerHTML = `<div class="text-center text-red-500">Error al cargar los detalles: ${error.message}</div>`;
-            }
-        }
-
-        function closeOrderDetailsModal() {
-            document.getElementById('order-details-modal').classList.add('hidden');
-        }
-
-        document.getElementById('modal-close-btn').addEventListener('click', closeOrderDetailsModal);
-        document.getElementById('modal-ok-btn').addEventListener('click', closeOrderDetailsModal);
-
-        // Close banner functionality
-        document.getElementById('close-banner').addEventListener('click', function() {
-            const banner = document.getElementById('welcome-banner');
-            banner.classList.add('banner-hidden');
-            localStorage.setItem('welcomeBannerClosed', 'true');
-            setTimeout(() => {
-                banner.style.display = 'none';
-            }, 500); // Match CSS transition duration
-        });
-
-        // Initial setup on page load
+        
         document.addEventListener('DOMContentLoaded', () => {
-            // Check if welcome banner was previously closed
-            if (localStorage.getItem('welcomeBannerClosed') === 'true') {
-                document.getElementById('welcome-banner').style.display = 'none';
+            const appState = {
+                activeSection: 'dashboard',
+                loadedSections: new Set(), // Para no recargar datos innecesariamente
+                charts: {} // Para almacenar instancias de Chart.js
+            };
+
+            // --- HELPERS ---
+            async function apiRequest(url, method = 'GET', body = null) {
+                const options = {
+                    method,
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+                };
+                if (body) options.body = JSON.stringify(body);
+                
+                const response = await fetch(url, options);
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ error: 'Error de red o respuesta no válida.' }));
+                    throw new Error(errorData.error || `Error ${response.status}`);
+                }
+                return response.status === 204 ? null : response.json();
             }
 
-            const params = new URLSearchParams(window.location.search);
-            const section = params.get('section') || 'dashboard';
+            // --- UI & NAVIGATION ---
+            function showSection(sectionId) {
+                appState.activeSection = sectionId;
+                document.querySelectorAll('.content-section').forEach(sec => sec.classList.add('hidden'));
+                document.getElementById(sectionId)?.classList.remove('hidden');
 
-            // Deactivate all links first
-            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active', 'bg-amber-100', 'border-r-4', 'border-amber-500', 'text-amber-800'));
-            // Activate the correct one
-            document.querySelector(`.nav-link[data-section="${section}"]`).classList.add('active', 'bg-amber-100', 'border-r-4', 'border-amber-500', 'text-amber-800');
-            showSection(section);
-            renderCharts();
+                document.querySelectorAll('.nav-link').forEach(link => {
+                    link.classList.toggle('active', link.dataset.section === sectionId);
+                    link.classList.toggle('bg-amber-100', link.dataset.section === sectionId);
+                    link.classList.toggle('border-r-4', link.dataset.section === sectionId);
+                    link.classList.toggle('border-amber-500', link.dataset.section === sectionId);
+                    link.classList.toggle('text-amber-800', link.dataset.section === sectionId);
+                    link.classList.toggle('text-gray-600', link.dataset.section !== sectionId);
+                    link.classList.toggle('hover:bg-gray-100', link.dataset.section !== sectionId);
+                });
 
-            // Real-time WebSocket for admin updates
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const ws = new WebSocket(`${protocol}//${window.location.host}/ws/admin-updates/`);
-
-            ws.onmessage = function(e) {
-                const data = JSON.parse(e.data);
-                handleAdminUpdate(data);
-            };
-
-            ws.onclose = function(e) {
-                console.error('Admin WebSocket closed unexpectedly');
-            };
-
-            function handleAdminUpdate(update) {
-                if (update.model === 'order') {
-                    // Update dashboard stats
-                    updateDashboardStats(update.stats);
-                    // Update recent orders table on dashboard
-                    updateRecentOrderInUI(update.data, update.action);
-                    // Update the "Gestión de Pedidos" table if it's visible
-                    updateOrderInUI(update.data, update.action);
-                } else if (update.model === 'menu_item') {
-                    updateMenuItemInUI(update.data, update.action);
-                } else if (update.model === 'table') {
-                    updateTableInUI(update.data, update.action);
+                // Cargar datos de la sección si es la primera vez que se muestra
+                if (!appState.loadedSections.has(sectionId)) {
+                    loadSectionData(sectionId);
+                    appState.loadedSections.add(sectionId);
                 }
+            }
+
+            function loadSectionData(sectionId) {
+                switch (sectionId) {
+                    case 'dashboard':
+                        renderAllCharts();
+                        break;
+                    case 'menu':
+                        loadAndRenderMenu();
+                        break;
+                    case 'users':
+                        loadAndRenderPins();
+                        loadAndRenderUsers();
+                        break;
+                    case 'orders':
+                        initReports();
+                        break;
+                }
+            }
+
+            function initNavigation() {
+                document.querySelectorAll('.nav-link').forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const sectionId = link.dataset.section;
+                        window.history.pushState({ section: sectionId }, '', `?section=${sectionId}`);
+                        showSection(sectionId);
+                    });
+                });
+
+                window.addEventListener('popstate', (e) => {
+                    const sectionId = e.state?.section || 'dashboard';
+                    showSection(sectionId);
+                });
+            }
+
+            function initUIComponents() {
+                // Sidebar para móviles
+                const sidebar = document.getElementById('sidebar');
+                const sidebarToggle = document.getElementById('sidebar-toggle');
+                const sidebarOverlay = document.getElementById('sidebar-overlay');
+                const toggleSidebar = () => {
+                    sidebar.classList.toggle('-translate-x-full');
+                    sidebarOverlay.classList.toggle('hidden');
+                };
+                sidebarToggle?.addEventListener('click', toggleSidebar);
+                sidebarOverlay?.addEventListener('click', toggleSidebar);
+
+                // Banner de bienvenida
+                const banner = document.getElementById('welcome-banner');
+                if (localStorage.getItem('welcomeBannerClosed') === 'true') {
+                    banner.style.display = 'none';
+                }
+                document.getElementById('close-banner')?.addEventListener('click', () => {
+                    banner.classList.add('banner-hidden');
+                    localStorage.setItem('welcomeBannerClosed', 'true');
+                    setTimeout(() => banner.style.display = 'none', 500);
+                });
+
+                // Modales
+                document.getElementById('modal-close-btn')?.addEventListener('click', () => document.getElementById('order-details-modal').classList.add('hidden'));
+                document.getElementById('modal-ok-btn')?.addEventListener('click', () => document.getElementById('order-details-modal').classList.add('hidden'));
+                document.getElementById('cancel-menu-btn')?.addEventListener('click', () => document.getElementById('menu-form-modal').classList.add('hidden'));
+                document.getElementById('cancel-user-edit-btn')?.addEventListener('click', () => document.getElementById('user-edit-modal').classList.add('hidden'));
+            }
+
+            // --- CHARTS ---
+            async function renderChart(chartId, url, type, options, dataProcessor) {
+                try {
+                    const rawData = await apiRequest(url);
+                    const chartData = dataProcessor(rawData);
+                    const ctx = document.getElementById(chartId)?.getContext('2d');
+                    if (!ctx) return;
+
+                    if (appState.charts[chartId]) appState.charts[chartId].destroy();
+
+                    appState.charts[chartId] = new Chart(ctx, { type, data: chartData, options });
+                } catch (error) {
+                    console.error(`Error rendering chart ${chartId}:`, error);
+                }
+            }
+
+            function renderAllCharts() {
+                renderChart('salesChart', "{% url 'api_dashboard_charts' %}?chart=sales_by_day", 'bar', 
+                    { scales: { y: { beginAtZero: true } }, responsive: true, plugins: { legend: { display: false } } },
+                    (d) => ({ labels: d.labels, datasets: [{ label: 'Ventas ($)', data: d.data, backgroundColor: 'rgba(59, 130, 246, 0.5)', borderColor: 'rgba(59, 130, 246, 1)', borderWidth: 1 }] })
+                );
+                renderChart('topDishesChart', "{% url 'api_dashboard_charts' %}?chart=top_dishes", 'doughnut',
+                    { responsive: true, plugins: { legend: { position: 'top' } } },
+                    (d) => ({ labels: d.labels, datasets: [{ label: 'Cantidad Vendida', data: d.data, backgroundColor: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'] }] })
+                );
+                renderChart('salesByHourChart', "{% url 'api_dashboard_charts' %}?chart=sales_by_hour", 'line',
+                    { scales: { y: { beginAtZero: true } }, responsive: true, plugins: { legend: { display: false } } },
+                    (d) => ({ labels: d.labels, datasets: [{ label: 'Ventas ($)', data: d.data, backgroundColor: 'rgba(239, 68, 68, 0.2)', borderColor: 'rgba(239, 68, 68, 1)', fill: true, tension: 0.3 }] })
+                );
+                renderChart('waiterPerformanceChart', "{% url 'api_dashboard_charts' %}?chart=waiter_performance", 'bar',
+                    { indexAxis: 'y', scales: { x: { beginAtZero: true } }, responsive: true, plugins: { legend: { display: false } } },
+                    (d) => ({ labels: d.labels, datasets: [{ label: 'Pedidos Atendidos', data: d.orders, backgroundColor: 'rgba(245, 158, 11, 0.5)', borderColor: 'rgba(245, 158, 11, 1)', borderWidth: 1 }] })
+                );
+                renderChart('salesByCategoryChart', "{% url 'api_dashboard_charts' %}?chart=sales_by_category", 'pie',
+                    { responsive: true, plugins: { legend: { position: 'top' } } },
+                    (d) => ({ labels: d.labels, datasets: [{ label: 'Ventas por Categoría', data: d.data, backgroundColor: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#6B7280', '#D946EF'] }] })
+                );
+            }
+
+            // --- WEBSOCKETS ---
+            function initWebSockets() {
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const ws = new WebSocket(`${protocol}//${window.location.host}/ws/admin-updates/`);
+
+                ws.onmessage = (e) => {
+                    const update = JSON.parse(e.data).message; // La data viene anidada en 'message'
+                    if (!update) return;
+
+                    if (update.stats) {
+                        updateDashboardStats(update.stats);
+                    }
+                    if (update.order) {
+                        updateRecentOrderInUI(update.order);
+                    }
+                    if (update.model === 'menu_item') {
+                        updateMenuItemInUI(update.data, update.action);
+                    }
+                };
+
+                ws.onclose = () => {
+                    console.error('Admin WebSocket closed unexpectedly. Reloading in 5s...');
+                    setTimeout(() => location.reload(), 5000);
+                };
             }
 
             function updateDashboardStats(stats) {
-                if (!stats) return;
-                document.getElementById('total-orders-today').textContent = stats.total_orders_today;
-                document.getElementById('preparing-count').textContent = stats.preparing_count;
-                document.getElementById('ready-count').textContent = stats.ready_count;
-                document.getElementById('completed-count').textContent = stats.completed_count;
+                document.getElementById('total-orders-today').textContent = stats.total_today || 0;
+                document.getElementById('preparing-count').textContent = stats.preparing || 0;
+                document.getElementById('ready-count').textContent = stats.ready || 0;
+                document.getElementById('completed-count').textContent = stats.completed || 0;
+                document.getElementById('total-sales-today').textContent = `$${(stats.total_sales_today || 0).toLocaleString('es-CL')}`;
             }
 
-
-            function updateRecentOrderInUI(order, action) {
-                const tbody = document.querySelector('#dashboard tbody');
+            function updateRecentOrderInUI(order) {
+                const tbody = document.querySelector('#dashboard table tbody');
                 if (!tbody) return;
 
-                const existingRow = document.getElementById(`recent-order-${order.id}`);
+                let row = document.getElementById(`recent-order-${order.id}`);
+                const rowHTML = `
+                    <td class="py-4 font-medium text-gray-900">${order.id}</td>
+                    <td class="py-4">${order.identifier || (order.room_number || 'N/A')} / ${order.user_username || 'N/A'}</td>
+                    <td class="py-4"><span class="px-2 py-1 text-xs font-medium ${order.status_class} rounded-full">${order.status_display}</span></td>
+                    <td class="py-4">${new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td> 
+                    <td class="py-4">$${(order.total || 0).toFixed(0)}</td>
+                    <td class="py-4">
+                        <button class="text-gray-500 hover:text-blue-600 p-1" onclick="viewOrderDetails(${order.id})" title="Ver detalles">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                        </button>
+                    </td>
+                `;
 
-                if (action === 'created' && !existingRow) {
-                    const newRow = document.createElement('tr');
-                    newRow.className = 'border-b border-gray-100'; //
-                    newRow.id = `recent-order-${order.id}`;
-                    newRow.innerHTML = `
-                        <td class="py-4">${order.id}</td>
-                        <td class="py-4">${order.table_number} / ${order.user}</td>
-                        <td class="py-4"><span class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">${order.status}</span></td>
-                        <td class="py-4">${new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
-                        <td class="py-4">$${order.total.toFixed(0)}</td>
-                        <td class="py-4">
+                if (row) {
+                    row.innerHTML = rowHTML;
+                } else {
+                    row = document.createElement('tr');
+                    row.id = `recent-order-${order.id}`;
+                    row.className = 'border-b border-gray-100';
+                    row.innerHTML = rowHTML;
+                    tbody.prepend(row);
+                }
+            }
+
+            // --- MENU MANAGEMENT ---
+            async function loadAndRenderMenu() {
+                try {
+                    const items = await apiRequest("{% url 'api_menu_items' %}");
+                    const tbody = document.querySelector('#menu-table tbody');
+                    tbody.innerHTML = items.map(item => getMenuItemRowHTML(item)).join('');
+                } catch (error) {
+                    console.error('Failed to load menu items:', error);
+                }
+            }
+
+            function getMenuItemRowHTML(item) {
+                return `
+                    <tr data-item-id="${item.id}" class="border-b border-gray-100">
+                        <td class="p-3">${item.name}</td>
+                        <td class="p-3">$${item.price.toFixed(0)}</td>
+                        <td class="p-3">${item.category}</td>
+                        <td class="p-3">${item.available ? 'Sí' : 'No'}</td>
+                        <td class="p-3">
                             <div class="flex items-center space-x-2">
-                                <button class="text-gray-500 hover:text-blue-600 p-1 rounded-full transition-colors" onclick="viewOrderDetails(${order.id})" title="Ver detalles">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                                </button>
+                                <button class="text-gray-500 hover:text-yellow-600 p-1" onclick="editMenuItem(${item.id})" title="Editar"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z"></path></svg></button>
+                                <button class="text-gray-500 hover:text-red-600 p-1" onclick="deleteMenuItem(${item.id})" title="Eliminar"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
                             </div>
                         </td>
-                    `;
-                    tbody.prepend(newRow);
-                } else if (action === 'updated' && existingRow) {
-                    existingRow.cells[2].innerHTML = `<span class="px-2 py-1 text-xs font-medium ${order.status_class} rounded-full">${order.status_display}</span>`;
-                }
-            }
-
-            function updateOrderInUI(order, action) {
-                const tbody = document.querySelector('#orders-table tbody');
-                if (!tbody) return;
-
-                const existingRow = document.querySelector(`#orders-table tr[data-order-id="${order.id}"]`);
-
-                if (action === 'created') {
-                    if (!existingRow) {
-                        const row = `<tr data-order-id="${order.id}" class="border-b border-gray-100">
-                            <td class="p-3">${order.id}</td>
-                            <td class="p-3">${order.table_number}</td>
-                            <td class="p-3">${order.status}</td>
-                            <td class="p-3">
-                                <div class="flex items-center space-x-2">
-                                    <button class="text-gray-500 hover:text-yellow-600 p-1 rounded-full transition-colors" onclick="editOrder(${order.id})" title="Editar">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z"></path></svg>
-                                    </button>
-                                    <button class="text-gray-500 hover:text-red-600 p-1 rounded-full transition-colors" onclick="deleteOrder(${order.id})" title="Eliminar">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>`;
-                        tbody.insertAdjacentHTML('afterbegin', row);
-                    }
-                } else if (action === 'updated') {
-                    if (existingRow) {
-                        existingRow.cells[1].textContent = order.table_number;
-                        existingRow.cells[2].textContent = order.status;
-                    }
-                }
+                    </tr>`;
             }
 
             function updateMenuItemInUI(item, action) {
+                if (appState.activeSection !== 'menu') return; // No actualizar si la sección no está visible
                 const tbody = document.querySelector('#menu-table tbody');
-                if (!tbody) return;
+                const row = document.querySelector(`#menu-table tr[data-item-id="${item.id}"]`);
 
-                const existingRow = document.querySelector(`#menu-table tr[data-item-id="${item.id}"]`);
-
-                if (action === 'created') {
-                    if (!existingRow) {
-                        const row = `<tr data-item-id="${item.id}" class="border-b border-gray-100">
-                            <td class="p-3">${item.name}</td>
-                            <td class="p-3">$${item.price.toFixed(0)}</td>
-                            <td class="p-3">${item.category}</td>
-                            <td class="p-3">${item.available ? 'Sí' : 'No'}</td>
-                            <td class="p-3">
-                                <div class="flex items-center space-x-2">
-                                    <button class="text-gray-500 hover:text-yellow-600 p-1 rounded-full transition-colors" onclick="editMenuItem(${item.id})" title="Editar">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z"></path></svg>
-                                    </button>
-                                    <button class="text-gray-500 hover:text-red-600 p-1 rounded-full transition-colors" onclick="deleteMenuItem(this, ${item.id})" title="Eliminar">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>`;
-                        tbody.insertAdjacentHTML('beforeend', row);
-                    }
-                } else if (action === 'updated') {
-                    if (existingRow) {
-                        existingRow.cells[0].textContent = item.name;
-                        existingRow.cells[1].textContent = `$${item.price.toFixed(0)}`;
-                        existingRow.cells[2].textContent = item.category;
-                        existingRow.cells[3].textContent = item.available ? 'Sí' : 'No';
-                    }
+                if (action === 'deleted') {
+                    row?.remove();
+                } else if (row) { // updated
+                    row.innerHTML = getMenuItemRowHTML(item).match(/<td.*<\/td>/gs).join('');
+                } else { // created
+                    tbody.insertAdjacentHTML('beforeend', getMenuItemRowHTML(item));
                 }
             }
 
-            function updateTableInUI(table, action) {
-                const tbody = document.querySelector('#tables-table tbody');
-                if (!tbody) return;
+            function initMenuManagement() {
+                document.getElementById('add-menu-btn').addEventListener('click', () => {
+                    document.getElementById('menu-form-element').reset();
+                    document.getElementById('menu-item-id').value = '';
+                    document.getElementById('menu-form-title').textContent = 'Agregar Plato';
+                    document.getElementById('menu-form-modal').classList.remove('hidden');
+                });
 
-                const existingRow = document.querySelector(`#tables-table tr[data-table-id="${table.id}"]`);
+                document.getElementById('menu-form-element').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const id = document.getElementById('menu-item-id').value;
+                    const data = {
+                        name: document.getElementById('menu-name').value,
+                        description: document.getElementById('menu-description').value,
+                        price: document.getElementById('menu-price').value,
+                        category: document.getElementById('menu-category').value,
+                        available: document.getElementById('menu-available').checked,
+                    };
+                    const url = id ? `/restaurant/api/menu-items/${id}/` : "{% url 'api_menu_items' %}";
+                    const method = id ? 'PUT' : 'POST';
 
-                if (action === 'created') {
-                    if (!existingRow) {
-                        const row = `<tr data-table-id="${table.id}" class="border-b border-gray-100">
-                            <td class="p-3">${table.number}</td>
-                            <td class="p-3">${table.capacity}</td>
-                            <td class="p-3">
-                                <div class="flex items-center space-x-2">
-                                    <button class="text-gray-500 hover:text-yellow-600 p-1 rounded-full transition-colors" onclick="editTable(${table.id})" title="Editar">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z"></path></svg>
-                                    </button>
-                                    <button class="text-gray-500 hover:text-red-600 p-1 rounded-full transition-colors" onclick="deleteTable(${table.id})" title="Eliminar">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>`;
-                        tbody.insertAdjacentHTML('beforeend', row);
+                    try {
+                        await apiRequest(url, method, data);
+                        document.getElementById('menu-form-modal').classList.add('hidden');
+                        // La actualización de la UI se manejará vía WebSocket
+                    } catch (error) {
+                        alert(`Error guardando el plato: ${error.message}`);
                     }
-                } else if (action === 'updated') {
-                    if (existingRow) {
-                        existingRow.cells[0].textContent = table.number;
-                        existingRow.cells[1].textContent = table.capacity;
-                    }
-                }
+                });
             }
 
-            // --- Chart Rendering ---
-            async function renderCharts() {
+            // --- PINS MANAGEMENT ---
+            async function loadAndRenderPins() {
                 try {
-                    // Fetch sales data
-                    const salesResponse = await fetch(`/restaurant/api/dashboard-charts/?chart=sales_by_day`);
-                    const salesChartData = await salesResponse.json();
-                    
-                    // Render sales chart
-                    const salesCtx = document.getElementById('salesChart').getContext('2d');
-                    new Chart(salesCtx, {
-                        type: 'bar',
-                        data: {
-                            labels: salesChartData.labels,
-                            datasets: [{
-                                label: 'Ventas ($)',
-                                data: salesChartData.data,
-                                backgroundColor: 'rgba(59, 130, 246, 0.5)',
-                                borderColor: 'rgba(59, 130, 246, 1)',
-                                borderWidth: 1
-                            }]
-                        },
-                        options: {
-                            scales: { y: { beginAtZero: true } },
-                            responsive: true,
-                            plugins: { legend: { display: false } }
-                        }
-                    });
+                    const pins = await apiRequest("{% url 'api_registration_pins' %}");
+                    const tbody = document.getElementById('pins-tbody');
+                    tbody.innerHTML = pins.map(pin => `
+                        <tr class="border-b border-gray-100" data-pin-id="${pin.id}">
+                            <td class="p-3 font-mono">${pin.pin}</td>
+                            <td class="p-3">${pin.group_name}</td>
+                            <td class="p-3"><span class="px-2 py-1 text-xs font-medium rounded-full ${pin.is_used ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}">${pin.is_used ? `Usado por ${pin.used_by}` : 'Activo'}</span></td>
+                            <td class="p-3"><button class="text-gray-500 hover:text-red-600 p-1" onclick="deletePin(${pin.id})" title="Eliminar PIN"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button></td>
+                        </tr>
+                    `).join('');
+                } catch (error) {
+                    console.error('Failed to load PINs:', error);
+                }
+            }
 
-                    // Fetch top dishes data
-                    const dishesResponse = await fetch(`/restaurant/api/dashboard-charts/?chart=top_dishes`);
-                    const dishesChartData = await dishesResponse.json();
+            function initPinManagement() {
+                document.getElementById('generate-pin-form').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const groupId = document.getElementById('pin-group-select').value;
+                    try {
+                        const result = await apiRequest("{% url 'api_registration_pins' %}", 'POST', { group_id: groupId });
+                        document.getElementById('new-pin-code').textContent = result.pin;
+                        document.getElementById('new-pin-display').classList.remove('hidden');
+                        loadAndRenderPins();
+                    } catch (error) {
+                        alert(`Error generando PIN: ${error.message}`);
+                    }
+                });
+            }
 
-                    // Render top dishes chart (doughnut)
-                    const dishesCtx = document.getElementById('topDishesChart').getContext('2d');
-                    new Chart(dishesCtx, {
-                        type: 'doughnut',
-                        data: {
-                            labels: dishesChartData.labels,
-                            datasets: [{
-                                label: 'Cantidad Vendida',
-                                data: dishesChartData.data,
-                                backgroundColor: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'],
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            plugins: { legend: { position: 'top' } }
-                        }
-                    });
+            // --- USERS MANAGEMENT ---
+            async function loadAndRenderUsers() {
+                try {
+                    const users = await apiRequest("{% url 'api_users' %}");
+                    window.allUsersData = users; // Guardar para el modal de edición
+                    const tbody = document.getElementById('users-tbody');
+                    tbody.innerHTML = users.map(user => `
+                        <tr class="border-b border-gray-100" data-user-id="${user.id}">
+                            <td class="p-3 font-medium">${user.username}</td>
+                            <td class="p-3 text-gray-600">${user.email || '-'}</td>
+                            <td class="p-3">${user.group_name}</td>
+                            <td class="p-3 text-sm text-gray-500">${user.last_login}</td>
+                            <td class="p-3">
+                                <div class="flex items-center space-x-2">
+                                    <button class="text-gray-500 hover:text-yellow-600 p-1" onclick="editUser(${user.id})" title="Editar Rol"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z"></path></svg></button>
+                                    <button class="text-gray-500 hover:text-red-600 p-1" onclick="deleteUser(${user.id})" title="Eliminar Usuario">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('');
+                } catch (error) {
+                    console.error('Failed to load users:', error);
+                    document.getElementById('users-tbody').innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-500">Error al cargar usuarios.</td></tr>`;
+                }
+            }
 
-                    // Fetch sales by hour data
-                    const salesHourResponse = await fetch(`/restaurant/api/dashboard-charts/?chart=sales_by_hour`);
-                    const salesHourData = await salesHourResponse.json();
+            function initUserManagement() {
+                document.getElementById('user-edit-form').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const userId = document.getElementById('user-edit-id').value;
+                    const groupId = document.getElementById('user-role-select').value;
 
-                    // Render sales by hour chart (line)
-                    const salesHourCtx = document.getElementById('salesByHourChart').getContext('2d');
-                    new Chart(salesHourCtx, {
-                        type: 'line',
-                        data: {
-                            labels: salesHourData.labels,
-                            datasets: [{
-                                label: 'Ventas ($)',
-                                data: salesHourData.data,
-                                backgroundColor: 'rgba(239, 68, 68, 0.2)',
-                                borderColor: 'rgba(239, 68, 68, 1)',
-                                borderWidth: 2,
-                                fill: true,
-                                tension: 0.3
-                            }]
-                        },
-                        options: {
-                            scales: { y: { beginAtZero: true } },
-                            responsive: true,
-                            plugins: { legend: { display: false } }
-                        }
-                    });
+                    try {
+                        await apiRequest(`/restaurant/api/users/${userId}/`, 'PUT', { group_id: groupId });
+                        document.getElementById('user-edit-modal').classList.add('hidden');
+                        loadAndRenderUsers(); // Recargar la lista para ver el cambio
+                    } catch (error) {
+                        alert(`Error al actualizar el rol: ${error.message}`);
+                    }
+                });
+            }
 
-                    // Fetch waiter performance data
-                    const waiterPerfResponse = await fetch(`/restaurant/api/dashboard-charts/?chart=waiter_performance`);
-                    const waiterPerfData = await waiterPerfResponse.json();
+            // --- GLOBAL FUNCTIONS (para onclick) ---
+            window.viewOrderDetails = async (orderId) => {
+                const modal = document.getElementById('order-details-modal');
+                const modalContent = document.getElementById('modal-content');
+                modal.classList.remove('hidden');
+                modalContent.innerHTML = '<div class="text-center">Cargando...</div>';
+                try {
+                    const order = await apiRequest(`/restaurant/api/orders/${orderId}/`);
+                    const itemsHtml = order.items?.map(item => `<li class="flex justify-between"><span>${item.quantity}x ${item.name}</span><span>$${(item.price * item.quantity).toFixed(0)}</span></li>`).join('') || '<li>No hay items.</li>';
+                    const subtotal = order.subtotal || 0;
+                    const tip = order.tip_amount || 0;
+                    const total = order.total || 0;
 
-                    // Render waiter performance chart (horizontal bar)
-                    const waiterPerfCtx = document.getElementById('waiterPerformanceChart').getContext('2d');
-                    new Chart(waiterPerfCtx, {
-                        type: 'bar',
-                        data: {
-                            labels: waiterPerfData.labels,
-                            datasets: [{
-                                label: 'Pedidos Atendidos',
-                                data: waiterPerfData.orders,
-                                backgroundColor: 'rgba(245, 158, 11, 0.5)',
-                                borderColor: 'rgba(245, 158, 11, 1)',
-                                borderWidth: 1
-                            }]
-                        },
-                        options: {
-                            indexAxis: 'y', // Makes the bar chart horizontal
-                            scales: { x: { beginAtZero: true } },
-                            responsive: true,
-                            plugins: { legend: { display: false } }
-                        }
-                    });
+                    modalContent.innerHTML = `
+                        <p><strong>Pedido ID:</strong> ${order.id}</p>
+                        <p><strong>Cliente/Hab:</strong> ${order.identifier}</p>
+                        <p><strong>Estado:</strong> ${order.status_display}</p>
+                        <p><strong>Hora:</strong> ${new Date(order.created_at).toLocaleTimeString()}</p>
+                        <h4 class="font-semibold mt-4 mb-2">Items:</h4>
+                        <ul class="space-y-1 max-h-60 overflow-y-auto">${itemsHtml}</ul>
+                        <div class="mt-3 pt-3 border-t space-y-1 text-right">
+                            <p>Subtotal: $${subtotal.toLocaleString('es-CL')}</p>
+                            <p>Propina: $${tip.toLocaleString('es-CL')}</p>
+                            <p class="text-lg font-bold">Total: $${total.toLocaleString('es-CL')}</p>
+                        </div>`;
+                } catch (error) {
+                    modalContent.innerHTML = `<div class="text-center text-red-500">Error: ${error.message}</div>`;
+                }
+            };
+
+            window.editMenuItem = async (id) => {
+                try {
+                    const item = await apiRequest(`/restaurant/api/menu-items/${id}/`);
+                    document.getElementById('menu-item-id').value = item.id;
+                    document.getElementById('menu-name').value = item.name;
+                    document.getElementById('menu-description').value = item.description;
+                    document.getElementById('menu-price').value = item.price;
+                    document.getElementById('menu-category').value = item.category;
+                    document.getElementById('menu-available').checked = item.available;
+                    document.getElementById('menu-form-title').textContent = 'Editar Plato';
+                    document.getElementById('menu-form-modal').classList.remove('hidden');
+                } catch (error) {
+                    alert(`Error cargando plato: ${error.message}`);
+                }
+            };
+
+            window.deleteMenuItem = async (id) => {
+                if (confirm('¿Estás seguro de que quieres eliminar este plato?')) {
+                    try {
+                        await apiRequest(`/restaurant/api/menu-items/${id}/`, 'DELETE');
+                        document.querySelector(`#menu-table tr[data-item-id="${id}"]`)?.remove();
+                    } catch (error) {
+                        alert(`Error eliminando plato: ${error.message}`);
+                    }
+                }
+            };
+
+            window.deletePin = async (id) => {
+                if (confirm('¿Estás seguro de que quieres eliminar este PIN?')) {
+                    try {
+                        await apiRequest(`/restaurant/api/pins/${id}/`, 'DELETE');
+                        loadAndRenderPins();
+                    } catch (error) {
+                        alert(`Error eliminando PIN: ${error.message}`);
+                    }
+                }
+            };
+
+            window.deleteUser = async (id) => {
+                if (confirm('¿Estás seguro de que quieres eliminar este usuario? Esta acción no se puede deshacer.')) {
+                    try {
+                        await apiRequest(`/restaurant/api/users/${id}/`, 'DELETE');
+                        loadAndRenderUsers(); // Recargar la lista
+                    } catch (error) {
+                        alert(`Error al eliminar el usuario: ${error.message}`);
+                    }
+                }
+            };
+
+            window.editUser = (id) => {
+                const user = window.allUsersData.find(u => u.id === id);
+                if (!user) return;
+
+                document.getElementById('user-edit-id').value = id;
+                document.getElementById('user-edit-title').textContent = `Editar Rol de ${user.username}`;
+                document.getElementById('user-role-select').value = user.group_id;
+                document.getElementById('user-edit-modal').classList.remove('hidden');
+            };
+
+            // --- REPORTS (ORDERS SECTION) ---
+            function initReports() {
+                document.getElementById('report-filter-btn')?.addEventListener('click', fetchOrdersReport);
+                document.getElementById('report-export-excel-btn')?.addEventListener('click', exportOrdersToExcel);
+            }
+
+            async function fetchOrdersReport() {
+                const search = document.getElementById('report-search-input').value;
+                const status = document.getElementById('report-status-filter').value;
+                const dateFrom = document.getElementById('report-date-from-filter').value;
+                const dateTo = document.getElementById('report-date-to-filter').value;
+                const tbody = document.getElementById('orders-report-tbody');
+
+                const query = new URLSearchParams({ search, status, date_from: dateFrom, date_to: dateTo }).toString();
+                
+                try {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-12 text-gray-500">Cargando...</td></tr>';
+                    const orders = await apiRequest(`/restaurant/api/orders-report/?${query}`);
+
+                    if (orders.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-12 text-gray-500">No se encontraron pedidos con los filtros seleccionados.</td></tr>';
+                        return;
+                    }
+
+                    tbody.innerHTML = orders.map(order => `
+                        <tr class="border-b border-gray-100">
+                            <td class="py-4 px-3">${order.id}</td>
+                            <td class="py-4 px-3">${order.identifier}</td>
+                            <td class="py-4 px-3">
+                                <span class="px-2 py-1 text-xs font-medium rounded-full ${order.status_class}">${order.status_display}</span>
+                            </td>
+                            <td class="py-4 px-3">${new Date(order.created_at).toLocaleString('es-CL')}</td>
+                            <td class="py-4 px-3">$${order.total.toLocaleString('es-CL')}</td>
+                            <td class="py-4 px-3">
+                                <button class="text-gray-500 hover:text-blue-600 p-1" onclick="viewOrderDetails(${order.id})" title="Ver detalles">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
 
                 } catch (error) {
-                    console.error("Error rendering charts:", error);
+                    console.error('Error fetching orders report:', error);
+                    tbody.innerHTML = `<tr><td colspan="6" class="text-center py-12 text-red-500">Error al cargar el reporte: ${error.message}</td></tr>`;
                 }
             }
+
+            function exportOrdersToExcel() {
+                const search = document.getElementById('report-search-input').value;
+                const status = document.getElementById('report-status-filter').value;
+                const dateFrom = document.getElementById('report-date-from-filter').value;
+                const dateTo = document.getElementById('report-date-to-filter').value;
+
+                const query = new URLSearchParams({ search, status, date_from: dateFrom, date_to: dateTo }).toString();
+
+                // Redirect to the export URL, the browser will handle the download
+                window.location.href = `/restaurant/export/orders-excel/?${query}`;
+            }
+
+
+            // --- INITIALIZATION ---
+            function initialize() {
+                initUIComponents();
+                initNavigation();
+                initWebSockets();
+                initMenuManagement();
+                initPinManagement();
+                initUserManagement();
+
+                // Cargar la sección inicial desde la URL o por defecto
+                const initialSection = new URLSearchParams(window.location.search).get('section') || 'dashboard';
+                showSection(initialSection);
+            }
+
+            initialize();
         });
     </script>
 </body>

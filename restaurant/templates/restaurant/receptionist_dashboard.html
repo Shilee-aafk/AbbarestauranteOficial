@@ -53,6 +53,12 @@
                 </svg>
                 Cobros
             </a>
+            <a href="#" class="nav-link flex items-center px-6 py-3 text-gray-600 hover:bg-gray-100" data-section="room_charges">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                </svg>
+                Cargos de Habitaciones
+            </a>
             {% if user_role == 'Administrador' or user_role == 'Recepcionista' %}
             <a href="#" class="nav-link flex items-center px-6 py-3 text-gray-600 hover:bg-gray-100" data-section="reports">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -78,7 +84,7 @@
                 <h1 class="text-2xl font-bold text-gray-900 hidden sm:block">Panel de Recepción</h1>
             </div>
             <div class="flex items-center space-x-4">
-                <span class="text-gray-700">{{ user.username }} ({{ user_role }})</span>
+                <span class="text-gray-700">{{ user.username }}</span>
                 <a href="{% url 'logout' %}" class="text-red-600 hover:text-red-800">Cerrar Sesión</a>
             </div>
         </div>
@@ -104,15 +110,33 @@
                     <p class="text-gray-600 mt-2">Gestiona los pagos de los pedidos servidos.</p>
                 </div>
 
+                <!-- Total Sales Card -->
+                <div class="mb-8">
+                    <div class="bg-white rounded-lg shadow-md p-6 max-w-sm">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-600 text-sm">Total Vendido Hoy</p>
+                                <p id="total-sales-today" class="text-3xl font-bold text-gray-900">${{ total_sales_today|floatformat:0 }}</p>
+                            </div>
+                            <div class="bg-purple-100 rounded-full p-3">
+                                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18.5A6.5 6.5 0 1012 5.5a6.5 6.5 0 000 13z"></path></svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Served Orders for Payment -->
                 <div class="bg-white rounded-lg shadow-md p-6">
                     <h2 class="text-xl font-semibold text-gray-900 mb-4">Pedidos Servidos (para Cobrar)</h2>
                     <ul id="served-orders-list" class="space-y-3 max-h-[70vh] overflow-y-auto">
-                        {% for order in served_orders %}
+                        {% for order in served_orders %} {# Esta lista ahora incluye 'served' y 'charged_to_room' #}
                         <li id="served-order-{{ order.id }}" class="flex justify-between items-center bg-blue-50 p-3 rounded-lg">
-                            <div>
-                                <p class="font-semibold">Mesa {{ order.table.number }} - Pedido #{{ order.id }}</p>
-                                <p class="text-sm text-gray-700">Total: ${{ order.total|floatformat:0 }}</p>
+                            <div class="truncate mr-4">
+                                <p class="font-semibold truncate">Pedido #{{ order.id }} - {{ order.room_number|default:order.client_identifier }}</p>
+                                <div class="flex items-center space-x-2 mt-1">
+                                    <span class="px-2 py-1 text-xs font-medium rounded-full {{ order.status_class }}">{{ order.get_status_display }}</span>
+                                    <p class="text-sm text-gray-700">Total: ${{ order.total_amount|floatformat:0 }}</p>
+                                </div>
                             </div>
                             <button class="charge-btn bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700" data-order-id="{{ order.id }}">
                                 Cobrar
@@ -125,6 +149,42 @@
                 </div>
             </div>
 
+            <div id="room_charges" class="content-section hidden">
+                <div class="mb-8">
+                    <h1 class="text-3xl font-bold text-gray-900">Cargos a Habitaciones</h1>
+                    <p class="text-gray-600 mt-2">Historial de todos los pedidos cargados a habitaciones.</p>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="overflow-x-auto">
+                        <table class="w-full table-auto">
+                            <thead>
+                                <tr class="text-left border-b border-gray-200">
+                                    <th class="pb-3 font-semibold text-gray-900">N° PEDIDO</th>
+                                    <th class="pb-3 font-semibold text-gray-900">HABITACIÓN</th>
+                                    <th class="pb-3 font-semibold text-gray-900">FECHA Y HORA</th>
+                                    <th class="pb-3 font-semibold text-gray-900">TOTAL</th>
+                                </tr>
+                            </thead>
+                            <tbody id="room-charges-tbody">
+                                {% for order in room_charge_orders %}
+                                <tr class="border-b border-gray-100" id="room-charge-row-{{ order.id }}">
+                                    <td class="py-4">{{ order.id }}</td>
+                                    <td class="py-4 font-semibold">{{ order.room_number|default:order.client_identifier }}</td>
+                                    <td class="py-4">{{ order.created_at|date:"Y-m-d H:i" }}</td> 
+                                    <td class="py-4">${{ order.total_amount|floatformat:0 }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr id="no-room-charges">
+                                    <td colspan="4" class="text-center py-12 text-gray-500">No hay cargos a habitaciones registrados.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             <div id="reports" class="content-section hidden">
                 <div class="mb-8">
                     <h1 class="text-3xl font-bold text-gray-900">Reporte de Pedidos</h1>
@@ -134,7 +194,7 @@
                 <div class="bg-white rounded-lg shadow-md p-6">
                     <!-- Filters -->
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                        <input type="text" id="search-input" placeholder="Buscar por N° de pedido, mesa..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <input type="text" id="search-input" placeholder="Buscar por N° pedido, cliente, hab..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         <select id="status-filter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                             <option value="">Todos los Estados</option>
                             <option value="pending">Pendiente</option>
@@ -142,6 +202,7 @@
                             <option value="ready">Listo</option>
                             <option value="served">Servido</option>
                             <option value="paid">Pagado</option>
+                            <option value="charged_to_room">Cargado a Habitación</option>
                             <option value="cancelled">Cancelado</option>
                         </select>
                         <input type="date" id="date-from-filter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
@@ -149,7 +210,7 @@
                     </div>
                     <div class="flex justify-end mb-6">
                         <button id="filter-btn" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700">Buscar</button>
-                        <button id="export-csv-btn" class="ml-2 bg-green-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-green-700">Exportar a CSV</button>
+                        <button id="export-excel-btn" class="ml-2 bg-green-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-green-700">Exportar a Excel</button>
                     </div>
 
                     <!-- Table -->
@@ -158,7 +219,7 @@
                             <thead>
                                 <tr class="text-left border-b border-gray-200">
                                     <th class="pb-3 font-semibold text-gray-900">N° PEDIDO</th>
-                                    <th class="pb-3 font-semibold text-gray-900">MESA</th>
+                                    <th class="pb-3 font-semibold text-gray-900">CLIENTE/HAB.</th>
                                     <th class="pb-3 font-semibold text-gray-900">ESTADO</th>
                                     <th class="pb-3 font-semibold text-gray-900">FECHA Y HORA</th>
                                     <th class="pb-3 font-semibold text-gray-900">TOTAL</th>
@@ -187,14 +248,36 @@
                         <ul id="modal-order-items" class="text-sm text-gray-700 space-y-1 max-h-60 overflow-y-auto">
                             <!-- Order items will be populated here -->
                         </ul>
-                        <div class="mt-3 pt-3 border-t text-right">
-                            <p class="text-lg font-bold text-gray-900">Total: $<span id="modal-order-total">0.00</span></p>
-                        </div> 
+                        <div class="mt-4 pt-4 border-t space-y-2">
+                            <div class="flex justify-between text-md">
+                                <span class="font-semibold">Subtotal:</span>
+                                <span class="font-semibold">$<span id="modal-order-subtotal">0</span></span>
+                            </div>
+                            <!-- La sección de propina solo se mostrará si el monto es mayor a cero -->
+                            <div id="modal-tip-row" class="hidden flex justify-between text-md text-purple-700">
+                                <span class="font-semibold">Propina:</span>
+                                <span class="font-semibold">$<span id="modal-order-tip">0</span></span>
+                            </div>
+                            <div class="flex justify-between text-lg font-bold text-gray-900">
+                                <span>Total:</span>
+                                <span>$<span id="modal-order-total">0</span></span>
+                            </div>
+                        </div>
                     </div>
+                </div>
+                <div class="mt-4 p-4 bg-gray-100 rounded-lg">
+                    <label for="split-bill-select" class="block text-sm font-medium text-gray-700 mb-2">Dividir la cuenta:</label>
+                    <select id="split-bill-select" class="w-full p-2 border border-gray-300 rounded-md">
+                        <option value="1">No dividir</option>
+                    </select>
+                    <p id="split-bill-result" class="mt-2 text-center font-semibold text-blue-600"></p>
                 </div>
                 <div class="modal-footer">
                     <button id="modal-confirm-payment-btn" class="px-4 py-2 bg-indigo-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         Confirmar Pago
+                    </button>
+                    <button id="modal-charge-to-room-btn" class="mt-2 px-4 py-2 bg-purple-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 hidden">
+                        Cargar a Habitación
                     </button>
                     <button id="modal-cancel-btn" class="mt-2 px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400">
                         Cancelar
@@ -278,7 +361,7 @@
 
             // --- Reports Logic ---
             document.getElementById('filter-btn').addEventListener('click', fetchOrdersReport);
-            document.getElementById('export-csv-btn').addEventListener('click', exportOrdersToCSV);
+            document.getElementById('export-excel-btn').addEventListener('click', exportOrdersToExcel);
 
             // --- WebSocket for real-time updates ---
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -286,10 +369,17 @@
 
             ws.onmessage = function(e) {
                 const data = JSON.parse(e.data);
-                // Escucha el tipo 'admin_update' que ahora también recibe
-                if (data.type === 'admin_update' && data.order) {
-                    // El payload ahora está anidado dentro de 'order'
-                    handleOrderUpdate(data.order);
+                // El consumidor ahora puede enviar dos tipos de mensajes
+                if (data.type === 'receptionist_message') {
+                    const message = data.message;
+                    if (message.type === 'room_charge_update') {
+                        addOrUpdateRoomChargeRow(message.order);
+                    }
+                } else if (data.type === 'order_update') {
+                    // Este es el flujo original para actualizar la lista de 'servidos'
+                    if (data.order) {
+                        handleOrderUpdate(data.order);
+                    }
                 }
             };
 
@@ -299,8 +389,10 @@
         });
 
         function handleOrderUpdate(order) {
-            if (order.status === 'served') {
+            // La recepcionista debe ver los pedidos 'servidos' y 'cargados a habitación'
+            if (order.status === 'served' || order.status === 'charged_to_room') {
                 addOrUpdateServedOrder(order);
+            // Si el pedido es pagado o cancelado, se elimina de la lista de cobros pendientes.
             } else {
                 removeServedOrder(order.id);
             }
@@ -311,9 +403,12 @@
             let orderLi = document.getElementById(`served-order-${order.id}`);
 
             const orderHTML = `
-                <div>
-                    <p class="font-semibold">Mesa ${order.table_number} - Pedido #${order.id}</p> 
-                    <p class="text-sm text-gray-700">Total: $${order.total.toFixed(0)}</p>
+                <div class="truncate mr-4">
+                    <p class="font-semibold truncate">Pedido #${order.id} - ${order.identifier || ''}</p>
+                    <div class="flex items-center space-x-2 mt-1">
+                        <span class="px-2 py-1 text-xs font-medium rounded-full ${order.status_class}">${order.status_display}</span>
+                        <p class="text-sm text-gray-700">Total: $${order.total.toLocaleString('es-CL')}</p>
+                    </div>
                 </div>
                 <button class="charge-btn bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700" data-order-id="${order.id}">
                     Cobrar
@@ -343,27 +438,108 @@
             }
         }
 
+        function addOrUpdateRoomChargeRow(order) {
+            const tbody = document.getElementById('room-charges-tbody');
+            let row = document.getElementById(`room-charge-row-${order.id}`);
+
+            const rowHTML = `
+                <td class="py-4">${order.id}</td>
+                <td class="py-4 font-semibold">${order.identifier}</td>
+                <td class="py-4">${new Date(order.created_at).toLocaleString('es-CL', { dateStyle: 'short', timeStyle: 'short' })}</td>
+                <td class="py-4">$${order.total.toFixed(0)}</td>
+            `;
+
+            if (row) {
+                // Actualizar una fila existente (aunque es poco común para esta tabla)
+                row.innerHTML = rowHTML;
+            } else {
+                // Crear una nueva fila
+                row = document.createElement('tr');
+                row.id = `room-charge-row-${order.id}`;
+                row.className = 'border-b border-gray-100';
+                row.innerHTML = rowHTML;
+                tbody.prepend(row); // Añadir al principio
+            }
+
+            // Eliminar el mensaje "No hay cargos" si existe
+            const noChargesRow = document.getElementById('no-room-charges');
+            if (noChargesRow) noChargesRow.remove();
+        }
+
         async function openPaymentModal(orderId) {
             try {
                 const response = await fetch(`/restaurant/api/orders/${orderId}/`);
                 if (!response.ok) throw new Error('Failed to fetch order details');
                 const data = await response.json();
 
-                document.getElementById('modal-title').textContent = `Confirmar Cobro - Mesa ${data.table_number}`;
+                document.getElementById('modal-title').textContent = `Confirmar Cobro - ${data.identifier || ''}`;
                 const itemsList = document.getElementById('modal-order-items');
                 itemsList.innerHTML = data.items.map(item => `
-                    <li class="flex justify-between">
-                        <span>${item.quantity}x ${item.menu_item_name}</span> 
-                        <span>$${(item.price * item.quantity).toFixed(0)}</span>
+                    <li class="flex justify-between" data-item-id="${item.id}">
+                        <span>${item.quantity}x ${item.name}</span> 
+                        <span>$${(item.price * item.quantity).toLocaleString('es-CL')}</span>
                     </li>
                 `).join('');
-                document.getElementById('modal-order-total').textContent = data.total.toFixed(0);
+
+                const subtotal = data.subtotal;
+
+                const modalOrderSubtotal = document.getElementById('modal-order-subtotal');
+                const modalOrderTip = document.getElementById('modal-order-tip');
+                const modalOrderTotal = document.getElementById('modal-order-total');
+                const splitSelect = document.getElementById('split-bill-select');
+                const splitResult = document.getElementById('split-bill-result');
+                const tipRow = document.getElementById('modal-tip-row');
+                
+                // Lógica simplificada: solo mostrar datos, no calcular.
+                const displayTotals = () => {
+                    const totalAmount = data.total; // Total final desde la API
+                    
+                    modalOrderSubtotal.textContent = subtotal.toLocaleString('es-CL');
+                    modalOrderTotal.textContent = totalAmount.toLocaleString('es-CL');
+
+                    if (data.tip_amount > 0) {
+                        modalOrderTip.textContent = data.tip_amount.toLocaleString('es-CL');
+                        tipRow.classList.remove('hidden');
+                    } else {
+                        tipRow.classList.add('hidden');
+                    }
+
+                    // Actualizar lógica de división de cuenta
+                    const numPeople = parseInt(splitSelect.value);
+                    if (numPeople > 1) {
+                        const amountPerPerson = totalAmount / numPeople;
+                        splitResult.textContent = `${numPeople} pagos de $${amountPerPerson.toLocaleString('es-CL', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+                    } else {
+                        splitResult.textContent = '';
+                    }
+                };
+
+                splitSelect.innerHTML = '<option value="1">No dividir</option>'; // Reset
+                for (let i = 2; i <= 6; i++) splitSelect.innerHTML += `<option value="${i}">Dividir por ${i} personas</option>`;
+                splitResult.textContent = '';
+                splitSelect.onchange = displayTotals;
+                displayTotals(); // Llamada inicial para mostrar los montos
 
                 const confirmBtn = document.getElementById('modal-confirm-payment-btn');
-                confirmBtn.onclick = () => {
-                    updateOrderStatus(orderId, 'paid');
+                // Clonar y reemplazar para eliminar listeners antiguos y evitar ejecuciones múltiples
+                const newConfirmBtn = confirmBtn.cloneNode(true);
+                confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+
+                newConfirmBtn.onclick = () => {
+                    updateOrderStatus(orderId, 'paid', 'Pagado');
                     closePaymentModal();
                 };
+
+                const chargeToRoomBtn = document.getElementById('modal-charge-to-room-btn');
+                if (data.room_number) {
+                    chargeToRoomBtn.classList.remove('hidden');
+                    chargeToRoomBtn.onclick = () => {
+                        updateOrderStatus(orderId, 'charged_to_room', 'Cargado a Habitación');
+                        closePaymentModal();
+                    };
+                } else {
+                    chargeToRoomBtn.classList.add('hidden');
+                }
 
                 document.getElementById('payment-modal').classList.remove('hidden');
             } catch (error) {
@@ -373,18 +549,22 @@
         }
 
         function closePaymentModal() {
+            document.getElementById('modal-charge-to-room-btn').classList.add('hidden');
             document.getElementById('payment-modal').classList.add('hidden');
         }
 
-        async function updateOrderStatus(orderId, newStatus) {
+        async function updateOrderStatus(orderId, newStatus, statusText) {
+            const body = { status: newStatus };
+            // Ya no se agrega propina desde este modal. El backend se encargará de mantener la propina existente.
+
             try {
                 const response = await fetch(`/restaurant/api/orders/${orderId}/status/`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
-                    body: JSON.stringify({ status: newStatus })
+                    body: JSON.stringify(body)
                 });
                 if (response.ok) {
-                    showToast(`Pedido #${orderId} marcado como Pagado.`, 'success');
+                    showToast(`Pedido #${orderId} marcado como ${statusText}.`, 'success');
                     // WebSocket will handle UI update
                 } else {
                     showToast('Error al actualizar el estado del pedido.', 'error');
@@ -418,7 +598,7 @@
                     const row = `
                         <tr class="border-b border-gray-100">
                             <td class="py-4">${order.id}</td>
-                            <td class="py-4">${order.table_number}</td>
+                            <td class="py-4">${order.identifier}</td>
                             <td class="py-4">
                                 <span class="px-2 py-1 text-xs font-medium rounded-full ${order.status_class}">${order.status_display}</span>
                             </td>
@@ -435,7 +615,7 @@
             }
         }
 
-        function exportOrdersToCSV() {
+        function exportOrdersToExcel() {
             const search = document.getElementById('search-input').value;
             const status = document.getElementById('status-filter').value;
             const dateFrom = document.getElementById('date-from-filter').value;
@@ -449,7 +629,7 @@
             }).toString();
 
             // Redirect to the export URL, the browser will handle the download
-            window.location.href = `/restaurant/export/orders-csv/?${query}`;
+            window.location.href = `/restaurant/export/orders-excel/?${query}`;
         }
 
         function showToast(message, type = 'info') {

@@ -10,8 +10,11 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 import json, decimal
 from django.contrib.auth.models import User
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment, PatternFill
+from openpyxl.utils import get_column_letter
 from .forms import CustomUserCreationForm
-from .models import Reservation, Order, OrderItem, MenuItem, Table, Group, RegistrationPin
+from .models import Reservation, Order, OrderItem, MenuItem, Group, RegistrationPin
 
 def home(request):
     if request.user.is_authenticated:
@@ -66,30 +69,26 @@ def admin_dashboard(request):
 
     # 2. Usar annotate para calcular el total de cada pedido en la DB (evita N+1)
     #    y prefetch_related para cargar los items eficientemente.
-    recent_orders = Order.objects.annotate(
-        total=Sum(F('orderitem__menu_item__price') * F('orderitem__quantity'))
-    ).select_related('table', 'user').order_by('-created_at')[:10]
+    # Ahora que total_amount se almacena directamente, no necesitamos annotate aquí.
+    recent_orders = Order.objects.select_related('user').order_by('-created_at')[:10]
 
+    # Nota: 'orders' aquí es Order.objects.all(), no recent_orders.
     # El resto de los objetos se cargan para el renderizado inicial o como fallback.
     reservations = Reservation.objects.all()
     orders = Order.objects.all()
     menu_items = MenuItem.objects.all()
-    tables = Table.objects.all()
     groups = Group.objects.all()  # Obtener todos los grupos/roles
     user_role = request.user.groups.first().name if request.user.groups.exists() else None
 
     # JSON data for JavaScript
     orders_json = json.dumps([{
         'id': o.id,
-        'table': o.table.number,
+        'identifier': o.room_number or o.client_identifier,
         'status': o.status,
         'user': o.user.username,
         'created_at': o.created_at.isoformat(),
+        'total': float(o.total_amount), # Usar el nuevo campo total_amount
     } for o in orders])
-    tables_json = json.dumps([{
-        'id': t.id,
-        'number': t.number
-    } for t in tables])
     menu_items_json = json.dumps([{
         'id': m.id,
         'name': m.name,
@@ -102,7 +101,6 @@ def admin_dashboard(request):
         'reservations': reservations,
         'orders': orders,
         'menu_items': menu_items,
-        'tables': tables,
         'groups': groups,  # Pasar los grupos a la plantilla
         'total_orders_today': stats.get('total_today', 0),
         'preparing_count': stats.get('preparing', 0),
@@ -111,7 +109,6 @@ def admin_dashboard(request):
         'recent_orders': recent_orders,
         'user_role': user_role,
         'orders_json': orders_json,
-        'tables_json': tables_json,
         'menu_items_json': menu_items_json,
     })
 
@@ -119,22 +116,31 @@ def admin_dashboard(request):
 @user_passes_test(lambda u: u.groups.filter(name='Recepcionista').exists())
 def receptionist_dashboard(request):
     from django.utils import timezone
+    from django.db.models import Sum, F, Q
 
-    # --- Optimización de Consultas ---
-    # 1. Usar annotate para calcular el total de cada pedido en la DB (evita N+1)
-    served_orders = Order.objects.filter(status='served').annotate(
-        total=Sum(F('orderitem__menu_item__price') * F('orderitem__quantity'))
-    ).select_related('table').order_by('-created_at')
+    # Unificamos los pedidos que necesitan acción de cobro: 'servido' y 'cargado a habitación'
+    served_orders = Order.objects.filter(status__in=['served', 'charged_to_room']).order_by('-created_at')
+    
+    # Ahora que total_amount se almacena directamente, no necesitamos annotate aquí.
+    room_charge_orders = Order.objects.filter(status='charged_to_room').order_by('-created_at')
+
+
+
+    today = timezone.now().date()
+    total_sales_today = Order.objects.filter(
+        status='paid',
+        created_at__date=today
+    ).aggregate(total=Sum('total_amount'))['total'] or 0 # Usar el nuevo campo total_amount
 
     reservations = Reservation.objects.all()
-    tables = Table.objects.all()
     user_role = request.user.groups.first().name if request.user.groups.exists() else None
 
     return render(request, 'restaurant/receptionist_dashboard.html', {
         'reservations': reservations,
-        'tables': tables,
         'user_role': user_role,
         'served_orders': served_orders,
+        'room_charge_orders': room_charge_orders,
+        'total_sales_today': total_sales_today,
     })
 
 @login_required
@@ -144,9 +150,8 @@ def cook_dashboard(request):
     from django.utils import timezone
 
     # Consulta optimizada para obtener pedidos y sus items
-    orders = Order.objects.filter(status__in=['pending', 'preparing']).annotate(
-        total=Sum(F('orderitem__menu_item__price') * F('orderitem__quantity'))
-    ).select_related('table', 'user').prefetch_related('orderitem_set__menu_item').order_by('created_at')
+    # Ahora que total_amount se almacena directamente, no necesitamos annotate aquí.
+    orders = Order.objects.filter(status__in=['pending', 'preparing']).select_related('user').prefetch_related('orderitem_set__menu_item').order_by('created_at')
 
     # Preparar datos JSON para el frontend
     orders_data = []
@@ -154,9 +159,9 @@ def cook_dashboard(request):
         orders_data.append({
             'id': order.id,
             'status': order.status,
-            'table_number': order.table.number if order.table else 'N/A',
+            'identifier': order.room_number or order.client_identifier,
             'user_username': order.user.username,
-            'created_at': order.created_at.isoformat(),
+            'created_at': order.created_at.isoformat(), # No need to change, total is not here
             'items': [{
                 'name': item.menu_item.name,
                 'quantity': item.quantity,
@@ -175,59 +180,88 @@ def waiter_dashboard(request):
     import json
     from django.utils import timezone
 
-    # --- Optimización de Consultas ---
+    # --- Datos para la toma de pedidos ---
     menu_items = MenuItem.objects.filter(available=True)
     categories = menu_items.values_list('category', flat=True).distinct()
+    menu_items_json = json.dumps([{'id': item.id, 'name': item.name, 'price': float(item.price)} for item in menu_items])
 
-    # Consultas para obtener los pedidos y las mesas
-    relevant_orders = Order.objects.filter(status__in=['pending', 'preparing', 'ready', 'served'])
-    active_orders = relevant_orders.exclude(status='served').select_related('table').prefetch_related('orderitem_set__menu_item').order_by('created_at')
-    served_orders = Order.objects.filter(status='served').order_by('-created_at')
-    
-    # Usar Prefetch para cargar eficientemente los pedidos relevantes para cada mesa
-    order_prefetch = Prefetch('order_set', queryset=relevant_orders.order_by('created_at'), to_attr='relevant_orders')
-    tables = Table.objects.prefetch_related(order_prefetch).all()
+    # --- Datos para el monitor de pedidos (carga inicial) ---
+    # Usamos prefetch_related para cargar los items de una vez y evitar N+1 queries
+    orders_for_monitor = Order.objects.filter(
+        status__in=['pending', 'preparing', 'ready', 'served']
+    ).prefetch_related('orderitem_set__menu_item').order_by('created_at')
 
-    # Determinar el estado de cada mesa en Python para evitar consultas adicionales en el bucle
-    for table in tables:
-        table.is_available = not relevant_orders.filter(table=table).exists()
-        table.current_order = relevant_orders.filter(table=table).first() if not table.is_available else None
+
+    initial_orders_data = []
+    for order in orders_for_monitor:
+        initial_orders_data.append({
+            'id': order.id,
+            'status': order.status,
+            'status_display': order.get_status_display(),
+            'status_class': order.status_class,
+            'identifier': order.room_number or order.client_identifier, # No need to change, total is not here
+            'total': float(order.total_amount), # Añadir el total para que el monitor lo renderice
+            'items': [{
+                'name': item.menu_item.name,
+                'quantity': item.quantity,
+            } for item in order.orderitem_set.all()]
+        })
+
+    initial_orders_json = json.dumps(initial_orders_data)
 
     user_role = request.user.groups.first().name if request.user.groups.exists() else None
-    menu_items_json = json.dumps([{'id': item.id, 'name': item.name, 'price': float(item.price)} for item in menu_items])
+
     return render(request, 'restaurant/waiter_dashboard.html', {
-        'tables': tables,
-        'active_orders': active_orders,
-        'served_orders': served_orders,
         'menu_items': menu_items,
         'categories': categories,
         'menu_items_json': menu_items_json,
+        'initial_orders_json': initial_orders_json,
         'user_role': user_role,
     })
 
+# Helper function to calculate subtotal for an order instance
+def calculate_order_subtotal(order_instance):
+    return order_instance.orderitem_set.aggregate(
+        subtotal=Sum(F('menu_item__price') * F('quantity'), output_field=fields.DecimalField())
+    )['subtotal'] or decimal.Decimal('0.00')
 @csrf_exempt
 @login_required
 @user_passes_test(lambda u: u.groups.filter(name='Garzón').exists())
 def save_order(request):
     if request.method == 'POST':
-        data = json.loads(request.body)
-        table_id = data.get('table_id')
-        items = data.get('items', [])
+        try:
+            data = json.loads(request.body)
+            items = data.get('items', [])
+            tip_amount = decimal.Decimal(data.get('tip_amount', '0.00'))
 
-        table = Table.objects.get(id=table_id)
-        order = Order.objects.create(table=table, user=request.user, status='pending')
+            # Usar una transacción atómica para asegurar la integridad de los datos.
+            # O todo se crea, o nada se crea si hay un error.
+            with transaction.atomic():
+                order = Order.objects.create(
+                    client_identifier=data.get('client_identifier'),
+                    room_number=data.get('room_number'),
+                    user=request.user, 
+                    status='pending',
+                    tip_amount=tip_amount
+                    # total_amount will be calculated after order items are added
+                )
 
-        for item in items:
-            menu_item = MenuItem.objects.get(id=item['id'])
-            OrderItem.objects.create(
-                order=order,
-                menu_item=menu_item,
-                quantity=item['quantity'],
-                note=item.get('note', '')
-            )
-
-        return JsonResponse({'success': True, 'order_id': order.id})
-    return JsonResponse({'success': False})
+                subtotal = decimal.Decimal('0.00')
+                for item in items:
+                    menu_item = MenuItem.objects.get(id=item['id'])
+                    OrderItem.objects.create(
+                        order=order,
+                        menu_item=menu_item,
+                        quantity=item['quantity'],
+                        note=item.get('note', '')
+                    )
+                    subtotal += menu_item.price * item['quantity']
+                
+                order.total_amount = subtotal + tip_amount # El total ahora incluye la propina desde el inicio
+                order.save() # Save again to update total_amount
+            return JsonResponse({'success': True, 'order_id': order.id})
+        except (KeyError, MenuItem.DoesNotExist, Exception) as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
 @csrf_exempt
 @login_required
@@ -253,13 +287,15 @@ def api_waiter_order_detail(request, pk):
             'note': item.note,
         } for item in items]
 
-        total = sum(item['price'] * item['quantity'] for item in items_data)
+        subtotal = sum(item['price'] * item['quantity'] for item in items_data)
 
         data = {
             'status': order.status,
             'items': items_data,
-            'total': total,
-            'table_number': order.table.number,
+            'subtotal': subtotal, # Se agrega el subtotal para que el modal de pago funcione
+            'total': subtotal + float(order.tip_amount), # El total ahora incluye la propina
+            'identifier': order.room_number or order.client_identifier,
+            'room_number': order.room_number,
         }
         return JsonResponse(data)
 
@@ -267,78 +303,21 @@ def api_waiter_order_detail(request, pk):
         data = json.loads(request.body)
         items_data = data.get('items', [])
 
-        # Delete old items and create new ones (simpler than diffing)
-        order.orderitem_set.all().delete()
+        with transaction.atomic(): # Add transaction for atomicity
+            # Delete old items and create new ones (simpler than diffing)
+            order.orderitem_set.all().delete()
 
-        for item_data in items_data:
-            menu_item = MenuItem.objects.get(id=item_data['id'])
-            OrderItem.objects.create(order=order, menu_item=menu_item, quantity=item_data['quantity'], note=item_data.get('note', ''))
-        
-        # The signal will automatically trigger the real-time update
-        order.save() # Trigger the post_save signal
-        return JsonResponse({'success': True, 'order_id': order.id})
-
-@csrf_exempt
-@login_required
-@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
-def add_order(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        table = Table.objects.get(number=data['table'])
-        order = Order.objects.create(table=table, user=request.user, status=data['status'])
-        return JsonResponse({'success': True, 'order': {'id': order.id, 'table': order.table.number, 'status': order.status}})
+            subtotal = decimal.Decimal('0.00')
+            for item_data in items_data:
+                menu_item = MenuItem.objects.get(id=item_data['id'])
+                OrderItem.objects.create(order=order, menu_item=menu_item, quantity=item_data['quantity'], note=item_data.get('note', ''))
+                subtotal += menu_item.price * item_data['quantity']
+            
+            order.total_amount = subtotal + order.tip_amount # Recalcular total_amount con el nuevo subtotal
+            order.save() # Trigger the post_save signal
+            return JsonResponse({'success': True, 'order_id': order.id})
 
 @csrf_exempt
-@login_required
-@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
-def edit_order(request, id):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        order = Order.objects.get(id=id)
-        table = Table.objects.get(number=data['table'])
-        order.table = table
-        order.status = data['status']
-        order.save()
-        return JsonResponse({'success': True, 'order': {'id': order.id, 'table': order.table.number, 'status': order.status}})
-
-@csrf_exempt
-@login_required
-@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
-def delete_order(request, id):
-    if request.method == 'POST':
-        Order.objects.get(id=id).delete()
-        return JsonResponse({'success': True})
-
-@login_required
-@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
-def add_table(request):
-    if request.method == 'POST':
-        if request.content_type == 'application/json':
-            data = json.loads(request.body)
-            number = data.get('number')
-            capacity = data.get('capacity', 4)
-            table = Table.objects.create(number=number)
-            return JsonResponse({'success': True, 'table': {'id': table.id, 'number': table.number, 'capacity': capacity}})
-        else:
-            number = request.POST.get('number')
-            Table.objects.create(number=number)
-            return redirect('admin_dashboard')
-    return redirect('admin_dashboard')
-
-@csrf_exempt
-@login_required
-@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
-def update_order_status_json(request, order_id):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        status = data.get('status')
-        order = Order.objects.get(id=order_id)
-        order.status = status
-        order.save()
-        return JsonResponse({'success': True})
-    return JsonResponse({'success': False})
-
-@login_required
 @user_passes_test(lambda u: u.groups.filter(name='Recepcionista').exists())
 def add_reservation(request):
     if request.method == 'POST':
@@ -348,8 +327,16 @@ def add_reservation(request):
         date = request.POST.get('date')
         time = request.POST.get('time')
         guests = request.POST.get('guests')
-        table_id = request.POST.get('table')
-        Reservation.objects.create(name=name, email=email, phone=phone, date=date, time=time, guests=guests, table_id=table_id)
+        notes = request.POST.get('notes')
+        Reservation.objects.create(
+            user=request.user,
+            client_name=name, 
+            phone=phone, 
+            date=date, 
+            time=time, 
+            guests=guests, 
+            notes=notes
+        )
         return redirect('receptionist_dashboard')
     return redirect('receptionist_dashboard')
 
@@ -364,26 +351,6 @@ def update_order_status(request, order_id):
         return redirect('cook_dashboard')
     return redirect('cook_dashboard')
 
-
-def crear_producto(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        name = data.get('name')
-        description = data.get('description')
-        price = data.get('price')
-        category = data.get('category', 'General')
-        available = data.get('available', True)
-
-        producto = MenuItem.objects.create(
-            name=name,
-            description=description,
-            price=price,
-            category=category,
-            available=available
-        )
-        return JsonResponse({'message': 'Producto creado', 'id': producto.id})
-    return JsonResponse({'error': 'Método no permitido'}, status=405)
-
 # --- API Views for Admin Dashboard ---
 
 @csrf_exempt
@@ -395,11 +362,10 @@ def api_orders(request):
     POST: Creates a new order.
     """
     if request.method == 'GET':
-        orders = Order.objects.select_related('table').all().order_by('-created_at')
+        orders = Order.objects.select_related('user').all().order_by('-created_at')
         data = [{
             'id': o.id,
-            'table_number': o.table.number if o.table else 'N/A',
-            'table_id': o.table.id if o.table else None,
+            'identifier': o.room_number or o.client_identifier,
             'status': o.get_status_display(),
         } for o in orders]
         return JsonResponse(data, safe=False)
@@ -407,23 +373,18 @@ def api_orders(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            table_id = data.get('table')
-            status = data.get('status')
-
-            if not table_id:
-                return JsonResponse({'error': 'Table ID is required'}, status=400)
-
-            table = Table.objects.get(id=table_id)
-            order = Order.objects.create(table=table, user=request.user, status=status)
+            order = Order.objects.create(
+                client_identifier=data['client_identifier'],
+                room_number=data.get('room_number'),
+                user=request.user,
+                status=data.get('status', 'pending')
+            )
             
             return JsonResponse({
                 'id': order.id,
-                'table_id': order.table.id,
-                'table_number': order.table.number,
+                'identifier': order.room_number or order.client_identifier,
                 'status': order.get_status_display()
             }, status=201)
-        except Table.DoesNotExist:
-            return JsonResponse({'error': 'Table not found'}, status=404)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
 
@@ -434,10 +395,10 @@ def api_orders(request):
 @user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
 def api_kitchen_orders(request):
     if request.method == 'GET':
-        orders = Order.objects.filter(status__in=['pending', 'preparing']).select_related('table')
+        orders = Order.objects.filter(status__in=['pending', 'preparing'])
         data = [{
             'id': o.id,
-            'table_number': o.table.number if o.table else 'N/A',
+            'identifier': o.room_number or o.client_identifier,
             'status': o.get_status_display(),
         } for o in orders]
         return JsonResponse(data, safe=False)
@@ -467,22 +428,27 @@ def api_order_detail(request, pk):
             'note': item.note,
         } for item in items]
 
-        total = sum(item['price'] * item['quantity'] for item in items_data)
+        subtotal = sum(item['price'] * item['quantity'] for item in items_data)
+        tip_amount = float(order.tip_amount)
 
         data = {
             'id': order.id,
-            'table_number': order.table.number,
+            'identifier': order.room_number or order.client_identifier,
             'status': order.status,
             'status_display': order.get_status_display(),
             'created_at': order.created_at.isoformat(),
             'user': order.user.username,
             'items': items_data,
-            'total': total,
+            'subtotal': subtotal,
+            'tip_amount': tip_amount,
+            'total': subtotal + tip_amount,
         }
         return JsonResponse(data)
 
     if request.method == 'PUT':
         data = json.loads(request.body)
+        order.client_identifier = data.get('client_identifier', order.client_identifier)
+        order.room_number = data.get('room_number', order.room_number)
         order.status = data.get('status', order.status)
 
         order.save()
@@ -501,72 +467,18 @@ def api_order_status(request, pk):
     if request.method == 'PUT':
         data = json.loads(request.body)
         order = Order.objects.get(pk=pk)
-        order.status = data['status']
-        order.save()
-        return JsonResponse({'success': True, 'status': order.status})
-    return JsonResponse({'error': 'Invalid method'}, status=405)
+        order.status = data.get('status')
+        
+        # Solo recalcular el total si se envía explícitamente una nueva propina.
+        # Esto evita que el modal de recepción recalcule el total con propinas antiguas.
+        if data.get('status') in ['paid', 'charged_to_room'] and 'tip_amount' in data:
+            order.tip_amount = decimal.Decimal(data['tip_amount']) # Ensure it's a Decimal
+            subtotal = calculate_order_subtotal(order)
+            order.total_amount = subtotal + order.tip_amount
 
-@csrf_exempt
-@login_required
-@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
-def api_tables(request):
-    """
-    GET: Returns a list of all tables.
-    POST: Creates a new table.
-    """
-    if request.method == 'GET':
-        tables = Table.objects.all().order_by('number')
-        data = [{
-            'id': t.id,
-            'number': t.number,
-            'capacity': t.capacity,
-        } for t in tables]
-        return JsonResponse(data, safe=False)
-
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            table = Table.objects.create(
-                number=data['number'],
-                capacity=data['capacity']
-            )
-            return JsonResponse({
-                'id': table.id,
-                'number': table.number,
-                'capacity': table.capacity
-            }, status=201)
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=400)
-
-@csrf_exempt
-@login_required
-@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
-def api_table_detail(request, pk):
-    try:
-        table = Table.objects.get(pk=pk)
-    except Table.DoesNotExist:
-        return JsonResponse({'error': 'Table not found'}, status=404)
-
-    if request.method == 'GET':
-        data = {
-            'id': table.id,
-            'number': table.number,
-            'capacity': table.capacity,
-        }
-        return JsonResponse(data)
-
-    if request.method == 'PUT': # El frontend envía PUT para editar
-        data = json.loads(request.body)
-        table.number = data.get('number', table.number)
-        table.capacity = data.get('capacity', table.capacity)
-        table.save()
-        return JsonResponse({'id': table.id, 'number': table.number, 'capacity': table.capacity})
-
-    elif request.method == 'DELETE':
-        table.delete()
-        return JsonResponse({'success': True}, status=204)
-
-    return JsonResponse({'error': 'Invalid method'}, status=405)
+        order.save() # This will trigger the post_save signal
+        return JsonResponse({'success': True, 'status': order.status, 'total_amount': float(order.total_amount)})
+    return JsonResponse({'error': 'Invalid method'}, status=405) # Added total_amount to response
 
 @csrf_exempt
 @login_required
@@ -647,15 +559,17 @@ def api_orders_report(request):
     """
     if request.method == 'GET':
         from django.db.models import Q
-        orders = Order.objects.select_related('table').prefetch_related('orderitem_set__menu_item').all()
+        orders = Order.objects.all() # total_amount is now a stored field
 
         # Filtering
         search_query = request.GET.get('search', '')
         if search_query:
+            # Búsqueda segura: Intenta buscar por ID si es un número, si no, solo por número de mesa.
+            # Esto evita el error si el `search_query` no es un número válido.
+            id_query = Q()
             if search_query.isdigit():
-                orders = orders.filter(Q(id=int(search_query)) | Q(table__number__icontains=search_query))
-            else:
-                orders = orders.filter(Q(table__number__icontains=search_query))
+                id_query = Q(id=int(search_query))
+            orders = orders.filter(id_query | Q(client_identifier__icontains=search_query) | Q(room_number__icontains=search_query))
 
         status_query = request.GET.get('status', '')
         if status_query:
@@ -674,19 +588,14 @@ def api_orders_report(request):
         # Prepare data for JSON response
         data = []
         for order in orders:
-            total = 0
-            for item in order.orderitem_set.all():
-                if item.menu_item: # Asegurarse de que menu_item existe antes de acceder a sus propiedades
-                    total += item.menu_item.price * item.quantity
-
             data.append({
                 'id': order.id,
-                'table_number': order.table.number if order.table else 'N/A',
+                'identifier': order.room_number or order.client_identifier,
                 'status': order.status,
                 'status_display': order.get_status_display(),
                 'status_class': order.status_class,
-                'created_at': order.created_at,
-                'total': total,
+                'created_at': order.created_at.isoformat(), # Ensure datetime is serializable
+                'total': float(order.total_amount or 0), # Usar el nuevo campo total_amount
             })
 
         return JsonResponse(data, safe=False)
@@ -695,54 +604,6 @@ def api_orders_report(request):
 
 @login_required
 @user_passes_test(lambda u: u.groups.filter(name__in=['Administrador', 'Recepcionista']).exists())
-def export_orders_csv(request):
-    """
-    Exports a filtered list of orders to a CSV file.
-    """
-    import csv
-    from django.http import HttpResponse
-    from django.utils import timezone
-
-    orders = Order.objects.select_related('table').prefetch_related('orderitem_set__menu_item').all()
-
-    # Filtering (same logic as api_orders_report)
-    search_query = request.GET.get('search', '')
-    if search_query:
-        # Mantengo la lógica original que el usuario indicó que funcionaba para CSV
-        # Aunque para IDs enteros, Q(id=int(search_query)) sería más preciso.
-        orders = orders.filter(Q(id__icontains=search_query) | Q(table__number__icontains=search_query))
-
-    status_query = request.GET.get('status', '')
-    if status_query:
-        orders = orders.filter(status=status_query)
-
-    date_from_query = request.GET.get('date_from', '')
-    if date_from_query:
-        orders = orders.filter(created_at__date__gte=date_from_query)
-
-    date_to_query = request.GET.get('date_to', '')
-    if date_to_query:
-        orders = orders.filter(created_at__date__lte=date_to_query)
-
-    orders = orders.order_by('-created_at')
-
-    response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
-    response['Content-Disposition'] = f'attachment; filename="reporte_pedidos_{timezone.now().strftime("%Y-%m-%d")}.csv"'
-
-    writer = csv.writer(response, delimiter=';')
-    writer.writerow(['ID Pedido', 'Mesa', 'Estado', 'Fecha y Hora', 'Total', 'Items'])
-
-    for order in orders:
-        total = 0 
-        for item in order.orderitem_set.all():
-            if item.menu_item: # Asegurarse de que menu_item existe antes de acceder a sus propiedades
-                total += item.menu_item.price * item.quantity
-        writer.writerow([order.id, order.table.number, order.get_status_display(), order.created_at.strftime('%Y-%m-%d %H:%M'), total])
-
-    return response
-    
-@login_required
-@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
 def api_dashboard_charts(request):
     from django.db.models import Sum, Count, F, Q, Case, When, Value, IntegerField
     from django.db.models.functions import TruncDate, ExtractHour
@@ -760,9 +621,8 @@ def api_dashboard_charts(request):
             created_at__date__gte=seven_days_ago
         ).annotate(
             date=TruncDate('created_at')
-        ).values('date').annotate(
-            # Usamos F() para referenciar campos y hacer el cálculo en la DB
-            daily_total=Sum(F('orderitem__menu_item__price') * F('orderitem__quantity'))
+        ).values('date').annotate( # Use the new total_amount field
+            daily_total=Sum('total_amount')
         ).order_by('date')
 
         # Preparamos los datos para el gráfico, asegurando que haya 7 días
@@ -788,9 +648,9 @@ def api_dashboard_charts(request):
             status='paid',
             created_at__date=today
         ).annotate(
-            hour=ExtractHour('created_at')
-        ).values('hour').annotate(
-            hourly_total=Sum(F('orderitem__menu_item__price') * F('orderitem__quantity'))
+            hour=ExtractHour('created_at') # Use the new total_amount field
+        ).values('hour').annotate( 
+            hourly_total=Sum('total_amount')
         ).order_by('hour')
 
         labels = [f"{h}:00" for h in range(24)]
@@ -806,8 +666,8 @@ def api_dashboard_charts(request):
             created_at__date=today,
             user__in=waiters
         ).values('user__username').annotate(
-            order_count=Count('id'),
-            total_sales=Sum(F('orderitem__menu_item__price') * F('orderitem__quantity'), filter=Q(status='paid'))
+            order_count=Count('id'), # Use the new total_amount field
+            total_sales=Sum('total_amount', filter=Q(status='paid'))
         ).order_by('-order_count')
 
         labels = [d['user__username'] for d in performance_data]
@@ -815,6 +675,18 @@ def api_dashboard_charts(request):
         data_sales = [float(d['total_sales'] or 0) for d in performance_data]
 
         return JsonResponse({'labels': labels, 'orders': data_orders, 'sales': data_sales})
+
+    if chart_type == 'sales_by_category':
+        # Ventas de hoy por categoría de producto
+        category_sales = OrderItem.objects.filter(
+            order__status='paid',
+            order__created_at__date=today
+        ).values('menu_item__category').annotate(
+            total=Sum(F('menu_item__price') * F('quantity'))
+        ).order_by('-total')
+        labels = [c['menu_item__category'] for c in category_sales]
+        data = [float(c['total']) for c in category_sales]
+        return JsonResponse({'labels': labels, 'data': data})
 
     return JsonResponse({'error': 'Invalid chart type'}, status=400)
 
@@ -880,20 +752,19 @@ def api_registration_pins(request, pk=None):
 
 @login_required
 @user_passes_test(lambda u: u.groups.filter(name__in=['Administrador', 'Recepcionista']).exists())
-def export_orders_csv(request):
+def export_orders_excel(request):
     """
-    Exports a filtered list of orders to a CSV file.
+    Exports a filtered list of orders to an Excel file (.xlsx).
     """
-    import csv
     from django.http import HttpResponse
     from django.utils import timezone
 
-    orders = Order.objects.select_related('table').prefetch_related('orderitem_set__menu_item').all()
+    orders = Order.objects.prefetch_related('orderitem_set__menu_item').all()
 
     # Filtering (same logic as api_orders_report)
     search_query = request.GET.get('search', '')
     if search_query:
-        orders = orders.filter(Q(id__icontains=search_query) | Q(table__number__icontains=search_query))
+        orders = orders.filter(Q(id__icontains=search_query) | Q(client_identifier__icontains=search_query) | Q(room_number__icontains=search_query))
 
     status_query = request.GET.get('status', '')
     if status_query:
@@ -909,16 +780,112 @@ def export_orders_csv(request):
 
     orders = orders.order_by('-created_at')
 
-    response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
-    response['Content-Disposition'] = f'attachment; filename="reporte_pedidos_{timezone.now().strftime("%Y-%m-%d")}.csv"'
+    # Create an Excel workbook and sheet
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Reporte de Pedidos"
 
-    writer = csv.writer(response, delimiter=';')
-    writer.writerow(['ID Pedido', 'Mesa', 'Estado', 'Fecha y Hora', 'Total'])
+    # Define styles
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="4F81BD", end_color="4F81BD", fill_type="solid")
+    total_font = Font(bold=True)
+    currency_format = '"$"#,##0'
 
+    # Write headers
+    headers = ['ID Pedido', 'Cliente/Habitación', 'Estado', 'Fecha y Hora', 'Total']
+    for col_num, header_title in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num, value=header_title)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal='center')
+
+    # Write data rows
+    grand_total = 0
+    row_num = 2
+    grand_total = decimal.Decimal('0.00')
     for order in orders:
-        total = sum(item.menu_item.price * item.quantity for item in order.orderitem_set.all() if item.menu_item)
-        # Convertir a la zona horaria local antes de formatear
+        final_total = order.total_amount # Use the new field
+        if final_total:
+            grand_total += final_total
         local_time = timezone.localtime(order.created_at).strftime('%Y-%m-%d %H:%M')
-        writer.writerow([order.id, order.table.number, order.get_status_display(), local_time, total])
+        
+        ws.cell(row=row_num, column=1, value=order.id)
+        ws.cell(row=row_num, column=2, value=order.room_number or order.client_identifier)
+        ws.cell(row=row_num, column=3, value=order.get_status_display())
+        ws.cell(row=row_num, column=4, value=local_time)
+        total_cell = ws.cell(row=row_num, column=5, value=final_total)
+        total_cell.number_format = currency_format
+        row_num += 1
+
+    # Write total row
+    total_label_cell = ws.cell(row=row_num + 1, column=4, value="Total Vendido:")
+    total_label_cell.font = total_font
+    total_label_cell.alignment = Alignment(horizontal='right')
+
+    grand_total_cell = ws.cell(row=row_num + 1, column=5, value=grand_total)
+    grand_total_cell.font = total_font
+    grand_total_cell.number_format = currency_format
+    grand_total_cell.fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid") # Yellow fill
+
+    # Adjust column widths
+    for col_num, header_title in enumerate(headers, 1):
+        column_letter = get_column_letter(col_num)
+        ws.column_dimensions[column_letter].width = 20
+
+    # Create the response
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = f'attachment; filename="reporte_pedidos_{timezone.now().strftime("%Y-%m-%d")}.xlsx"'
+    wb.save(response)
 
     return response
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
+@csrf_exempt
+def api_users(request, pk=None):
+    """
+    API endpoint to manage users.
+    - GET /api/users/ -> List all users.
+    - PUT /api/users/<pk>/ -> Update a user's role.
+    - DELETE /api/users/<pk>/ -> Delete a user.
+    """
+    # --- Manejo de un usuario específico (PUT, DELETE) ---
+    if pk:
+        try:
+            user = User.objects.get(pk=pk)
+        except User.DoesNotExist:
+            return JsonResponse({'error': 'Usuario no encontrado'}, status=404)
+
+        # Evitar que un administrador se modifique o elimine a sí mismo
+        if user == request.user:
+            return JsonResponse({'error': 'No puedes modificar o eliminar tu propia cuenta.'}, status=403)
+
+        if request.method == 'PUT':
+            data = json.loads(request.body)
+            group_id = data.get('group_id')
+            try:
+                group = Group.objects.get(id=group_id)
+                user.groups.set([group]) # set() reemplaza todos los grupos existentes
+                return JsonResponse({'success': True, 'message': 'Rol de usuario actualizado.'})
+            except Group.DoesNotExist:
+                return JsonResponse({'error': 'El rol especificado no existe.'}, status=400)
+
+        elif request.method == 'DELETE':
+            user.delete()
+            return JsonResponse({'success': True, 'message': 'Usuario eliminado.'}, status=204)
+
+    # --- Manejo de la lista de usuarios (GET) ---
+    elif request.method == 'GET':
+        users = User.objects.prefetch_related('groups').all().order_by('username')
+        data = [{
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'group_id': user.groups.first().id if user.groups.exists() else None,
+            'group_name': user.groups.first().name if user.groups.exists() else 'N/A',
+            'last_login': user.last_login.strftime('%Y-%m-%d %H:%M') if user.last_login else 'Nunca'
+        } for user in users]
+        return JsonResponse(data, safe=False)
+
+    # Método no permitido para la URL solicitada
+    return JsonResponse({'error': f'Método {request.method} no permitido.'}, status=405)

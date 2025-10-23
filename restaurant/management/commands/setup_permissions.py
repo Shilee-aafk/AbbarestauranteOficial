@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import Group, Permission, User
 from django.contrib.contenttypes.models import ContentType
-from restaurant.models import MenuItem, Table, Reservation, Order, OrderItem
+from restaurant.models import MenuItem, Reservation, Order, OrderItem
 
 class Command(BaseCommand):
     help = 'Setup permissions for user groups'
@@ -9,7 +9,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         # Get content types
         menuitem_ct = ContentType.objects.get_for_model(MenuItem)
-        table_ct = ContentType.objects.get_for_model(Table)
         reservation_ct = ContentType.objects.get_for_model(Reservation)
         order_ct = ContentType.objects.get_for_model(Order)
         orderitem_ct = ContentType.objects.get_for_model(OrderItem)
@@ -23,11 +22,6 @@ class Command(BaseCommand):
                 Permission.objects.get(content_type=menuitem_ct, codename='change_menuitem'),
                 Permission.objects.get(content_type=menuitem_ct, codename='delete_menuitem'),
                 Permission.objects.get(content_type=menuitem_ct, codename='view_menuitem'),
-                # Table permissions
-                Permission.objects.get(content_type=table_ct, codename='add_table'),
-                Permission.objects.get(content_type=table_ct, codename='change_table'),
-                Permission.objects.get(content_type=table_ct, codename='delete_table'),
-                Permission.objects.get(content_type=table_ct, codename='view_table'),
                 # Reservation permissions
                 Permission.objects.get(content_type=reservation_ct, codename='add_reservation'),
                 Permission.objects.get(content_type=reservation_ct, codename='change_reservation'),
@@ -52,7 +46,6 @@ class Command(BaseCommand):
             'Recepcionista': [
                 # View permissions
                 Permission.objects.get(content_type=menuitem_ct, codename='view_menuitem'),
-                Permission.objects.get(content_type=table_ct, codename='view_table'),
                 Permission.objects.get(content_type=reservation_ct, codename='view_reservation'),
                 Permission.objects.get(content_type=order_ct, codename='view_order'),
                 Permission.objects.get(content_type=orderitem_ct, codename='view_orderitem'),
@@ -72,7 +65,6 @@ class Command(BaseCommand):
             'Garzón': [
                 # View permissions
                 Permission.objects.get(content_type=menuitem_ct, codename='view_menuitem'),
-                Permission.objects.get(content_type=table_ct, codename='view_table'),
                 Permission.objects.get(content_type=order_ct, codename='view_order'),
                 Permission.objects.get(content_type=orderitem_ct, codename='view_orderitem'),
                 # Order creation and management
