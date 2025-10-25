@@ -76,14 +76,17 @@ def order_post_save_handler(sender, instance, created, **kwargs):
 
     async_to_sync(channel_layer.group_send)('waiters', {'type': 'order_update', 'message': waiter_payload})
     
+    # Si el estado es 'charged_to_room', se envía una notificación específica a la tabla de cargos de habitación.
+    # El mensaje principal 'order_update' se encargará de actualizar la lista de cobros pendientes.
     if instance.status == 'charged_to_room':
         receptionist_payload = {
             'type': 'room_charge_update',
             'order': waiter_payload['order'] 
         }
         async_to_sync(channel_layer.group_send)('receptionists', {'type': 'receptionist_message', 'message': receptionist_payload})
-
     
+    # Se envía siempre una actualización general para que el dashboard de recepción
+    # pueda añadir, actualizar o quitar el pedido de la lista de "para cobrar".
     async_to_sync(channel_layer.group_send)('receptionists', {'type': 'order_update', 'message': waiter_payload})
 
     

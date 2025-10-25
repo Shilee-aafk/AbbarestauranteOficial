@@ -1,26 +1,18 @@
-{% load static %}
-<!DOCTYPE html>
+{% extends 'restaurant/base.html' %}
 
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Cocinero - Restaurante</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+{% block title %}Dashboard Cocinero - AbbaHotel- Restaurante{% endblock %}
+
+{% block body_class %}bg-gray-50 text-gray-800{% endblock %}
+
+{% block extra_head %}
     <style>
-        body { 
-            font-family: 'Inter', sans-serif; 
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
         .order-card {
             transition: all 0.3s ease-in-out;
             border-left-width: 8px;
         }
-        .order-card-new { border-color: #3B82F6; } /* blue-500 */
-        .order-card-medium { border-color: #F59E0B; } /* amber-500 */
-        .order-card-old { border-color: #EF4444; } /* red-500 */
+        .order-card-new { border-color: #FBBF24; } /* amber-400 */
+        .order-card-medium { border-color: #D97706; } /* amber-600 */
+        .order-card-old { border-color: #92400E; } /* amber-800 */
 
         /* Ocultar la barra de scroll pero permitir el desplazamiento */
         .no-scrollbar::-webkit-scrollbar {
@@ -31,20 +23,19 @@
             scrollbar-width: none;
         }
     </style>
-</head>
-<body class="bg-gray-900 text-white">
-    <div class="fixed top-0 left-0 right-0 bg-gray-800 p-2 z-10 flex justify-between items-center border-b border-gray-700 h-16">
-        <div class="flex items-center">
-            <h1 class="text-2xl font-bold text-white ml-4">Panel de Cocina</h1>
-        </div>
-        <a href="{% url 'logout' %}" class="text-sm text-red-400 hover:text-red-300">Cerrar Sesión</a>
+{% endblock %}
+
+{% block content %}
+    <div class="fixed top-0 left-0 right-0 bg-white p-2 z-10 flex justify-between items-center border-b border-gray-200 shadow-sm">
+        <h1 class="text-2xl font-bold text-gray-900">Panel de Cocina</h1>
+        <a href="{% url 'logout' %}" class="text-sm text-red-600 hover:text-red-800">Cerrar Sesión</a>
     </div>
     
     <div class="flex h-screen pt-14">
         <!-- Columna de Pedidos Recibidos -->
-        <div class="w-1/2 border-r border-gray-700 flex flex-col">
-            <div class="p-4 border-b border-gray-700 bg-gray-800">
-                <h2 class="text-2xl font-bold text-center text-blue-300">Recibidos</h2>
+        <div class="w-1/2 border-r border-gray-200 flex flex-col">
+            <div class="p-4 border-b border-gray-200 bg-gray-100">
+                <h2 class="text-2xl font-bold text-center text-amber-800">Recibidos</h2>
             </div>
             <div id="pending-orders" class="flex-grow p-4 overflow-y-auto no-scrollbar">
                 {% for order in orders %}
@@ -57,8 +48,8 @@
     
         <!-- Columna de Pedidos en Preparación -->
         <div class="w-1/2 flex flex-col">
-            <div class="p-4 border-b border-gray-700 bg-gray-800">
-                <h2 class="text-2xl font-bold text-center text-amber-300">En Preparación</h2>
+            <div class="p-4 border-b border-gray-200 bg-gray-100">
+                <h2 class="text-2xl font-bold text-center text-amber-800">En Preparación</h2>
             </div>
             <div id="preparing-orders" class="flex-grow p-4 overflow-y-auto no-scrollbar">
                 {% for order in orders %}
@@ -69,7 +60,9 @@
             </div>
         </div>
     </div>
-    
+{% endblock %}
+
+{% block extra_js %}
     <script>
         const csrfToken = '{{ csrf_token }}';
         // Pasamos los pedidos iniciales de Django a JavaScript
@@ -106,28 +99,36 @@
          */
         function createOrderCardHTML(order) {
             const itemsHTML = order.items.map(item => `
-                <div class="flex items-start text-xl border-b border-gray-700 py-2">
+                <div class="flex items-start text-xl border-b border-gray-200 py-2">
                     <span class="font-bold text-2xl w-12">${item.quantity}x</span>
                     <div class="flex-1">
                         <p class="font-semibold">${item.name}</p>
-                        ${item.note ? `<p class="text-sm text-amber-300 font-light">${item.note}</p>` : ''}
+                        ${item.note ? `<p class="text-sm text-amber-600 font-light">${item.note}</p>` : ''}
                     </div>
                 </div>
             `).join('');
     
             let buttonHTML = '';
             if (order.status === 'pending') {
-                buttonHTML = `<button class="w-full text-xl font-bold py-3 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors" onclick="updateOrderStatus(${order.id}, 'preparing')">Empezar Preparación</button>`;
+                buttonHTML = `
+                    <button class="w-full flex items-center justify-center text-xl font-bold py-3 rounded-lg bg-amber-600 hover:bg-amber-700 text-white shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 ease-in-out" onclick="updateOrderStatus(${order.id}, 'preparing')">
+                        <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Empezar Preparación
+                    </button>`;
             } else if (order.status === 'preparing') {
-                buttonHTML = `<button class="w-full text-xl font-bold py-3 rounded-lg bg-green-600 hover:bg-green-700 transition-colors" onclick="updateOrderStatus(${order.id}, 'ready')">Marcar como Listo</button>`;
+                buttonHTML = `
+                    <button class="w-full flex items-center justify-center text-xl font-bold py-3 rounded-lg bg-amber-700 hover:bg-amber-800 text-white shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 ease-in-out" onclick="updateOrderStatus(${order.id}, 'ready')">
+                        <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Marcar como Listo
+                    </button>`;
             }
     
             return `
-                <div class="order-card bg-gray-800 rounded-lg shadow-lg p-4 mb-4" data-order-id="${order.id}" data-created-at="${order.created_at}">
+                <div class="order-card bg-white rounded-lg shadow-lg p-4 mb-4" data-order-id="${order.id}" data-created-at="${order.created_at}">
                     <div class="flex justify-between items-center mb-3">
                         <div class="truncate mr-4">
                             <h3 class="text-3xl font-bold truncate">${order.identifier}</h3>
-                            <p class="text-sm text-gray-400">Pedido #${order.id} por ${order.user_username}</p>
+                            <p class="text-sm text-gray-500">Pedido #${order.id} por ${order.user_username}</p>
                         </div>
                         <div class="timer text-2xl font-bold text-right">
                             <span class="countdown">00:00</span>
@@ -227,5 +228,4 @@
             cards.forEach(updateTimerForCard);
         }
     </script>
-</body>
-</html>
+{% endblock %}

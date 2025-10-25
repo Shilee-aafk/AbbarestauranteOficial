@@ -1,15 +1,11 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    {% load static %}
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Recepcionista - AbbaHotel- Restaurante</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+{% extends 'restaurant/base.html' %}
+{% load static %}
+
+{% block title %}Dashboard Recepcionista - AbbaHotel- Restaurante{% endblock %}
+
+{% block extra_head %}
     <link rel="stylesheet" href="{% static 'restaurant/css/components.css' %}">
     <style>
-        body { font-family: 'Inter', sans-serif; }
         /* Custom Toast Notification Styles */
         .toast {
             position: fixed;
@@ -37,17 +33,14 @@
             opacity: 0;
         }
     </style>
-</head>
-<body class="bg-gray-50">
+{% endblock %}
+
+{% block content %}
     <!-- Sidebar -->
-    <div id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-white shadow-md transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-30">
-        <div class="flex items-center justify-center h-16 bg-white border-b border-gray-200">
-<<<<<<< HEAD
-            <!-- Cambia 'restaurant/images/mi_logo.png' por la ruta a tu logo -->
-=======
-            <!-- Ruta actualizada para el nuevo logo.png -->
->>>>>>> db82e7c9c98ef9e2b66bd8481bfa355cd06d3fd3
-            <span class="text-xl font-semibold text-gray-800 ml-2">Mi Restaurante</span>
+    <div id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-amber-50 shadow-md transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-30">
+        <div class="flex items-center h-16 bg-amber-50 border-b border-amber-200 px-6">
+            <img src="{% static 'restaurant/images/mi_logo.png' %}" alt="Logo de Mi Restaurante" class="h-10 w-auto">
+            <span class="text-xl font-semibold text-amber-900 ml-2">Restaurante</span>
         </div>
         <nav class="mt-8">
             <a href="#" class="nav-link active flex items-center px-6 py-3 text-amber-800 bg-amber-100 border-r-4 border-amber-500" data-section="dashboard">
@@ -56,14 +49,14 @@
                 </svg>
                 Cobros
             </a>
-            <a href="#" class="nav-link flex items-center px-6 py-3 text-gray-600 hover:bg-gray-100" data-section="room_charges">
+            <a href="#" class="nav-link flex items-center px-6 py-3 text-amber-800 hover:bg-amber-100" data-section="room_charges">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
                 </svg>
                 Cargos de Habitaciones
             </a>
             {% if user_role == 'Administrador' or user_role == 'Recepcionista' %}
-            <a href="#" class="nav-link flex items-center px-6 py-3 text-gray-600 hover:bg-gray-100" data-section="reports">
+            <a href="#" class="nav-link flex items-center px-6 py-3 text-amber-800 hover:bg-amber-100" data-section="reports">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                 </svg>
@@ -121,8 +114,8 @@
                                 <p class="text-gray-600 text-sm">Total Vendido Hoy</p>
                                 <p id="total-sales-today" class="text-3xl font-bold text-gray-900">${{ total_sales_today|floatformat:0 }}</p>
                             </div>
-                            <div class="bg-purple-100 rounded-full p-3">
-                                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18.5A6.5 6.5 0 1012 5.5a6.5 6.5 0 000 13z"></path></svg>
+                            <div class="bg-amber-100 rounded-full p-3">
+                                <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18.5A6.5 6.5 0 1012 5.5a6.5 6.5 0 000 13z"></path></svg>
                             </div>
                         </div>
                     </div>
@@ -141,7 +134,7 @@
                                     <p class="text-sm text-gray-700">Total: ${{ order.total_amount|floatformat:0 }}</p>
                                 </div>
                             </div>
-                            <button class="charge-btn bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700" data-order-id="{{ order.id }}">
+                            <button class="charge-btn bg-amber-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-amber-800" data-order-id="{{ order.id }}">
                                 Cobrar
                             </button>
                         </li>
@@ -212,11 +205,11 @@
                         <input type="date" id="date-to-filter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     </div>
                     <div class="flex justify-end mb-6">
-                        <button id="filter-btn" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700">Buscar</button>
+                        <button id="filter-btn" class="bg-amber-700 text-white px-6 py-2 rounded-lg font-medium hover:bg-amber-800">Buscar</button>
                         <button id="export-excel-btn" class="ml-2 bg-green-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-green-700">Exportar a Excel</button>
                     </div>
 
-                    <!-- Table -->
+                    <!-- Table --> 
                     <div class="overflow-x-auto">
                         <table class="w-full table-auto">
                             <thead>
@@ -276,7 +269,7 @@
                     <p id="split-bill-result" class="mt-2 text-center font-semibold text-blue-600"></p>
                 </div>
                 <div class="modal-footer">
-                    <button id="modal-confirm-payment-btn" class="px-4 py-2 bg-indigo-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <button id="modal-confirm-payment-btn" class="px-4 py-2 bg-amber-700 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-amber-800 focus:outline-none focus:ring-2 focus:ring-amber-500">
                         Confirmar Pago
                     </button>
                     <button id="modal-charge-to-room-btn" class="mt-2 px-4 py-2 bg-purple-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 hidden">
@@ -290,6 +283,9 @@
         </div>
     </div>
 
+{% endblock %}
+
+{% block extra_js %}
     <script>
         const csrfToken = '{{ csrf_token }}';
 
@@ -372,17 +368,17 @@
 
             ws.onmessage = function(e) {
                 const data = JSON.parse(e.data);
-                // El consumidor ahora puede enviar dos tipos de mensajes
+                const message = data.message;
+
+                if (!message) return;
+
+                // El consumidor ahora puede enviar dos tipos de mensajes anidados
                 if (data.type === 'receptionist_message') {
-                    const message = data.message;
                     if (message.type === 'room_charge_update') {
                         addOrUpdateRoomChargeRow(message.order);
                     }
                 } else if (data.type === 'order_update') {
-                    // Este es el flujo original para actualizar la lista de 'servidos'
-                    if (data.order) {
-                        handleOrderUpdate(data.order);
-                    }
+                    handleOrderUpdate(message.order);
                 }
             };
 
@@ -413,7 +409,7 @@
                         <p class="text-sm text-gray-700">Total: $${order.total.toLocaleString('es-CL')}</p>
                     </div>
                 </div>
-                <button class="charge-btn bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700" data-order-id="${order.id}">
+                <button class="charge-btn bg-amber-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-amber-800" data-order-id="${order.id}">
                     Cobrar
                 </button>
             `;
@@ -660,5 +656,4 @@
             }, 3000);
         }
     </script>
-</body>
-</html>
+{% endblock %}

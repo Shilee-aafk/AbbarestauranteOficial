@@ -1,17 +1,13 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    {% load static %}
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Garzón - AbbaHotel- Restaurante</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+{% extends 'restaurant/base.html' %}
+{% load static %}
+
+{% block title %}Dashboard Garzón - AbbaHotel- Restaurante{% endblock %}
+
+{% block extra_head %}
     <link rel="stylesheet" href="{% static 'restaurant/css/components.css' %}">
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .category-filter.active {
-            background-color: #b3734e;
+        .category-filter.active, .category-filter.active:hover {
+            background-color: #92400e; /* amber-800 */
             color: #EAE0D9;
         }
         /* Custom Toast Notification Styles */
@@ -40,26 +36,32 @@
         .banner-hidden {
             opacity: 0;
         }
+        .order-ready {
+            border-left-width: 4px;
+            border-left-color: #22c55e; /* green-500 */
+            background-color: #f0fdf4; /* green-50 */
+        }
     </style>
-</head>
-<body class="bg-gray-50">
+{% endblock %}
+
+{% block content %}
     <!-- Sidebar -->
-    <div id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-white shadow-md transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-30">
-        <div class="flex items-center justify-center h-16 bg-white border-b border-gray-200">
+    <div id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-amber-50 shadow-md transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-30">
+        <div class="flex items-center h-16 bg-amber-50 border-b border-amber-200 px-6">
             <!-- Cambia 'restaurant/images/mi_logo.png' por la ruta a tu logo -->
-            <img src="{% static 'restaurant/images/mi_logo.png' %}" alt="Logo de Mi Restaurante" class="h-10 w-auto">
-            <span class="text-xl font-semibold text-gray-800 ml-2">Mi Restaurante</span>
+            <img src="{% static 'restaurant/images/logo_d.png' %}" alt="Logo de Mi Restaurante" class="h-10 w-auto">
+            <span class="text-xl font-semibold text-amber-900 ml-2">Restaurante</span>
         </div>
         <nav class="mt-8">
             <a href="#" class="nav-link active flex items-center px-6 py-3 text-amber-800 bg-amber-100 border-r-4 border-amber-500" data-section="dashboard">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z"></path></svg>
                 Mesas y Pedidos
             </a>
-            <a href="#" class="nav-link flex items-center px-6 py-3 text-gray-600 hover:bg-gray-100" data-section="bar">
+            <a href="#" class="nav-link flex items-center px-6 py-3 text-amber-800 hover:bg-amber-100" data-section="bar">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path><path d="M19 19L12 12"></path></svg>
                 Bar
             </a>
-            <a href="#" class="nav-link flex items-center px-6 py-3 text-gray-600 hover:bg-gray-100" data-section="monitor">
+            <a href="#" class="nav-link flex items-center px-6 py-3 text-amber-800 hover:bg-amber-100" data-section="monitor">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                 Monitor de Pedidos
             </a>
@@ -113,8 +115,9 @@
                             <label for="room-number" class="block text-sm font-medium text-gray-700">N° de Habitación (Opcional)</label>
                             <input type="text" id="room-number" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                         </div>
-                        <button id="start-table-order-btn" class="w-full bg-amber-700 text-white px-4 py-2 rounded-lg font-medium hover:bg-amber-800">
-                            Iniciar Pedido
+                        <button id="start-table-order-btn" class="w-full flex items-center justify-center bg-amber-700 text-white px-4 py-3 rounded-lg font-medium hover:bg-amber-800 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 ease-in-out">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <span>Iniciar Pedido</span>
                         </button>
                     </div>
                 </div>
@@ -133,8 +136,9 @@
                             <label for="bar-room-number" class="block text-sm font-medium text-gray-700">N° de Habitación (Opcional)</label>
                             <input type="text" id="bar-room-number" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                         </div>
-                        <button id="start-bar-order-btn" class="w-full bg-amber-700 text-white px-4 py-2 rounded-lg font-medium hover:bg-amber-800">
-                            Iniciar Pedido de Barra
+                        <button id="start-bar-order-btn" class="w-full flex items-center justify-center bg-amber-700 text-white px-4 py-3 rounded-lg font-medium hover:bg-amber-800 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 ease-in-out">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <span>Iniciar Pedido de Barra</span>
                         </button>
                     </div>
                 </div>
@@ -197,9 +201,15 @@
                                 Total: $<span id="order-total">0</span>
                             </div>
                             <div class="flex flex-col sm:flex-row sm:justify-center sm:space-x-2 space-y-2 sm:space-y-0">
-                                <button id="mark-served-btn" class="hidden bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Marcar como Servido</button>
-                                <button id="clear-order-btn" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 w-full sm:w-auto">Limpiar</button>
-                                <button id="submit-order-btn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 w-full sm:w-auto">Guardar Pedido</button>
+                                <button id="mark-served-btn" class="hidden flex items-center justify-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 ease-in-out">
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                                    Marcar como Servido</button>
+                                <button id="clear-order-btn" class="flex items-center justify-center bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 w-full sm:w-auto shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 ease-in-out">
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                                    Limpiar</button>
+                                <button id="submit-order-btn" class="flex items-center justify-center bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 w-full sm:w-auto shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 ease-in-out">
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+                                    Guardar Pedido</button>
                             </div>
                         </div>
                     </div>
@@ -237,19 +247,27 @@
                                 <span class="font-semibold">Subtotal:</span>
                                 <span class="font-semibold">$<span id="modal-order-subtotal">0</span></span>
                             </div>
-                            <div class="flex items-center justify-between">
-                                <label for="include-tip-checkbox" class="flex items-center cursor-pointer">
-                                    <input type="checkbox" id="include-tip-checkbox" class="form-checkbox h-4 w-4 text-blue-600 transition duration-150 ease-in-out">
-                                    <span class="ml-2 text-sm text-gray-600">Incluir Propina</span>
+                            <div class="flex items-center justify-start gap-4">
+                                <label for="include-tip-checkbox" class="flex items-center cursor-pointer p-2 rounded-lg font-medium transition-colors">
+                                    <input type="checkbox" id="include-tip-checkbox" class="form-checkbox h-5 w-5 transition duration-150 ease-in-out">
+                                    <span class="ml-3 text-base">Incluir Propina</span>
                                 </label>
-                                <div class="flex items-center">
-                                    <input type="number" id="custom-tip-percentage-input" class="w-20 p-1 border border-gray-300 rounded-md text-sm text-right" value="10" min="0">
-                                    <span class="text-sm text-gray-600 ml-1">%</span>
-                                </div>
                             </div>
-                            <div class="flex justify-between text-sm text-gray-600">
-                                <span>Propina (<span id="tip-percentage-display">10</span>%):</span>
-                                <span>$<span id="modal-order-tip">0</span></span>
+                            <div id="tip-inputs" class="hidden space-y-2 pl-4 pr-2">
+                                <div class="flex items-center justify-between">
+                                    <label for="custom-tip-percentage-input" class="text-sm font-medium text-gray-700">Porcentaje:</label>
+                                    <div class="flex items-center">
+                                        <input type="number" id="custom-tip-percentage-input" class="w-24 p-1 border border-gray-300 rounded-md text-sm text-right" value="10" min="0">
+                                        <span class="text-sm text-gray-600 ml-1">%</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <label for="custom-tip-amount-input" class="text-sm font-medium text-gray-700">Monto:</label>
+                                    <div class="flex items-center">
+                                        <span class="text-sm text-gray-600 mr-1">$</span>
+                                        <input type="number" id="custom-tip-amount-input" class="w-24 p-1 border border-gray-300 rounded-md text-sm text-right" value="0" min="0">
+                                    </div>
+                                </div>
                             </div>
                             <div class="flex justify-between text-lg font-bold text-gray-900">
                                 <span>Total:</span>
@@ -271,7 +289,7 @@
                     <p id="split-bill-result" class="mt-2 text-center font-semibold text-blue-600"></p>
                 </div>
                 <div class="modal-footer">
-                    <button id="modal-confirm-payment-btn" class="px-4 py-2 bg-indigo-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <button id="modal-confirm-payment-btn" class="px-4 py-2 bg-amber-700 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-amber-800 focus:outline-none focus:ring-2 focus:ring-amber-500">
                         Confirmar Pago
                     </button>
                     <button id="modal-charge-to-room-btn" class="mt-2 px-4 py-2 bg-purple-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 hidden">
@@ -285,6 +303,9 @@
         </div>
     </div>
 
+{% endblock %}
+
+{% block extra_js %}
     <script>
         const csrfToken = '{{ csrf_token }}';
         let editingOrderId = null; // To track if we are editing an order
@@ -481,6 +502,15 @@
                 initializeMonitor(); // Cargar los pedidos iniciales cuando el socket esté listo
             };
 
+            // --- Event Delegation for dynamically created buttons ---
+            document.getElementById('served-orders-list-monitor').addEventListener('click', function(e) {
+                // Find the closest charge-btn parent or the element itself
+                const chargeButton = e.target.closest('.charge-btn');
+                if (chargeButton) {
+                    openPaymentModal(chargeButton.dataset.orderId);
+                }
+            });
+
             // Attach event listeners to initially loaded elements
             document.querySelectorAll('.cancel-btn').forEach(button => {
                 button.addEventListener('click', (e) => {
@@ -512,6 +542,12 @@
                 addOrUpdateServedOrder(order);
             } else { // Si está pendiente, en preparación o listo, va a la lista de "Activos".
                 removeServedOrder(order.id);
+                // Si el pedido cambia a 'listo', mostrar notificación y reproducir sonido
+                if (order.status === 'ready') {
+                    showToast(`¡El pedido para ${order.identifier} está listo!`, 'info');
+                    const notificationSound = new Audio("{% static 'restaurant/sounds/notification.mp3' %}");
+                    notificationSound.play().catch(e => console.warn("La interacción del usuario es necesaria para reproducir audio."));
+                }
                 addOrUpdateActiveOrder(order);
             }
         }
@@ -525,8 +561,9 @@
                     <p class="font-semibold">${order.identifier} - Pedido #${order.id}</p>
                     <p class="text-sm text-gray-700">Total: $${order.total.toFixed(0)}</p>
                 </div>
-                <button class="charge-btn bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700" data-order-id="${order.id}">
-                    Cobrar
+                <button class="charge-btn flex items-center justify-center bg-amber-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-amber-800 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 ease-in-out" data-order-id="${order.id}">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H4a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                    <span>Cobrar</span>
                 </button>
             `;
 
@@ -540,9 +577,6 @@
                 servedOrdersList.prepend(orderLi);
             }
 
-            orderLi.querySelector('.charge-btn').addEventListener('click', (e) => {
-                openPaymentModal(e.target.dataset.orderId);
-            });
             document.getElementById('no-served-orders')?.remove();
         }
 
@@ -579,9 +613,13 @@
                         <select class="status-changer text-xs border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" data-order-id="${order.id}">
                             ${statusOptions}
                         </select>
-                        <button class="cancel-btn bg-red-500 text-white px-3 py-1 rounded-md text-xs font-medium hover:bg-red-600" data-order-id="${order.id}">Cancelar</button>
+                        <button class="cancel-btn flex items-center justify-center bg-red-500 text-white px-3 py-1 rounded-md text-xs font-medium hover:bg-red-600 shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-150" data-order-id="${order.id}">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </button>
                         ${order.status === 'ready' ? 
-                            `<button class="mark-served-monitor-btn bg-blue-500 text-white px-3 py-1 rounded-md text-xs font-medium hover:bg-blue-600" data-order-id="${order.id}">Servido</button>` 
+                            `<button class="mark-served-monitor-btn flex items-center justify-center bg-blue-500 text-white px-3 py-1 rounded-md text-xs font-medium hover:bg-blue-600 shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-150" data-order-id="${order.id}">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                                Servido</button>` 
                             : ''}
                     </div>
                 </div>
@@ -693,12 +731,6 @@
             }
         }
         
-        document.querySelectorAll('.charge-btn').forEach(button => {
-            button.addEventListener('click', (e) => {
-                openPaymentModal(e.target.dataset.orderId);
-            });
-        });
-
         document.querySelectorAll('.mark-served-monitor-btn').forEach(button => {
             button.addEventListener('click', (e) => {
                 updateOrderStatus(e.target.dataset.orderId, 'served');
@@ -725,33 +757,48 @@
 
                 const includeTipCheckbox = document.getElementById('include-tip-checkbox');
                 const customTipInput = document.getElementById('custom-tip-percentage-input');
+                const customTipAmountInput = document.getElementById('custom-tip-amount-input');
                 const modalOrderSubtotal = document.getElementById('modal-order-subtotal');
                 const modalOrderTip = document.getElementById('modal-order-tip');
                 const modalOrderTotal = document.getElementById('modal-order-total');
                 const splitSelect = document.getElementById('split-bill-select');
                 const splitResult = document.getElementById('split-bill-result');
+                const tipLabel = document.querySelector('label[for="include-tip-checkbox"]');
+
+                let isUpdating = false; // Flag to prevent infinite loops
 
                 // Function to calculate and display totals
                 const calculateAndDisplayTotals = () => {
+                    if (isUpdating) return;
+                    isUpdating = true;
+
                     modalOrderSubtotal.textContent = subtotal.toLocaleString('es-CL');
 
                     let currentTip = 0;
                     if (includeTipCheckbox.checked) {
-                        customTipInput.parentElement.classList.remove('hidden'); // Muestra el input de %
-                        const tipPercentage = parseFloat(customTipInput.value) || 0; // No need to change, total is not here
+                        document.getElementById('tip-inputs').classList.remove('hidden');
+                        tipLabel.classList.remove('bg-red-100', 'text-red-800', 'hover:bg-red-200');
+                        tipLabel.classList.add('bg-green-100', 'text-green-800', 'hover:bg-green-200');
+                        includeTipCheckbox.classList.remove('text-red-600');
+                        includeTipCheckbox.classList.add('text-green-600');
+
+                        const tipPercentage = parseFloat(customTipInput.value) || 0;
                         currentTip = subtotal * (tipPercentage / 100);
-                        document.getElementById('tip-percentage-display').textContent = tipPercentage;
+                        customTipAmountInput.value = Math.round(currentTip);
+
                     } else {
-                        customTipInput.parentElement.classList.add('hidden'); // Oculta el input de %
+                        document.getElementById('tip-inputs').classList.add('hidden');
                         currentTip = 0;
+                        tipLabel.classList.remove('bg-green-100', 'text-green-800', 'hover:bg-green-200');
+                        tipLabel.classList.add('bg-red-100', 'text-red-800', 'hover:bg-red-200');
+                        includeTipCheckbox.classList.remove('text-green-600');
+                        includeTipCheckbox.classList.add('text-red-600');
                     }
 
-                    const totalWithTip = subtotal + currentTip;
+                    const totalWithTip = subtotal + parseFloat(customTipAmountInput.value || 0);
 
-                    modalOrderTip.textContent = currentTip.toLocaleString('es-CL');
-                    modalOrderTotal.textContent = totalWithTip.toLocaleString('es-CL'); // No need to change, total is not here
+                    modalOrderTotal.textContent = totalWithTip.toLocaleString('es-CL');
 
-                    // Update split bill logic
                     const numPeople = parseInt(splitSelect.value);
                     if (numPeople > 1) {
                         const amountPerPerson = totalWithTip / numPeople;
@@ -759,15 +806,34 @@
                     } else {
                         splitResult.textContent = '';
                     }
+                    isUpdating = false;
                 };
 
                 // Initialize values and event listeners
-                includeTipCheckbox.checked = false; // Default to NOT include tip for faster checkout
+                includeTipCheckbox.checked = true; // Default to include tip
                 customTipInput.value = "0"; 
-                customTipInput.min = "0"; // Ensure tip cannot be negative
+                customTipInput.min = "0";
+                customTipAmountInput.min = "0";
 
                 includeTipCheckbox.onchange = calculateAndDisplayTotals;
-                customTipInput.oninput = calculateAndDisplayTotals;
+                customTipInput.oninput = () => {
+                    if (isUpdating) return;
+                    isUpdating = true;
+                    const percentage = parseFloat(customTipInput.value) || 0;
+                    const tipAmount = subtotal * (percentage / 100);
+                    customTipAmountInput.value = Math.round(tipAmount);
+                    isUpdating = false;
+                    calculateAndDisplayTotals();
+                };
+                customTipAmountInput.oninput = () => {
+                    if (isUpdating) return;
+                    isUpdating = true;
+                    const amount = parseFloat(customTipAmountInput.value) || 0;
+                    const percentage = subtotal > 0 ? (amount / subtotal) * 100 : 0;
+                    customTipInput.value = percentage.toFixed(1);
+                    isUpdating = false;
+                    calculateAndDisplayTotals();
+                };
                 splitSelect.value = "1"; // Reset
                 splitResult.textContent = '';
 
@@ -996,5 +1062,4 @@
 
         renderOrder();
     </script>
-</body>
-</html>
+{% endblock %}
