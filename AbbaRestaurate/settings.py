@@ -27,7 +27,7 @@ DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
-CSRF_TRUSTED_ORIGINS = ['https://*.ngrok-free.app']
+CSRF_TRUSTED_ORIGINS = ['https://*.ngrok-free.dev']
 
 # Application definition
 
@@ -89,7 +89,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'abbarestaurante_db',  # El nombre que le diste en el Paso 2
         'USER': 'root',      # Tu nombre de usuario de MySQL (comúnmente 'root')
-        'PASSWORD': 'root', # La contraseña de tu usuario de MySQL
+        'PASSWORD': 'Inacap.2025', # La contraseña de tu usuario de MySQL
         'HOST': 'localhost',             # O '127.0.0.1'
         'PORT': '3306',                  # El puerto por defecto de MySQL
         'OPTIONS': {
