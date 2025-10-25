@@ -1,0 +1,52 @@
+# Entorno Virtual
+venv/
+env/
+.venv/
+
+# Archivos de caché de Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Archivos de configuración de IDEs
+.idea/
+.vscode/
+
+# Archivos de base de datos local (aunque uses MySQL, es buena práctica)
+db.sqlite3
+db.sqlite3-journal
+
+# Archivos estáticos recolectados por collectstatic
+staticfiles/
+
+# Archivos de media subidos por usuarios (si los tuvieras)
+media/
+
+# Archivos de logs
+*.log
+
+# Archivos generados por la aplicación
+*.sql
+*.dump
+reporte_pedidos_*.xlsx
+
+# Archivos de secretos y configuración local
+# ¡Muy importante para no subir tus contraseñas a GitHub!
+.env
+*.env
+local_settings.py
+
+# Archivos generados por el sistema operativo
+.DS_Store
+Thumbs.db
+
+# Reportes de cobertura de tests
+.coverage
+.coverage.*
+htmlcov/
+
+# Paquetes y distribución de Python
+build/
+dist/
+*.egg-info/
+*.egg
