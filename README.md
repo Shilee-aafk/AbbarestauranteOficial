@@ -95,6 +95,16 @@ python manage.py runserver
 
 Abre tu navegador y ve a **http://127.0.0.1:8000/**. Serás redirigido a la página de login.
 
+### 7. Ejecutar con Daphne (Opcional, para WebSockets)
+
+El comando `runserver` es suficiente para la mayoría de las tareas, pero para probar la funcionalidad completa de WebSockets de una manera que simule más de cerca el entorno de producción, puedes usar `daphne`, el servidor ASGI.
+
+```bash
+daphne AbbaRestaurate.asgi:application
+```
+
+El servidor también estará disponible en **http://127.0.0.1:8000/**.
+
 ## 🔑 Usuarios de Prueba
 
 Puedes usar las siguientes credenciales para iniciar sesión y probar los diferentes roles. La contraseña para todos es `password123`.

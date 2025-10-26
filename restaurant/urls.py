@@ -1,5 +1,8 @@
 from django.urls import path
 from . import views
+from restaurant import views as restaurant_views
+
+app_name = 'restaurant'
 
 urlpatterns = [
     # Auth
@@ -11,7 +14,8 @@ urlpatterns = [
     path('receptionist-dashboard/', views.receptionist_dashboard, name='receptionist_dashboard'),
     path('cook-dashboard/', views.cook_dashboard, name='cook_dashboard'),
     path('waiter-dashboard/', views.waiter_dashboard, name='waiter_dashboard'),
-
+    path('menu/', restaurant_views.public_menu_view, name='public_menu'),
+    path('logout/', views.logout_view, name='logout'),
     path('save_order/', views.save_order, name='save_order'),
     path('add_reservation/', views.add_reservation, name='add_reservation'),
     path('update_order_status/<int:order_id>/', views.update_order_status, name='update_order_status'),

@@ -223,6 +223,32 @@ def waiter_dashboard(request):
         'user_role': user_role,
     })
 
+def public_menu_view(request):
+    """
+    Vista pública para mostrar el menú del restaurante, ideal para un código QR.
+    No requiere autenticación.
+    """
+    # Obtener solo los items disponibles y ordenarlos por categoría
+    menu_url = request.build_absolute_uri()
+    menu_items = MenuItem.objects.filter(available=True).order_by('category', 'name')
+
+    # Agrupar items por categoría en un diccionario
+    grouped_menu = {}
+    for item in menu_items:
+        category = item.category
+        if not category: # Agrupar items sin categoría en 'Otros'
+            category = 'Otros'
+        if category not in grouped_menu:
+            grouped_menu[category] = []
+        grouped_menu[category].append(item)
+
+    return render(request, 'restaurant/public_menu.html', {
+        'grouped_menu': grouped_menu,
+        # Puedes añadir más contexto si lo necesitas, como el nombre del restaurante
+        'restaurant_name': 'Restaurante AbbaHotel',
+        'menu_url': menu_url
+    })
+
 # Helper function to calculate subtotal for an order instance
 def calculate_order_subtotal(order_instance):
     return order_instance.orderitem_set.aggregate(

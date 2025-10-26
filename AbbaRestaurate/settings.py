@@ -29,6 +29,10 @@ DEBUG = os.environ.get('RENDER', 'false').lower() != 'true'
 
 ALLOWED_HOSTS = []
 
+# Si estamos en desarrollo, permitimos localhost y los dominios de ngrok
+if DEBUG:
+    ALLOWED_HOSTS.extend(['localhost', '127.0.0.1', '.ngrok-free.app'])
+
 # Añade el host de Render a los hosts permitidos si está en producción
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_URL')
 if RENDER_EXTERNAL_HOSTNAME:
@@ -141,3 +145,11 @@ STATICFILES_DIRS = [
 # Configuración de WhiteNoise para servir archivos estáticos en producción
 if not DEBUG:
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+LOGIN_URL = '/accounts/login/'
+LOGIN_REDIRECT_URL = '/restaurant/'
+LOGOUT_REDIRECT_URL = '/restaurant/'

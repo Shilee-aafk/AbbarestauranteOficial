@@ -16,12 +16,14 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from django.views.generic import RedirectView
+from django.views.generic.base import RedirectView
 from restaurant import views
+from django.contrib.staticfiles.storage import staticfiles_storage
 
 urlpatterns = [
     path('', RedirectView.as_view(url='/restaurant/')),
     path('admin/', admin.site.urls),
+    path("favicon.ico", RedirectView.as_view(url=staticfiles_storage.url("favicon.ico"))),
     path('restaurant/', include('restaurant.urls')),
     path('accounts/logout/', views.logout_view, name='logout'),
     path('accounts/', include('django.contrib.auth.urls')),

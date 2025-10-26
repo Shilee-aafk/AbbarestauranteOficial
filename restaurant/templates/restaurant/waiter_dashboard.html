@@ -41,6 +41,12 @@
             border-left-color: #22c55e; /* green-500 */
             background-color: #f0fdf4; /* green-50 */
         }
+        .fade-out {
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+            opacity: 0;
+            transform: scale(0.95);
+            height: 0;
+        }
     </style>
 {% endblock %}
 
@@ -63,7 +69,15 @@
             </a>
             <a href="#" class="nav-link flex items-center px-6 py-3 text-amber-800 hover:bg-amber-100" data-section="monitor">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                Monitor de Pedidos
+                Pedidos
+            </a>
+            <a href="#" class="nav-link flex items-center px-6 py-3 text-amber-800 hover:bg-amber-100" data-section="payments">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H4a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                Cobros
+            </a>
+            <a href="{% url 'restaurant:public_menu' %}" target="_blank" class="flex items-center px-6 py-3 text-amber-800 hover:bg-amber-100">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.75 4.875c0-1.036.84-1.875 1.875-1.875h4.5c1.036 0 1.875.84 1.875 1.875v4.5c0 1.036-.84 1.875-1.875 1.875h-4.5A1.875 1.875 0 013.75 9.375v-4.5zM3.75 14.625c0-1.036.84-1.875 1.875-1.875h4.5c1.036 0 1.875.84 1.875 1.875v4.5c0 1.036-.84 1.875-1.875 1.875h-4.5a1.875 1.875 0 01-1.875-1.875v-4.5zM13.5 4.875c0-1.036.84-1.875 1.875-1.875h4.5c1.036 0 1.875.84 1.875 1.875v4.5c0 1.036-.84 1.875-1.875 1.875h-4.5A1.875 1.875 0 0113.5 9.375v-4.5z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 14.625v4.5c0 1.036.84 1.875 1.875 1.875h4.5c1.036 0 1.875-.84 1.875-1.875v-4.5a1.875 1.875 0 00-1.875-1.875h-4.5A1.875 1.875 0 0013.5 14.625z"></path></svg>
+                Ver Menú QR
             </a>
         </nav>
     </div>
@@ -113,7 +127,7 @@
                         </div>
                         <div class="mb-4">
                             <label for="room-number" class="block text-sm font-medium text-gray-700">N° de Habitación (Opcional)</label>
-                            <input type="text" id="room-number" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                            <input type="number" id="room-number" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" pattern="\d*" inputmode="numeric">
                         </div>
                         <button id="start-table-order-btn" class="w-full flex items-center justify-center bg-amber-700 text-white px-4 py-3 rounded-lg font-medium hover:bg-amber-800 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 ease-in-out">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -134,7 +148,7 @@
                         </div>
                         <div class="mb-4">
                             <label for="bar-room-number" class="block text-sm font-medium text-gray-700">N° de Habitación (Opcional)</label>
-                            <input type="text" id="bar-room-number" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                            <input type="number" id="bar-room-number" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" pattern="\d*" inputmode="numeric">
                         </div>
                         <button id="start-bar-order-btn" class="w-full flex items-center justify-center bg-amber-700 text-white px-4 py-3 rounded-lg font-medium hover:bg-amber-800 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 ease-in-out">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -220,14 +234,28 @@
         <!-- Monitor Section -->
         <div id="monitor" class="content-section hidden">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <!-- Active Orders Monitor -->
-                <div class="bg-white rounded-lg shadow-md p-6"><h2 class="text-xl font-semibold text-gray-900 mb-4">Monitor de Pedidos Activos</h2><ul id="active-orders-list-monitor" class="space-y-3 max-h-[70vh] overflow-y-auto"></ul></div>
-
-                <!-- Served Orders for Payment -->
+                <!-- Ready Orders -->
                 <div class="bg-white rounded-lg shadow-md p-6">
-                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Pedidos Servidos (para Cobrar)</h2>
-                    <ul id="served-orders-list-monitor" class="space-y-3 max-h-[70vh] overflow-y-auto"><li id="no-served-orders" class="text-gray-500">No hay pedidos servidos pendientes de cobro.</li></ul>
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Pedidos Listos para Servir</h2>
+                    <ul id="ready-orders-list-monitor" class="space-y-3 max-h-[70vh] overflow-y-auto">
+                        <li id="no-ready-orders" class="text-gray-500">No hay pedidos listos.</li>
+                    </ul>
                 </div>
+                <!-- Pending/Preparing Orders -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Pedidos en Curso</h2>
+                    <ul id="in-progress-orders-list-monitor" class="space-y-3 max-h-[70vh] overflow-y-auto">
+                        <li id="no-in-progress-orders" class="text-gray-500">No hay pedidos en curso.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payments Section -->
+        <div id="payments" class="content-section hidden">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">Pedidos Servidos (para Cobrar)</h2>
+                <ul id="served-orders-list-monitor" class="space-y-3 max-h-[70vh] overflow-y-auto"><li id="no-served-orders" class="text-gray-500">No hay pedidos servidos pendientes de cobro.</li></ul>
             </div>
         </div>
     </div>
@@ -253,6 +281,11 @@
                                     <span class="ml-3 text-base">Incluir Propina</span>
                                 </label>
                             </div>
+                            <div id="tip-preset-buttons" class="hidden flex justify-start space-x-2 py-2 pl-4">
+                                <button class="tip-preset-btn px-3 py-1 text-sm font-medium rounded-full border border-gray-300 hover:bg-gray-100" data-percentage="10">10%</button>
+                                <button class="tip-preset-btn px-3 py-1 text-sm font-medium rounded-full border border-gray-300 hover:bg-gray-100" data-percentage="15">15%</button>
+                                <button class="tip-preset-btn px-3 py-1 text-sm font-medium rounded-full border border-gray-300 hover:bg-gray-100" data-percentage="20">20%</button>
+                            </div>
                             <div id="tip-inputs" class="hidden space-y-2 pl-4 pr-2">
                                 <div class="flex items-center justify-between">
                                     <label for="custom-tip-percentage-input" class="text-sm font-medium text-gray-700">Porcentaje:</label>
@@ -277,15 +310,16 @@
                     </div>
                 </div>
                 <div class="mt-4 p-4 bg-gray-100 rounded-lg">
-                    <label for="split-bill-select" class="block text-sm font-medium text-gray-700 mb-2">Dividir la cuenta:</label>
-                    <select id="split-bill-select" class="w-full p-2 border border-gray-300 rounded-md">
-                        <option value="1">No dividir</option>
-                        <option value="2">Dividir por 2 personas</option>
-                        <option value="3">Dividir por 3 personas</option>
-                        <option value="4">Dividir por 4 personas</option>
-                        <option value="5">Dividir por 5 personas</option>
-                        <option value="6">Dividir por 6 personas</option>
-                    </select>
+                    <label for="split-bill-input" class="block text-sm font-medium text-gray-700 mb-2">Dividir la cuenta por:</label>
+                    <div class="flex items-center space-x-2">
+                        <input type="number" id="split-bill-input" class="w-20 p-2 border border-gray-300 rounded-md text-center" value="1" min="1">
+                        <div class="flex space-x-1">
+                            <button class="split-preset-btn px-3 py-1 text-sm font-medium rounded-full border border-gray-300 hover:bg-gray-200" data-split="2">2</button>
+                            <button class="split-preset-btn px-3 py-1 text-sm font-medium rounded-full border border-gray-300 hover:bg-gray-200" data-split="3">3</button>
+                            <button class="split-preset-btn px-3 py-1 text-sm font-medium rounded-full border border-gray-300 hover:bg-gray-200" data-split="4">4</button>
+                            <button class="split-preset-btn px-3 py-1 text-sm font-medium rounded-full border border-gray-300 hover:bg-gray-200" data-split="5">5</button>
+                        </div>
+                    </div>
                     <p id="split-bill-result" class="mt-2 text-center font-semibold text-blue-600"></p>
                 </div>
                 <div class="modal-footer">
@@ -299,6 +333,27 @@
                         Cancelar
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Serve Confirmation Modal -->
+    <div id="serve-confirmation-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="modal-container bg-white rounded-lg shadow-xl w-full max-w-sm p-6">
+            <div class="text-center">
+                <h3 class="text-lg font-medium leading-6 text-gray-900" id="serve-modal-title">Confirmar Entrega</h3>
+                <div class="mt-2">
+                    <p class="text-sm text-gray-500">Verifica que todos los productos son correctos antes de marcar como servido.</p>
+                </div>
+            </div>
+            <div class="mt-4">
+                <ul id="serve-modal-order-items" class="text-sm text-gray-700 space-y-1 max-h-48 overflow-y-auto bg-gray-50 p-3 rounded-md">
+                    <!-- Order items will be populated here -->
+                </ul>
+            </div>
+            <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+                <button id="serve-modal-confirm-btn" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:col-start-2 sm:text-sm">Confirmar y Servir</button>
+                <button id="serve-modal-cancel-btn" type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:col-start-1 sm:text-sm">Cancelar</button>
             </div>
         </div>
     </div>
@@ -352,6 +407,11 @@
             if (sidebarOverlay) {
                 sidebarOverlay.addEventListener('click', toggleSidebar);
             }
+
+            // Iniciar el temporizador global que actualiza todas las tarjetas del garzón
+            setInterval(updateWaiterTimers, 1000);
+
+
 
         });
         // --- Category Filtering Logic ---
@@ -508,6 +568,11 @@
                 const chargeButton = e.target.closest('.charge-btn');
                 if (chargeButton) {
                     openPaymentModal(chargeButton.dataset.orderId);
+                    }
+                    // Find the closest edit-btn parent or the element itself
+                    const editButton = e.target.closest('.edit-btn');
+                    if (editButton) {
+                        editOrderFromMonitor(editButton.dataset.orderId);
                 }
             });
 
@@ -530,25 +595,29 @@
 
         function handleOrderUpdate(order) {
             // Si el pedido está finalizado (pagado, cancelado o cargado a habitación), se elimina de ambas listas del monitor.
-            if (order.status === 'paid' || order.status === 'cancelled' || order.status === 'charged_to_room') {
-                removeActiveOrder(order.id);
+            if (['paid', 'cancelled', 'charged_to_room'].includes(order.status)) {
+                removeInProgressOrder(order.id);
+                removeReadyOrder(order.id);
                 removeServedOrder(order.id);
                 return;
             }
 
             // Si el pedido está servido, se mueve a la lista de "Servidos" y se quita de "Activos".
-            if (order.status === 'served') {
-                removeActiveOrder(order.id);
+            if (order.status === 'served') { // Va a la sección de Cobros
+                removeInProgressOrder(order.id);
+                removeReadyOrder(order.id);
                 addOrUpdateServedOrder(order);
-            } else { // Si está pendiente, en preparación o listo, va a la lista de "Activos".
+            } else if (order.status === 'ready') { // Va a la columna de Listos
+                removeInProgressOrder(order.id);
                 removeServedOrder(order.id);
-                // Si el pedido cambia a 'listo', mostrar notificación y reproducir sonido
-                if (order.status === 'ready') {
-                    showToast(`¡El pedido para ${order.identifier} está listo!`, 'info');
-                    const notificationSound = new Audio("{% static 'restaurant/sounds/notification.mp3' %}");
-                    notificationSound.play().catch(e => console.warn("La interacción del usuario es necesaria para reproducir audio."));
-                }
-                addOrUpdateActiveOrder(order);
+                addOrUpdateReadyOrder(order);
+                showToast(`¡El pedido para ${order.identifier} está listo!`, 'info');
+                const notificationSound = new Audio("{% static 'restaurant/sounds/notification.mp3' %}");
+                notificationSound.play().catch(e => console.warn("La interacción del usuario es necesaria para reproducir audio."));
+            } else { // Si está pendiente o en preparación, va a la columna En Curso
+                removeReadyOrder(order.id);
+                removeServedOrder(order.id);
+                addOrUpdateInProgressOrder(order);
             }
         }
 
@@ -557,14 +626,22 @@
             let orderLi = document.getElementById(`served-order-monitor-${order.id}`);
 
             const orderHTML = `
-                <div>
-                    <p class="font-semibold">${order.identifier} - Pedido #${order.id}</p>
-                    <p class="text-sm text-gray-700">Total: $${order.total.toFixed(0)}</p>
+                <div class="flex-grow">
+                    <div class="flex justify-between items-center">
+                        <p class="font-semibold">${order.identifier} - Pedido #${order.id}</p>
+                        <span class="waiter-timer text-sm font-medium text-gray-600">00:00</span>
+                    </div>
+                    <p class="text-sm text-gray-700 mt-1">Total: $${order.total.toLocaleString('es-CL')}</p>
                 </div>
-                <button class="charge-btn flex items-center justify-center bg-amber-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-amber-800 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 ease-in-out" data-order-id="${order.id}">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H4a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
-                    <span>Cobrar</span>
-                </button>
+                <div class="flex items-center space-x-2 ml-4">
+                    <button class="edit-btn flex items-center justify-center bg-gray-500 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-600 shadow-md" data-order-id="${order.id}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z"></path></svg>
+                    </button>
+                    <button class="charge-btn flex items-center justify-center bg-amber-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-amber-800 shadow-md" data-order-id="${order.id}">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H4a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                        <span>Cobrar</span>
+                    </button>
+                </div>
             `;
 
             if (orderLi) {
@@ -572,6 +649,7 @@
             } else {
                 orderLi = document.createElement('li');
                 orderLi.id = `served-order-monitor-${order.id}`;
+                orderLi.dataset.updatedAt = order.updated_at;
                 orderLi.className = 'flex justify-between items-center bg-blue-50 p-3 rounded-lg';
                 orderLi.innerHTML = orderHTML;
                 servedOrdersList.prepend(orderLi);
@@ -585,15 +663,19 @@
             if (orderLi) {
                 orderLi.remove();
             }
+            const list = document.getElementById('served-orders-list-monitor');
+            if (list.children.length === 0) {
+                list.innerHTML = '<li id="no-served-orders" class="text-gray-500">No hay pedidos servidos pendientes de cobro.</li>';
+            }
         }
 
-        function addOrUpdateActiveOrder(order) {
-            const activeOrdersList = document.getElementById('active-orders-list-monitor');
-            let orderLi = document.getElementById(`active-order-${order.id}`);
+        function addOrUpdateInProgressOrder(order) {
+            const inProgressList = document.getElementById('in-progress-orders-list-monitor');
+            let orderLi = document.getElementById(`inprogress-order-${order.id}`);
 
             const itemsHTML = order.items.map(item => `<li>${item.quantity}x ${item.name}</li>`).join('');
 
-            const statusOptions = `
+            const statusOptions = ` 
                 <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pendiente</option>
                 <option value="preparing" ${order.status === 'preparing' ? 'selected' : ''}>En Preparación</option>
                 <option value="ready" ${order.status === 'ready' ? 'selected' : ''}>Listo</option>
@@ -601,11 +683,14 @@
 
             const orderHTML = `
                 <div class="flex justify-between items-center">
-                    <p class="font-semibold">Pedido #${order.id} (${order.identifier})</p>
-                    <span class="px-2 py-1 text-xs font-medium rounded-full ${order.status_class}">${order.status_display}</span>
+                    <div>
+                        <p class="font-semibold">Pedido #${order.id} (${order.identifier})</p>
+                        <span class="px-2 py-1 text-xs font-medium rounded-full ${order.status_class}">${order.status_display}</span>
+                    </div>
+                    <span class="waiter-timer text-lg font-bold text-gray-700">00:00</span>
                 </div>
                 <div class="text-sm text-gray-600 mt-1">
-                    <p>Total: $${order.total.toFixed(0)}</p>
+                    <p>Total: $${order.total.toLocaleString('es-CL')}</p>
                     <ul class="list-disc list-inside pl-1">${itemsHTML}</ul>
                 </div>
                 <div class="mt-2 text-right">
@@ -613,14 +698,12 @@
                         <select class="status-changer text-xs border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" data-order-id="${order.id}">
                             ${statusOptions}
                         </select>
+                        <button class="edit-btn flex items-center justify-center bg-gray-500 text-white px-3 py-1 rounded-md text-xs font-medium hover:bg-gray-600" data-order-id="${order.id}">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z"></path></svg>
+                        </select>
                         <button class="cancel-btn flex items-center justify-center bg-red-500 text-white px-3 py-1 rounded-md text-xs font-medium hover:bg-red-600 shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-150" data-order-id="${order.id}">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         </button>
-                        ${order.status === 'ready' ? 
-                            `<button class="mark-served-monitor-btn flex items-center justify-center bg-blue-500 text-white px-3 py-1 rounded-md text-xs font-medium hover:bg-blue-600 shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-150" data-order-id="${order.id}">
-                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-                                Servido</button>` 
-                            : ''}
                     </div>
                 </div>
             `;
@@ -629,11 +712,14 @@
                 orderLi.innerHTML = orderHTML;
             } else {
                 orderLi = document.createElement('li');
-                orderLi.id = `active-order-${order.id}`;
+                orderLi.id = `inprogress-order-${order.id}`;
+                orderLi.dataset.updatedAt = order.updated_at;
                 orderLi.className = 'bg-gray-50 p-3 rounded-lg border';
                 orderLi.innerHTML = orderHTML;
-                activeOrdersList.prepend(orderLi);
+                inProgressList.prepend(orderLi);
             }
+
+            document.getElementById('no-in-progress-orders')?.remove();
 
             orderLi.querySelector('.cancel-btn').addEventListener('click', (e) => {
                 const orderId = e.target.dataset.orderId;
@@ -647,17 +733,109 @@
                 updateOrderStatus(orderId, e.target.value);
             });
 
-            orderLi.querySelector('.mark-served-monitor-btn').addEventListener('click', (e) => {
-                const orderId = e.target.dataset.orderId;
-                updateOrderStatus(orderId, 'served');
+            orderLi.querySelector('.edit-btn').addEventListener('click', (e) => {
+                const orderId = e.currentTarget.dataset.orderId;
+                editOrderFromMonitor(orderId);
             });
         }
 
-        function removeActiveOrder(orderId) {
-            const orderLi = document.getElementById(`active-order-${orderId}`);
+        function removeInProgressOrder(orderId) {
+            const orderLi = document.getElementById(`inprogress-order-${orderId}`);
             if (orderLi) {
                 orderLi.remove();
             }
+            const list = document.getElementById('in-progress-orders-list-monitor');
+            if (list.children.length === 0) {
+                list.innerHTML = '<li id="no-in-progress-orders" class="text-gray-500">No hay pedidos en curso.</li>';
+            }
+        }
+
+        function addOrUpdateReadyOrder(order) {
+            const readyList = document.getElementById('ready-orders-list-monitor');
+            let orderLi = document.getElementById(`ready-order-${order.id}`);
+
+            const itemsHTML = order.items.map(item => `<li>${item.quantity}x ${item.name}</li>`).join('');
+
+            const orderHTML = `
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="font-semibold">Pedido #${order.id} (${order.identifier})</p>
+                        <span class="px-2 py-1 text-xs font-medium rounded-full ${order.status_class}">${order.status_display}</span>
+                    </div>
+                    <span class="waiter-timer text-lg font-bold text-green-700">00:00</span>
+                </div>
+                <div class="text-sm text-gray-600 mt-1">
+                    <ul class="list-disc list-inside pl-1">${itemsHTML}</ul>
+                </div>
+                <div class="mt-3 flex items-center space-x-2">
+                    <button class="edit-btn flex-shrink-0 flex items-center justify-center bg-gray-500 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-600 shadow-md" data-order-id="${order.id}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z"></path></svg>
+                    </button>
+                    <button class="mark-served-monitor-btn w-full flex items-center justify-center bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-green-600 shadow-md" data-order-id="${order.id}">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                        Marcar Servido
+                    </button>
+                </div>
+            `;
+
+            if (orderLi) {
+                orderLi.innerHTML = orderHTML;
+            } else {
+                orderLi = document.createElement('li');
+                orderLi.id = `ready-order-${order.id}`;
+                orderLi.dataset.updatedAt = order.updated_at;
+                orderLi.className = 'bg-green-50 p-3 rounded-lg border border-green-200';
+                orderLi.innerHTML = orderHTML;
+                readyList.prepend(orderLi);
+            }
+            document.getElementById('no-ready-orders')?.remove();
+
+            orderLi.querySelector('.mark-served-monitor-btn').addEventListener('click', (e) => {
+                const orderId = e.currentTarget.dataset.orderId;
+                openServeConfirmationModal(orderId);
+            });
+
+            orderLi.querySelector('.edit-btn').addEventListener('click', (e) => {
+                const orderId = e.currentTarget.dataset.orderId;
+                editOrderFromMonitor(orderId);
+            });
+        }
+
+        function removeReadyOrder(orderId) {
+            const orderLi = document.getElementById(`ready-order-${orderId}`);
+            if (orderLi) {
+                orderLi.classList.add('fade-out');
+                // Esperar a que termine la animación para eliminar el elemento
+                setTimeout(() => {
+                    orderLi.remove();
+                    const list = document.getElementById('ready-orders-list-monitor');
+                    if (list.children.length === 1 && list.querySelector('.fade-out')) { // Check if only the fading element is left
+                        // This check might be tricky with timing, a simpler check is often enough
+                    } else if (list.children.length === 0) {
+                        list.innerHTML = '<li id="no-ready-orders" class="text-gray-500">No hay pedidos listos.</li>';
+                    }
+                }, 500); // Debe coincidir con la duración de la transición en CSS
+            }
+        }
+
+        /**
+         * Itera sobre todas las tarjetas de pedido del garzón y actualiza sus temporizadores.
+         */
+        function updateWaiterTimers() {
+            const cards = document.querySelectorAll('#monitor li[data-updated-at], #payments li[data-updated-at]');
+            cards.forEach(card => {
+                const updatedAt = new Date(card.dataset.updatedAt);
+                const now = new Date();
+                const diffSeconds = Math.floor((now - updatedAt) / 1000);
+                
+                const minutes = Math.floor(diffSeconds / 60);
+                const seconds = diffSeconds % 60;
+                
+                const timerEl = card.querySelector('.waiter-timer');
+                if (timerEl) {
+                    timerEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                }
+            });
         }
 
         function showToast(message, type = 'info') {
@@ -706,11 +884,14 @@
         async function updateOrderStatus(orderId, newStatus, statusText = null) {
             const body = { status: newStatus };
 
-            // Si estamos finalizando el pedido (pagado o cargado a habitación), obtener y añadir la propina.
+            // Si estamos finalizando el pedido (pagado o cargado a habitación), obtener y añadir la propina solo si la casilla está marcada.
             if (newStatus === 'paid' || newStatus === 'charged_to_room') {
-                const tipPercentage = parseFloat(document.getElementById('custom-tip-percentage-input').value) || 0;
-                const subtotal = parseFloat(document.getElementById('modal-order-subtotal').textContent.replace(/\./g, ''));
-                body.tip_amount = (subtotal * (tipPercentage / 100)).toFixed(2);
+                const includeTipCheckbox = document.getElementById('include-tip-checkbox');
+                if (includeTipCheckbox.checked) {
+                    body.tip_amount = parseFloat(document.getElementById('custom-tip-amount-input').value).toFixed(2) || '0.00';
+                } else {
+                    body.tip_amount = '0.00'; // Asegurarse de que la propina sea 0 si la casilla no está marcada.
+                }
             }
 
             try {
@@ -761,83 +942,112 @@
                 const modalOrderSubtotal = document.getElementById('modal-order-subtotal');
                 const modalOrderTip = document.getElementById('modal-order-tip');
                 const modalOrderTotal = document.getElementById('modal-order-total');
-                const splitSelect = document.getElementById('split-bill-select');
+                const splitInput = document.getElementById('split-bill-input');
                 const splitResult = document.getElementById('split-bill-result');
+                const tipPresetButtonsContainer = document.getElementById('tip-preset-buttons');
                 const tipLabel = document.querySelector('label[for="include-tip-checkbox"]');
 
                 let isUpdating = false; // Flag to prevent infinite loops
 
                 // Function to calculate and display totals
                 const calculateAndDisplayTotals = () => {
-                    if (isUpdating) return;
-                    isUpdating = true;
-
                     modalOrderSubtotal.textContent = subtotal.toLocaleString('es-CL');
 
                     let currentTip = 0;
                     if (includeTipCheckbox.checked) {
                         document.getElementById('tip-inputs').classList.remove('hidden');
-                        tipLabel.classList.remove('bg-red-100', 'text-red-800', 'hover:bg-red-200');
+                        tipPresetButtonsContainer.classList.remove('hidden');
+                        // --- Estilos para propina ACTIVADA (Verde) ---
+                        tipLabel.classList.remove('bg-amber-200', 'text-amber-900', 'hover:bg-amber-300');
                         tipLabel.classList.add('bg-green-100', 'text-green-800', 'hover:bg-green-200');
-                        includeTipCheckbox.classList.remove('text-red-600');
+                        includeTipCheckbox.classList.remove('text-amber-700');
                         includeTipCheckbox.classList.add('text-green-600');
-
-                        const tipPercentage = parseFloat(customTipInput.value) || 0;
-                        currentTip = subtotal * (tipPercentage / 100);
-                        customTipAmountInput.value = Math.round(currentTip);
+                        currentTip = parseFloat(customTipAmountInput.value) || 0;
 
                     } else {
                         document.getElementById('tip-inputs').classList.add('hidden');
-                        currentTip = 0;
+                        tipPresetButtonsContainer.classList.add('hidden');
+                        // --- Estilos para propina DESACTIVADA (Café más notorio) ---
                         tipLabel.classList.remove('bg-green-100', 'text-green-800', 'hover:bg-green-200');
-                        tipLabel.classList.add('bg-red-100', 'text-red-800', 'hover:bg-red-200');
+                        tipLabel.classList.add('bg-amber-200', 'text-amber-900', 'hover:bg-amber-300');
                         includeTipCheckbox.classList.remove('text-green-600');
-                        includeTipCheckbox.classList.add('text-red-600');
+                        includeTipCheckbox.classList.add('text-amber-700');
+                        currentTip = 0;
+                        // Asegurarse de que el input de monto se ponga a 0 para que el cálculo sea correcto
+                        customTipAmountInput.value = '0';
                     }
 
-                    const totalWithTip = subtotal + parseFloat(customTipAmountInput.value || 0);
+                    const totalWithTip = subtotal + currentTip;
 
                     modalOrderTotal.textContent = totalWithTip.toLocaleString('es-CL');
 
-                    const numPeople = parseInt(splitSelect.value);
+                    const numPeople = parseInt(splitInput.value) || 1;
                     if (numPeople > 1) {
                         const amountPerPerson = totalWithTip / numPeople;
                         splitResult.textContent = `${numPeople} pagos de $${amountPerPerson.toLocaleString('es-CL', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
                     } else {
                         splitResult.textContent = '';
                     }
-                    isUpdating = false;
                 };
 
                 // Initialize values and event listeners
-                includeTipCheckbox.checked = true; // Default to include tip
-                customTipInput.value = "0"; 
+                includeTipCheckbox.checked = false; // Iniciar con la propina desactivada
+                customTipInput.value = "0"; // Porcentaje por defecto
+                includeTipCheckbox.classList.add('text-amber-700'); // Estilo inicial del checkbox
+
                 customTipInput.min = "0";
                 customTipAmountInput.min = "0";
+                customTipAmountInput.value = "10";
+
+                // --- Lógica para botones de propina preestablecida ---
+                const tipPresetButtons = tipPresetButtonsContainer.querySelectorAll('.tip-preset-btn');
+                tipPresetButtons.forEach(button => {
+                    button.onclick = () => {
+                        const percentage = button.dataset.percentage;
+                        customTipInput.value = percentage;
+                        // Activar visualmente el botón presionado
+                        tipPresetButtons.forEach(btn => btn.classList.remove('active'));
+                        button.classList.add('active');
+                        // Disparar el evento 'input' para que todo se recalcule
+                        customTipInput.dispatchEvent(new Event('input'));
+                    };
+                });
 
                 includeTipCheckbox.onchange = calculateAndDisplayTotals;
+
                 customTipInput.oninput = () => {
                     if (isUpdating) return;
                     isUpdating = true;
-                    const percentage = parseFloat(customTipInput.value) || 0;
+                    const percentage = parseFloat(customTipInput.value) || 0;                    
                     const tipAmount = subtotal * (percentage / 100);
                     customTipAmountInput.value = Math.round(tipAmount);
-                    isUpdating = false;
                     calculateAndDisplayTotals();
+                    isUpdating = false;
                 };
+
                 customTipAmountInput.oninput = () => {
                     if (isUpdating) return;
                     isUpdating = true;
                     const amount = parseFloat(customTipAmountInput.value) || 0;
                     const percentage = subtotal > 0 ? (amount / subtotal) * 100 : 0;
                     customTipInput.value = percentage.toFixed(1);
-                    isUpdating = false;
                     calculateAndDisplayTotals();
+                    isUpdating = false;
                 };
-                splitSelect.value = "1"; // Reset
-                splitResult.textContent = '';
 
-                splitSelect.onchange = calculateAndDisplayTotals;
+                splitInput.value = "1"; // Reset
+                splitResult.textContent = '';
+                splitInput.oninput = calculateAndDisplayTotals;
+
+                // --- Lógica para botones de división de cuenta ---
+                const splitPresetButtons = document.querySelectorAll('.split-preset-btn');
+                splitPresetButtons.forEach(button => {
+                    button.onclick = () => {
+                        splitInput.value = button.dataset.split;
+                        // Disparar el evento 'input' para que todo se recalcule
+                        splitInput.dispatchEvent(new Event('input'));
+                    };
+                });
 
                 calculateAndDisplayTotals(); // Initial calculation
 
@@ -873,6 +1083,78 @@
             }
         }
 
+        async function editOrderFromMonitor(orderId) {
+            try {
+                const response = await fetch(`/restaurant/api/waiter/orders/${orderId}/`);
+                if (!response.ok) {
+                    showToast('No se pudo cargar el pedido para editar.', 'error');
+                    return;
+                }
+                const data = await response.json();
+
+                // Set global state for editing
+                editingOrderId = orderId;
+                currentClientIdentifier = data.identifier;
+                currentRoomNumber = data.room_number;
+
+                // Populate the order view
+                document.getElementById('order-identifier-display').textContent = data.identifier;
+                
+                currentOrder = data.items.map(item => ({
+                    ...item,
+                    lineItemId: Date.now() + Math.random() // Create a unique ID for the line item
+                }));
+
+                renderOrder();
+
+                // Update button texts and visibility
+                document.getElementById('submit-order-btn').textContent = 'Actualizar Pedido';
+                document.getElementById('mark-served-btn').classList.remove('hidden');
+
+                showOrderView();
+            } catch (error) {
+                console.error('Error editing order:', error);
+                showToast('Error al cargar el pedido.', 'error');
+            }
+        }
+
+        async function openServeConfirmationModal(orderId) {
+            try {
+                const response = await fetch(`/restaurant/api/waiter/orders/${orderId}/`);
+                if (!response.ok) throw new Error('Failed to fetch order details for confirmation');
+                const data = await response.json();
+
+                // Populate modal
+                document.getElementById('serve-modal-title').textContent = `Confirmar Entrega - ${data.identifier || ''}`;
+                const itemsList = document.getElementById('serve-modal-order-items');
+                itemsList.innerHTML = data.items.map(item => `
+                    <li class="flex justify-between">
+                        <span>${item.quantity}x ${item.name}</span>
+                    </li>
+                `).join('');
+
+                // Set up confirm button
+                const confirmBtn = document.getElementById('serve-modal-confirm-btn');
+                const newConfirmBtn = confirmBtn.cloneNode(true);
+                confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+
+                newConfirmBtn.onclick = () => {
+                    updateOrderStatus(orderId, 'served');
+                    closeServeConfirmationModal();
+                };
+
+                // Show modal
+                document.getElementById('serve-confirmation-modal').classList.remove('hidden');
+            } catch (error) {
+                console.error('Error opening serve confirmation modal:', error);
+                showToast('No se pudo cargar el detalle del pedido para confirmar.', 'error');
+            }
+        }
+
+        function closeServeConfirmationModal() {
+            document.getElementById('serve-confirmation-modal').classList.add('hidden');
+        }
+
         function closePaymentModal() {
             document.getElementById('modal-charge-to-room-btn').classList.add('hidden');
             document.getElementById('payment-modal').classList.add('hidden');
@@ -880,6 +1162,7 @@
 
         document.getElementById('modal-cancel-btn').addEventListener('click', closePaymentModal);
 
+        document.getElementById('serve-modal-cancel-btn').addEventListener('click', closeServeConfirmationModal);
         // --- Order Management Logic ---
         function addToOrder(itemId, name, price) {
             // Use a unique line ID to allow the same product with different notes
@@ -987,7 +1270,7 @@
 
         document.getElementById('mark-served-btn').addEventListener('click', () => {
             if (editingOrderId) {
-                updateOrderStatus(editingOrderId, 'served');
+                openServeConfirmationModal(editingOrderId);
             }
         });
 
@@ -1008,7 +1291,7 @@
                 return;
             }
 
-            const url = isEditing ? `/restaurant/api/waiter/orders/${editingOrderId}/` : "{% url 'save_order' %}";
+            const url = isEditing ? `/restaurant/api/waiter/orders/${editingOrderId}/` : "{% url 'restaurant:save_order' %}";
             const method = isEditing ? 'PUT' : 'POST';
             const body = { 
                 items: currentOrder, 
