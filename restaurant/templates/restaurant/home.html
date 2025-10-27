@@ -16,13 +16,13 @@
                         {% if user.is_authenticated %}
                             <p class="lead">Hola, {{ user.username }}!</p>
                             {% if is_admin %}
-                                <a href="{% url 'admin_dashboard' %}" class="btn btn-primary btn-lg mb-2">Dashboard Administrador</a>
+                                <a href="{% url 'restaurant:admin_dashboard' %}" class="btn btn-primary btn-lg mb-2">Dashboard Administrador</a>
                             {% elif is_receptionist %}
-                                <a href="{% url 'receptionist_dashboard' %}" class="btn btn-success btn-lg mb-2">Dashboard Recepcionista</a>
+                                <a href="{% url 'restaurant:receptionist_dashboard' %}" class="btn btn-success btn-lg mb-2">Dashboard Recepcionista</a>
                             {% elif is_cook %}
-                                <a href="{% url 'cook_dashboard' %}" class="btn btn-warning btn-lg mb-2">Dashboard Cocinero</a>
+                                <a href="{% url 'restaurant:cook_dashboard' %}" class="btn btn-warning btn-lg mb-2">Dashboard Cocinero</a>
                             {% elif is_waiter %}
-                                <a href="{% url 'waiter_dashboard' %}" class="btn btn-info btn-lg mb-2">Dashboard Garzón</a>
+                                <a href="{% url 'restaurant:waiter_dashboard' %}" class="btn btn-info btn-lg mb-2">Dashboard Garzón</a>
                             {% endif %}
                             <br>
                             <a href="{% url 'logout' %}" class="btn btn-secondary">Cerrar Sesión</a>

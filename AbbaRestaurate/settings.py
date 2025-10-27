@@ -117,7 +117,7 @@ if DEBUG:
             'ENGINE': 'django.db.backends.mysql',
             'NAME': 'abbarestaurante_db',
             'USER': 'root',
-            'PASSWORD': 'root',
+            'PASSWORD': 'Inacap.2025',
             'HOST': 'localhost',
             'PORT': '3306',
             'OPTIONS': {

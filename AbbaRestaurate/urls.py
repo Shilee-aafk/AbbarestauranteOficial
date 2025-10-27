@@ -25,6 +25,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("favicon.ico", RedirectView.as_view(url=staticfiles_storage.url("favicon.ico"))),
     path('restaurant/', include('restaurant.urls')),
+    path('accounts/signup/', views.signup_view, name='signup'),
+    path('accounts/login/', views.login_view, name='login'),
     path('accounts/logout/', views.logout_view, name='logout'),
     path('accounts/', include('django.contrib.auth.urls')),
 ]

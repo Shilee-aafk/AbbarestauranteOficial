@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth import logout, login
+from django.contrib.auth import logout, login, authenticate
 from django.contrib import messages
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
@@ -14,18 +14,19 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill
 from openpyxl.utils import get_column_letter
 from .forms import CustomUserCreationForm
+from django.contrib.auth.forms import AuthenticationForm
 from .models import Reservation, Order, OrderItem, MenuItem, Group, RegistrationPin
 
 def home(request):
     if request.user.is_authenticated:
         if request.user.is_superuser or request.user.groups.filter(name='Administrador').exists():
-            return redirect('admin_dashboard')
+            return redirect('restaurant:admin_dashboard')
         elif request.user.groups.filter(name='Recepcionista').exists():
-            return redirect('receptionist_dashboard')
+            return redirect('restaurant:receptionist_dashboard')
         elif request.user.groups.filter(name='Cocinero').exists():
-            return redirect('cook_dashboard')
+            return redirect('restaurant:cook_dashboard')
         elif request.user.groups.filter(name='Garzón').exists():
-            return redirect('waiter_dashboard')
+            return redirect('restaurant:waiter_dashboard')
         else:
             # No role assigned, render home
             return render(request, 'restaurant/home.html', {})
@@ -50,6 +51,20 @@ def signup_view(request):
     else:
         form = CustomUserCreationForm()
     return render(request, 'registration/signup.html', {'form': form})
+
+def login_view(request):
+    """
+    Vista para el inicio de sesión de usuarios.
+    """
+    if request.method == 'POST':
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)
+            return redirect('home')
+    else:
+        form = AuthenticationForm()
+    return render(request, 'registration/login.html', {'form': form})
 
 @login_required
 @user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
