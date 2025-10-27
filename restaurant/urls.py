@@ -7,7 +7,6 @@ app_name = 'restaurant'
 urlpatterns = [
     # Auth
     path('signup/', views.signup_view, name='signup'),
-
     path('', views.home, name='home'),
     # Dashboards
     path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),

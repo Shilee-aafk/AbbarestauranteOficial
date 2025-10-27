@@ -47,7 +47,7 @@ def signup_view(request):
             user = form.save()
             # Inicia sesión automáticamente para el nuevo usuario
             login(request, user)
-            return redirect('home')  # Redirige a home, que gestionará el dashboard correcto
+            return redirect('restaurant:home')  # Redirige a home, que gestionará el dashboard correcto
     else:
         form = CustomUserCreationForm()
     return render(request, 'registration/signup.html', {'form': form})
@@ -61,7 +61,7 @@ def login_view(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
-            return redirect('home')
+            return redirect('restaurant:home')
     else:
         form = AuthenticationForm()
     return render(request, 'registration/login.html', {'form': form})
