@@ -24,21 +24,22 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-9q340snr7*@mbs+7z06vv=pq0j#voi*%&+hvw1l+8wn!90$i@p')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# Render establece la variable de entorno 'RENDER' a 'true' automáticamente.
-DEBUG = os.environ.get('RENDER', 'false').lower() != 'true'
+# En producción, DEBUG debe ser False. La variable de entorno 'DEBUG' no estará presente en Koyeb.
+DEBUG = os.environ.get('DEBUG', 'False') == 'True' # Se mantiene True solo si la variable de entorno es 'True'
 
 ALLOWED_HOSTS = []
 
-# Si estamos en desarrollo, permitimos localhost y los dominios de ngrok
+# En producción, los hosts se añaden desde las variables de entorno.
+# En desarrollo, permitimos localhost y los dominios de ngrok.
 if DEBUG:
-    ALLOWED_HOSTS.extend(['localhost', '127.0.0.1', '.ngrok-free.app'])
+    ALLOWED_HOSTS.extend(['localhost', '127.0.0.1', '.ngrok-free.app', '*']) # '*' es para conveniencia en desarrollo
 
-# Añade el host de Render a los hosts permitidos si está en producción
-RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_URL')
-if RENDER_EXTERNAL_HOSTNAME:
-    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME.split("://")[1])
+# Koyeb y otras plataformas inyectan la URL de la app en variables de entorno.
+APP_HOSTNAME = os.environ.get('KOYEB_APP_URL', '').split('://')[-1] or os.environ.get('RENDER_EXTERNAL_HOSTNAME', '')
+if APP_HOSTNAME:
+    ALLOWED_HOSTS.append(APP_HOSTNAME)
 
-CSRF_TRUSTED_ORIGINS = ['https://*.ngrok-free.app', 'https://*.onrender.com']
+CSRF_TRUSTED_ORIGINS = ['https://*.ngrok-free.app', 'https://*.onrender.com', 'https://*.koyeb.app']
 
 # Application definition
 
