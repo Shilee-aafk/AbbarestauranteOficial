@@ -66,7 +66,7 @@ El proyecto está configurado para usar MySQL.
     CREATE DATABASE abbarestaurante_db;
     ```
 
-3.  **Verifica la conexión:** El archivo `AbbaRestaurate/settings.py` está configurado para usar `USER: 'root'` y `PASSWORD: 'root'`. Si tu configuración de MySQL es diferente, por favor, actualiza esas credenciales en el archivo.
+3.  **Verifica la conexión:** El archivo `AbbaRestaurante/settings.py` está configurado para usar `USER: 'root'` y `PASSWORD: 'root'`. Si tu configuración de MySQL es diferente, por favor, actualiza esas credenciales en el archivo.
 
 ### 5. Configuración Inicial de Django
 
@@ -100,7 +100,7 @@ Abre tu navegador y ve a **http://127.0.0.1:8000/**. Serás redirigido a la pág
 El comando `runserver` es suficiente para la mayoría de las tareas, pero para probar la funcionalidad completa de WebSockets de una manera que simule más de cerca el entorno de producción, puedes usar `daphne`, el servidor ASGI.
 
 ```bash
-daphne AbbaRestaurate.asgi:application
+daphne AbbaRestaurante.asgi:application
 ```
 
 El servidor también estará disponible en **http://127.0.0.1:8000/**.

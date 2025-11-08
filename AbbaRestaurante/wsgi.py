@@ -1,5 +1,5 @@
 """
-WSGI config for AbbaRestaurate project.
+WSGI config for AbbaRestaurante project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
@@ -11,6 +11,6 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'AbbaRestaurate.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'AbbaRestaurante.settings')
 
 application = get_wsgi_application()

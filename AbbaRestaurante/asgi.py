@@ -1,5 +1,5 @@
 """
-ASGI config for AbbaRestaurate project.
+ASGI config for AbbaRestaurante project.
 
 It exposes the ASGI callable as a module-level variable named ``application``.
 
@@ -13,7 +13,7 @@ from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.auth import AuthMiddlewareStack
 from django.core.asgi import get_asgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'AbbaRestaurate.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'AbbaRestaurante.settings')
 django.setup()
 import restaurant.routing
 
