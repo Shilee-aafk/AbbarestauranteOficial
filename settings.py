@@ -67,7 +67,7 @@ MIDDLEWARE = [
     
 ]
 
-ROOT_URLCONF = 'AbbaRestaurate.urls'
+ROOT_URLCONF = 'AbbaRestaurante.urls'
 
 TEMPLATES = [
     {
@@ -84,9 +84,9 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'AbbaRestaurate.wsgi.application'
+WSGI_APPLICATION = 'AbbaRestaurante.wsgi.application'
 
-ASGI_APPLICATION = 'AbbaRestaurate.asgi.application'
+ASGI_APPLICATION = 'AbbaRestaurante.asgi.application'
 
 # Configuración de Channels para desarrollo y producción
 if DEBUG:
@@ -140,6 +140,7 @@ else:
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+# La advertencia W004 indica que esta carpeta no existe. La comentamos.
 # STATICFILES_DIRS = [
 #     BASE_DIR / "static",
 # ]
