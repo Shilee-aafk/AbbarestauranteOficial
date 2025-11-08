@@ -140,9 +140,10 @@ else:
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_DIRS = [
-    BASE_DIR / "static",
-]
+# La advertencia W004 indica que esta carpeta no existe. La comentamos para limpiar el log.
+# STATICFILES_DIRS = [
+#     BASE_DIR / "static",
+# ]
 # Configuración de WhiteNoise para servir archivos estáticos en producción
 if not DEBUG:
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
