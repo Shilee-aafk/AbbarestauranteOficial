@@ -24,18 +24,25 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # La SECRET_KEY se leerá desde las variables de entorno en producción
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-9q340snr7*@mbs+7z06vv=pq0j#voi*%&+hvw1l+8wn!90$i@p')
 
+# --- Configuración de Entorno (Desarrollo, Koyeb, PythonAnywhere) ---
+
+# Detectar si estamos en PythonAnywhere
+IS_PYTHONANYWHERE = 'PYTHONANYWHERE_DOMAIN' in os.environ
+
 # SECURITY WARNING: don't run with debug turned on in production!
-# En producción, DEBUG debe ser False. La variable de entorno 'DEBUG' no estará presente en Koyeb.
-DEBUG = os.environ.get('DEBUG', 'True') == 'True' # Por defecto es True para desarrollo local
+# En producción, DEBUG debe ser False.
+DEBUG = os.environ.get('DEBUG', 'True') == 'True' and not IS_PYTHONANYWHERE
 
 if DEBUG:
     # En desarrollo, permitimos cualquier host para mayor flexibilidad.
     ALLOWED_HOSTS = ['*']
+elif IS_PYTHONANYWHERE:
+    # En producción en PythonAnywhere, solo permitimos el dominio específico.
+    ALLOWED_HOSTS = [os.environ.get('PYTHONANYWHERE_DOMAIN')]
 else:
-    # En producción, solo permitimos el dominio específico de Koyeb.
+    # En producción en Koyeb, solo permitimos el dominio específico.
     koyeb_domain = os.environ.get('KOYEB_PUBLIC_DOMAIN')
     ALLOWED_HOSTS = [koyeb_domain] if koyeb_domain else []
-    
     # Es crucial decirle a Django que confíe en este dominio para peticiones POST seguras (HTTPS).
     CSRF_TRUSTED_ORIGINS = [f'https://{koyeb_domain}'] if koyeb_domain else []
 
@@ -86,7 +93,7 @@ WSGI_APPLICATION = 'AbbaRestaurante.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 # Configuración de la base de datos para desarrollo y producción
-if DEBUG:
+if DEBUG and not IS_PYTHONANYWHERE:
     # Configuración para desarrollo local (MySQL)
     DATABASES = {
         'default': {
@@ -99,6 +106,15 @@ if DEBUG:
             'OPTIONS': {
                 'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
             },
+        }
+    }
+elif IS_PYTHONANYWHERE:
+    # Configuración para producción en PythonAnywhere (SQLite por defecto para plan gratuito)
+    # Si usas un plan de pago con MySQL, puedes cambiar esto para usar las credenciales de tu DB en PythonAnywhere.
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
 else:
@@ -120,14 +136,14 @@ else:
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
-# La advertencia W004 indica que esta carpeta no existe. La comentamos para limpiar el log.
-# STATICFILES_DIRS = [
-#     BASE_DIR / "static",
-# ]
+STATIC_URL = '/static/'
+
+# La ruta donde `collectstatic` dejará los archivos estáticos.
+# En PythonAnywhere, esto debe apuntar a una ruta accesible públicamente.
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
 # Configuración de WhiteNoise para servir archivos estáticos en producción
-if not DEBUG:
+if not DEBUG or IS_PYTHONANYWHERE:
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
