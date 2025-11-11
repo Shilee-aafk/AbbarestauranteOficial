@@ -33,17 +33,12 @@ ALLOWED_HOSTS = []
 # En desarrollo, permitimos localhost y los dominios de ngrok.
 if DEBUG:
     ALLOWED_HOSTS.extend(['localhost', '127.0.0.1', '.ngrok-free.app', '*']) # '*' es para conveniencia en desarrollo
-
-# Para producción, construimos los hosts permitidos a partir de variables de entorno fiables.
-if 'KOYEB_APP_NAME' in os.environ:
-    koyeb_host = f"{os.environ.get('KOYEB_APP_NAME')}.koyeb.app"
-    ALLOWED_HOSTS.append(koyeb_host)
-    CSRF_TRUSTED_ORIGINS = [f"https://{koyeb_host}"]
 else:
-    CSRF_TRUSTED_ORIGINS = ['https://*.ngrok-free.app', 'https://*.onrender.com']
-    RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
-    if RENDER_EXTERNAL_HOSTNAME:
-        ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+    # En producción, obtenemos el dominio directamente de la variable de entorno de Koyeb.
+    koyeb_domain = os.environ.get('KOYEB_PUBLIC_DOMAIN')
+    if koyeb_domain:
+        ALLOWED_HOSTS.append(koyeb_domain)
+        CSRF_TRUSTED_ORIGINS = [f"https://{koyeb_domain}"]
 
 # Application definition
 
