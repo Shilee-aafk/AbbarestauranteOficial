@@ -546,7 +546,7 @@
         // --- Real-time WebSocket Logic ---
         document.addEventListener('DOMContentLoaded', () => {
             const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-            const wsPath = wsProtocol + window.location.host + "/ws/waiter/";
+            const wsPath = wsProtocol + window.location.host + "/ws/waiter-updates/";
 
             const socket = new WebSocket(wsPath);
 
