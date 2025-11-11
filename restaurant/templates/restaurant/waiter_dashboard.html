@@ -1341,14 +1341,22 @@
         const garzonChannel = pusher.subscribe('garzon-channel');
         console.log("Escuchando en 'garzon-channel'...");
 
-        garzonChannel.bind('actualizacion-estado', (data) => handleOrderUpdate(data.order));
-        garzonChannel.bind('pedido-listo', (data) => handleOrderUpdate(data.order));
+        garzonChannel.bind('actualizacion-estado', (data) => {
+            handleOrderUpdate(data.order);
+        });
+
+        garzonChannel.bind('pedido-listo', (data) => {
+            showToast(`¡Pedido para ${data.order.identifier} está listo!`, 'info');
+            handleOrderUpdate(data.order);
+        });
 
         // Canal para disponibilidad de menú (compartido con admin)
         const adminChannel = pusher.subscribe('admin-channel');
         console.log("Escuchando en 'admin-channel' para cambios de menú...");
 
         adminChannel.bind('item-disponibilidad', function(data) {
+            const message = data.available ? `'${data.name}' está disponible de nuevo.` : `¡ATENCIÓN! El plato '${data.name}' ya no está disponible.`;
+            showToast(message, data.available ? 'info' : 'error');
             const menuItemButton = document.querySelector(`.add-to-order-btn[onclick*="addToOrder(${data.item_id},"]`);
             if (menuItemButton) {
                 menuItemButton.disabled = !data.available;
