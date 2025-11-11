@@ -464,6 +464,18 @@
                 addOrUpdateRoomChargeRow(data.order);
             });
 
+            receptionChannel.bind('pedido-pagado', function(data) {
+                console.log('Evento "pedido-pagado" recibido:', data);
+                // Actualizar total_sales_today sumando el total del pedido pagado
+                const totalSalesElement = document.getElementById('total-sales-today');
+                const currentTotal = parseFloat(totalSalesElement.textContent.replace('$', '').replace(/\./g, '').replace(',', '.')) || 0;
+                const newTotal = currentTotal + (data.order.total || 0);
+                totalSalesElement.textContent = `$${newTotal.toLocaleString('es-CL', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+                showToast(`Pedido pagado: ${data.order.client_identifier}`, 'success');
+                // Remover de la lista de cobros pendientes si está ahí
+                removeServedOrder(data.order.id);
+            });
+
             // También escuchamos actualizaciones generales para la lista de cobros pendientes
             pusher.subscribe('garzon-channel').bind('actualizacion-estado', (data) => handleOrderUpdate(data.order));
         });

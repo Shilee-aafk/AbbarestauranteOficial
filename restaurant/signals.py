@@ -34,6 +34,7 @@ def order_status_changed(sender, instance, created, **kwargs):
         'created_at': instance.created_at.isoformat(),
         'user_id': instance.user.id, # ID del garzón que creó el pedido
         'room_number': instance.room_number, # Número de habitación para recepción
+        'total': instance.total_amount, # Total del pedido para actualizaciones de ventas
     }
 
     if created:
@@ -63,6 +64,13 @@ def order_status_changed(sender, instance, created, **kwargs):
             # Notificar a RECEPCIÓN y ADMIN que un pedido se cargó a una habitación.
             pusher_client.trigger(['recepcion-channel', 'admin-channel'], 'cargo-habitacion', {
                 'message': f"Se cargó un pedido a la habitación {instance.room_number}",
+                'order': order_data
+            })
+
+        if instance.status == 'paid':
+            # Notificar a RECEPCIÓN y ADMIN que un pedido fue pagado.
+            pusher_client.trigger(['recepcion-channel', 'admin-channel'], 'pedido-pagado', {
+                'message': f"Pedido pagado: {order_data['client_identifier']}",
                 'order': order_data
             })
 

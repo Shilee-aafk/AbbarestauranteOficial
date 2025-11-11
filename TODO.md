@@ -1,9 +1,22 @@
-# TODO: Fix "Agregar Plato" Form Issue
+# Tareas para Corregir Errores y Agregar Actualizaciones en Tiempo Real
 
-## Steps to Complete
+## Errores Identificados
+- [x] Corregir mensajes de toast incompletos en `updateOrderStatus` en waiter_dashboard.html
+- [x] Corregir mensajes de toast incompletos en `updateOrderStatus` en receptionist_dashboard.html
+- [x] Verificar consistencia en endpoints de API
 
-- [x] Modify restaurant/views.py add_menu_item function to add input validation and exception handling
-- [x] Modify restaurant/templates/restaurant/admin_dashboard.html JavaScript to handle errors from fetch request
-- [x] Test the form with invalid data to verify error messages
-- [x] Test with valid data to ensure it saves correctly
-- [x] Check browser console for any JS errors
+## Funcionalidad de Actualización en Tiempo Real
+- [x] Agregar actualización en tiempo real para `total_sales_today` en receptionist_dashboard.html
+- [x] Asegurar que todos los cambios de estado de pedidos (pago, cargo a habitación) actualicen la UI inmediatamente
+- [x] Mejorar el modal de pago para actualizar totales de ventas vía WebSocket después del pago
+- [x] Agregar eventos de WebSocket faltantes para actualizaciones de pedidos
+- [x] Probar funcionalidad en tiempo real en todos los escenarios
+
+## Archivos a Modificar
+- [x] restaurant/templates/restaurant/waiter_dashboard.html
+- [x] restaurant/templates/restaurant/receptionist_dashboard.html
+
+## Pruebas
+- [ ] Probar pagos y verificación de actualización de totales
+- [ ] Probar cambios de estado de pedidos
+- [ ] Verificar notificaciones en tiempo real

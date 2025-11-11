@@ -366,7 +366,9 @@
         let editingOrderId = null; // To track if we are editing an order
         const initialOrders = {{ initial_orders_json|safe }};
         let selectedTableId = null; // To track the selected table without a dropdown
-        let currentOrder = [];
+let currentOrder = [];
+let currentClientIdentifier = '';
+let currentRoomNumber = '';
 
         // --- Sidebar Navigation Logic ---
         document.addEventListener('DOMContentLoaded', function() {
@@ -410,6 +412,9 @@
 
             // Iniciar el temporizador global que actualiza todas las tarjetas del garzón
             setInterval(updateWaiterTimers, 1000);
+
+            // Inicializar el monitor con los pedidos iniciales
+            initializeMonitor();
 
 
 
@@ -549,18 +554,19 @@
                 const chargeButton = e.target.closest('.charge-btn');
                 if (chargeButton) {
                     openPaymentModal(chargeButton.dataset.orderId);
-                    }
+                }
                     // Find the closest edit-btn parent or the element itself
                     const editButton = e.target.closest('.edit-btn');
-                    if (editButton) {          editOrderFromMonitor(editButton.dataset.orderId);
-                }
+                    if (editButton) {
+                        editOrderFromMonitor(editButton.dataset.orderId);
+                    }
             });
 
             // Attach event listeners to initially loaded elements
             document.querySelectorAll('.cancel-btn').forEach(button => {
                 button.addEventListener('click', (e) => {
                     const orderId = e.target.dataset.orderId;
-                    if (confirm(`¿Estás seguro de que quieres cancelar el pedido #${orderId}? Esta acción no se puede deshacer.`)) {
+                    if (confirm(`¿Estás seguro de que quieres cancelar el pedido #? Esta acción no se puede deshacer.`)) {
                         updateOrderStatus(orderId, 'cancelled');
                     }
                 });
@@ -638,8 +644,8 @@
             document.getElementById('no-served-orders')?.remove();
         }
 
-        function removeServedOrder(orderId) {
-            const orderLi = document.getElementById(`served-order-monitor-${orderId}`);
+function removeServedOrder(orderId) {
+    const orderLi = document.getElementById(`served-order-monitor-${orderId}`);
             if (orderLi) {
                 orderLi.remove();
             }
@@ -671,16 +677,16 @@
                 </div>
                 <div class="text-sm text-gray-600 mt-1">
                     <p>Total: $${order.total.toLocaleString('es-CL')}</p>
-                    <ul class="list-disc list-inside pl-1">${itemsHTML}</ul>
+                    <ul class="list-disc list-inside pl-1"></ul>
                 </div>
                 <div class="mt-2 text-right">
                     <div class="flex items-center justify-end space-x-2">
-                        <select class="status-changer text-xs border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" data-order-id="${order.id}">
-                            ${statusOptions}
-                        </select>
+<select class="status-changer text-xs border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" data-order-id="${order.id}">
+    ${statusOptions}
+</select>
                         <button class="edit-btn flex items-center justify-center bg-gray-500 text-white px-3 py-1 rounded-md text-xs font-medium hover:bg-gray-600" data-order-id="${order.id}">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z"></path></svg>
-                        </select>
+                        </button>
                         <button class="cancel-btn flex items-center justify-center bg-red-500 text-white px-3 py-1 rounded-md text-xs font-medium hover:bg-red-600 shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-150" data-order-id="${order.id}">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         </button>
@@ -703,7 +709,7 @@
 
             orderLi.querySelector('.cancel-btn').addEventListener('click', (e) => {
                 const orderId = e.target.dataset.orderId;
-                if (confirm(`¿Estás seguro de que quieres cancelar el pedido #${orderId}? Esta acción no se puede deshacer.`)) {
+                if (confirm(`¿Estás seguro de que quieres cancelar el pedido #? Esta acción no se puede deshacer.`)) {
                     updateOrderStatus(orderId, 'cancelled');
                 }
             });
@@ -719,8 +725,8 @@
             });
         }
 
-        function removeInProgressOrder(orderId) {
-            const orderLi = document.getElementById(`inprogress-order-${orderId}`);
+function removeInProgressOrder(orderId) {
+    const orderLi = document.getElementById(`inprogress-order-${orderId}`);
             if (orderLi) {
                 orderLi.remove();
             }
@@ -745,7 +751,7 @@
                     <span class="waiter-timer text-lg font-bold text-green-700">00:00</span>
                 </div>
                 <div class="text-sm text-gray-600 mt-1">
-                    <ul class="list-disc list-inside pl-1">${itemsHTML}</ul>
+                    <ul class="list-disc list-inside pl-1"></ul>
                 </div>
                 <div class="mt-3 flex items-center space-x-2">
                     <button class="edit-btn flex-shrink-0 flex items-center justify-center bg-gray-500 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-600 shadow-md" data-order-id="${order.id}">
@@ -781,8 +787,8 @@
             });
         }
 
-        function removeReadyOrder(orderId) {
-            const orderLi = document.getElementById(`ready-order-${orderId}`);
+function removeReadyOrder(orderId) {
+    const orderLi = document.getElementById(`ready-order-${orderId}`);
             if (orderLi) {
                 orderLi.classList.add('fade-out');
                 // Esperar a que termine la animación para eliminar el elemento
@@ -820,7 +826,7 @@
 
         function showToast(message, type = 'info') {
             const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
+            toast.className = `toast `;
 
             const icons = {
                 success: `<svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`,
@@ -899,8 +905,8 @@
         });
 
         async function openPaymentModal(orderId) {
-            try {
-                const response = await fetch(`/restaurant/api/waiter/orders/${orderId}/`);
+    try {
+        const response = await fetch(`/restaurant/api/waiter/orders/${orderId}/`);
                 if (!response.ok) throw new Error('Failed to fetch order details');
                 const data = await response.json();
 
@@ -964,7 +970,7 @@
                     const numPeople = parseInt(splitInput.value) || 1;
                     if (numPeople > 1) {
                         const amountPerPerson = totalWithTip / numPeople;
-                        splitResult.textContent = `${numPeople} pagos de $${amountPerPerson.toLocaleString('es-CL', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+                        splitResult.textContent = ` pagos de $${amountPerPerson.toLocaleString('es-CL', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
                     } else {
                         splitResult.textContent = '';
                     }
@@ -1064,8 +1070,8 @@
         }
 
         async function editOrderFromMonitor(orderId) {
-            try {
-                const response = await fetch(`/restaurant/api/waiter/orders/${orderId}/`);
+    try {
+        const response = await fetch(`/restaurant/api/waiter/orders/${orderId}/`);
                 if (!response.ok) {
                     showToast('No se pudo cargar el pedido para editar.', 'error');
                     return;
@@ -1079,7 +1085,7 @@
 
                 // Populate the order view
                 document.getElementById('order-identifier-display').textContent = data.identifier;
-                
+
                 currentOrder = data.items.map(item => ({
                     ...item,
                     lineItemId: Date.now() + Math.random() // Create a unique ID for the line item
@@ -1091,6 +1097,7 @@
                 document.getElementById('submit-order-btn').textContent = 'Actualizar Pedido';
                 document.getElementById('mark-served-btn').classList.remove('hidden');
 
+                resetCategoryFilters();
                 showOrderView();
             } catch (error) {
                 console.error('Error editing order:', error);
@@ -1099,8 +1106,8 @@
         }
 
         async function openServeConfirmationModal(orderId) {
-            try {
-                const response = await fetch(`/restaurant/api/waiter/orders/${orderId}/`);
+    try {
+        const response = await fetch(`/restaurant/api/waiter/orders/${orderId}/`);
                 if (!response.ok) throw new Error('Failed to fetch order details for confirmation');
                 const data = await response.json();
 
@@ -1292,6 +1299,17 @@
                 if (result.success) {
                     const message = isEditing ? `Pedido #${result.order_id} actualizado exitosamente.` : `Pedido #${result.order_id} creado exitosamente.`;
                     showToast(message, 'success');
+
+                    // Actualizar el monitor en tiempo real con el nuevo pedido
+                    if (!isEditing) {
+                        fetch(`/restaurant/api/waiter/orders/${result.order_id}/`)
+                            .then(response => response.json())
+                            .then(data => {
+                                handleOrderUpdate(data);
+                            })
+                            .catch(error => console.error('Error fetching new order:', error));
+                    }
+
                     showMainSectionView(); // Volver a la vista principal (Mesas o Bar)
                     clearAndPrepareNewOrder(); // Resetear el formulario y variables después de guardar
                     submitBtn.disabled = false; // Reactivar el botón para el próximo pedido
@@ -1329,42 +1347,41 @@
         const PUSHER_KEY = "{{ PUSHER_KEY }}";
         const PUSHER_CLUSTER = "{{ PUSHER_CLUSTER }}";
 
-        if (!PUSHER_KEY) {
-            console.error("Pusher key no está configurada.");
-            return;
-        }
+        if (PUSHER_KEY) {
+            Pusher.logToConsole = true;
+            const pusher = new Pusher(PUSHER_KEY, { cluster: PUSHER_CLUSTER });
 
-        Pusher.logToConsole = true;
-        const pusher = new Pusher(PUSHER_KEY, { cluster: PUSHER_CLUSTER });
+            // Canal para eventos de pedidos
+            const garzonChannel = pusher.subscribe('garzon-channel');
+            console.log("Escuchando en 'garzon-channel'...");
 
-        // Canal para eventos de pedidos
-        const garzonChannel = pusher.subscribe('garzon-channel');
-        console.log("Escuchando en 'garzon-channel'...");
+            garzonChannel.bind('actualizacion-estado', (data) => {
+                handleOrderUpdate(data.order);
+            });
 
-        garzonChannel.bind('actualizacion-estado', (data) => {
-            handleOrderUpdate(data.order);
-        });
+            garzonChannel.bind('pedido-listo', (data) => {
+                showToast(`¡Pedido para ${data.order.identifier} está listo!`, 'info');
+                handleOrderUpdate(data.order);
+            });
 
-        garzonChannel.bind('pedido-listo', (data) => {
-            showToast(`¡Pedido para ${data.order.identifier} está listo!`, 'info');
-            handleOrderUpdate(data.order);
-        });
+            // Canal para disponibilidad de menú (compartido con admin)
+            const adminChannel = pusher.subscribe('admin-channel');
+            console.log("Escuchando en 'admin-channel' para cambios de menú...");
 
-        // Canal para disponibilidad de menú (compartido con admin)
-        const adminChannel = pusher.subscribe('admin-channel');
-        console.log("Escuchando en 'admin-channel' para cambios de menú...");
-
-        adminChannel.bind('item-disponibilidad', function(data) {
-            const message = data.available ? `'${data.name}' está disponible de nuevo.` : `¡ATENCIÓN! El plato '${data.name}' ya no está disponible.`;
-            showToast(message, data.available ? 'info' : 'error');
-            const menuItemButton = document.querySelector(`.add-to-order-btn[onclick*="addToOrder(${data.item_id},"]`);
-            if (menuItemButton) {
-                menuItemButton.disabled = !data.available;
-                const menuItemDiv = menuItemButton.closest('.menu-item');
-                if (menuItemDiv) {
-                    menuItemDiv.style.opacity = data.available ? '1' : '0.5';
+            adminChannel.bind('item-disponibilidad', function(data) {
+                const message = data.available ? `'${data.name}' está disponible de nuevo.` : `¡ATENCIÓN! El plato '${data.name}' ya no está disponible.`;
+                showToast(message, data.available ? 'info' : 'error');
+                const menuItemButton = document.querySelector(`.add-to-order-btn[onclick*="addToOrder(${data.item_id},"]`);
+                if (menuItemButton) {
+                    menuItemButton.disabled = !data.available;
+                    const menuItemDiv = menuItemButton.closest('.menu-item');
+                    if (menuItemDiv) {
+                        menuItemDiv.style.opacity = data.available ? '1' : '0.5';
+                    }
                 }
-            }
-        });
+            });
+        } else {
+            console.error("Pusher key no está configurada.");
+        }
     </script>
 {% endblock %}
