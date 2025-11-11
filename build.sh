@@ -2,15 +2,19 @@
 # exit on error
 set -o errexit
 
-# Unset PYTHONHOME to avoid conflicts with the system Python
+# Force use of system Python instead of Koyeb's Python environment
+export PATH="/usr/bin:$PATH"
+
+# Unset conflicting environment variables
 unset PYTHONHOME
-export PYTHONPATH=""
+unset PYTHONPATH
 
 # Create profile.d script if it doesn't exist
 mkdir -p .profile.d
 cat > .profile.d/python.sh << 'EOF'
 #!/bin/bash
-# Unset PYTHONHOME to avoid conflicts in Koyeb's containerized environment
+# Force system Python and unset conflicting variables
+export PATH="/usr/bin:$PATH"
 unset PYTHONHOME
 unset PYTHONPATH
 EOF
@@ -19,10 +23,11 @@ chmod +x .profile.d/python.sh
 # Create migrate wrapper script
 cat > migrate.sh << 'EOF'
 #!/bin/bash
-# Wrapper script to run migrate with proper Python environment
+# Force system Python for migrate
+export PATH="/usr/bin:$PATH"
 unset PYTHONHOME
 unset PYTHONPATH
-python3 manage.py migrate
+/usr/bin/python3 manage.py migrate
 EOF
 chmod +x migrate.sh
 
