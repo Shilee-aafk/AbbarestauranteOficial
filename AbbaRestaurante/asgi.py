@@ -13,12 +13,6 @@ from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.auth import AuthMiddlewareStack
 from django.core.asgi import get_asgi_application
 
-# Force use of system Python paths
-if 'PYTHONHOME' in os.environ:
-    del os.environ['PYTHONHOME']
-if 'PYTHONPATH' in os.environ:
-    del os.environ['PYTHONPATH']
-
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'AbbaRestaurante.settings')
 
 # La importación de get_asgi_application() debe hacerse ANTES de django.setup()

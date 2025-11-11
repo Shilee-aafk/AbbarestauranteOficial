@@ -11,12 +11,6 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-# Force use of system Python paths
-if 'PYTHONHOME' in os.environ:
-    del os.environ['PYTHONHOME']
-if 'PYTHONPATH' in os.environ:
-    del os.environ['PYTHONPATH']
-
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'AbbaRestaurante.settings')
 
 application = get_wsgi_application()

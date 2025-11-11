@@ -3,12 +3,6 @@
 import os
 import sys
 
-# Force use of system Python paths
-if 'PYTHONHOME' in os.environ:
-    del os.environ['PYTHONHOME']
-if 'PYTHONPATH' in os.environ:
-    del os.environ['PYTHONPATH']
-
 
 def main():
     """Run administrative tasks."""
