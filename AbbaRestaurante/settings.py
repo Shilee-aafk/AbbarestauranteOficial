@@ -107,13 +107,13 @@ if DEBUG:
 else:
     # Configuración para producción (Render - PostgreSQL)
     DATABASES = {
-        # Usamos una función lambda para la carga "perezosa" (lazy loading).
-        # Esto evita que Django intente conectarse a la base de datos durante la fase de build (collectstatic),
-        # momento en el que las variables de entorno podrían no estar completamente disponibles.
-        'default': dj_database_url.config(conn_max_age=600, ssl_require=True, default='')
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': 'dummy.db', # Base de datos dummy para la fase de build
+        }
     }
-    if not DATABASES['default']:
-        raise ValueError("La variable de entorno DATABASE_URL no está configurada en producción.")
+    if 'DATABASE_URL' in os.environ:
+        DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
