@@ -362,29 +362,6 @@
             document.getElementById('filter-btn').addEventListener('click', fetchOrdersReport);
             document.getElementById('export-excel-btn').addEventListener('click', exportOrdersToExcel);
 
-            // --- WebSocket for real-time updates ---
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const ws = new WebSocket(`${protocol}//${window.location.host}/ws/receptionist-updates/`);
-
-            ws.onmessage = function(e) {
-                const data = JSON.parse(e.data);
-                const message = data.message;
-
-                if (!message) return;
-
-                // El consumidor ahora puede enviar dos tipos de mensajes anidados
-                if (data.type === 'receptionist_message') {
-                    if (message.type === 'room_charge_update') {
-                        addOrUpdateRoomChargeRow(message.order);
-                    }
-                } else if (data.type === 'order_update') {
-                    handleOrderUpdate(message.order);
-                }
-            };
-
-            ws.onclose = function(e) {
-                console.error('Receptionist WebSocket closed unexpectedly');
-            };
         });
 
         function handleOrderUpdate(order) {
@@ -464,6 +441,32 @@
             const noChargesRow = document.getElementById('no-room-charges');
             if (noChargesRow) noChargesRow.remove();
         }
+
+        // --- Lógica de Pusher para Tiempo Real ---
+        document.addEventListener('DOMContentLoaded', function() {
+            const PUSHER_KEY = "{{ PUSHER_KEY }}";
+            const PUSHER_CLUSTER = "{{ PUSHER_CLUSTER }}";
+
+            if (!PUSHER_KEY) {
+                console.error("Pusher key no está configurada.");
+                return;
+            }
+
+            Pusher.logToConsole = true;
+            const pusher = new Pusher(PUSHER_KEY, { cluster: PUSHER_CLUSTER });
+
+            const receptionChannel = pusher.subscribe('recepcion-channel');
+            console.log("Escuchando en 'recepcion-channel'...");
+
+            receptionChannel.bind('cargo-habitacion', function(data) {
+                console.log('Evento "cargo-habitacion" recibido:', data);
+                showToast(`Nuevo cargo a la habitación ${data.order.room_number}`, 'info');
+                addOrUpdateRoomChargeRow(data.order);
+            });
+
+            // También escuchamos actualizaciones generales para la lista de cobros pendientes
+            pusher.subscribe('garzon-channel').bind('actualizacion-estado', (data) => handleOrderUpdate(data.order));
+        });
 
         async function openPaymentModal(orderId) {
             try {

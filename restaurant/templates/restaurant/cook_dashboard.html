@@ -72,24 +72,8 @@
             // Renderizar los pedidos iniciales
             initialOrders.forEach(order => handleOrderUpdate(order));
     
-            // Iniciar el temporizador global que actualiza todas las tarjetas
-            setInterval(updateTimers, 1000);
-    
-            // Conectar al WebSocket para actualizaciones en tiempo real
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const socket = new WebSocket(`${protocol}//${window.location.host}/ws/cook-updates/`);
-    
-            socket.onmessage = function(e) {
-                const data = JSON.parse(e.data);
-                if (data.type === 'order_update') {
-                    handleOrderUpdate(data.order);
-                }
-            };
-    
-            socket.onclose = function(e) {
-                console.error('Cook WebSocket closed unexpectedly. Trying to reconnect in 5s...');
-                setTimeout(() => { location.reload(); }, 5000);
-            };
+            // Iniciar el temporizador global que actualiza los contadores de tiempo
+            setInterval(updateTimers, 1000); // 1 segundo
         });
     
         /**
@@ -146,17 +130,23 @@
          * @param {object} order - El objeto del pedido.
          */
         function handleOrderUpdate(order) {
+            // Si el pedido ya no está pendiente o en preparación, lo eliminamos de la vista de cocina.
+            if (order.status !== 'pending' && order.status !== 'preparing') {
+                const cardToRemove = document.querySelector(`.order-card[data-order-id='${order.id}']`);
+                if (cardToRemove) {
+                    cardToRemove.remove();
+                }
+                return;
+            }
+
             const existingCard = document.querySelector(`.order-card[data-order-id='${order.id}']`);
             if (existingCard) {
                 existingCard.remove();
             }
     
-            let targetContainer;
-            if (order.status === 'pending') {
-                targetContainer = document.getElementById('pending-orders');
-            } else if (order.status === 'preparing') {
-                targetContainer = document.getElementById('preparing-orders');
-            }
+            const targetContainer = order.status === 'pending' 
+                ? document.getElementById('pending-orders') 
+                : document.getElementById('preparing-orders');
     
             if (targetContainer) {
                 const cardHTML = createOrderCardHTML(order);
@@ -164,6 +154,12 @@
                 // Actualiza el temporizador de la nueva tarjeta inmediatamente
                 const newCard = targetContainer.querySelector(`[data-order-id='${order.id}']`);
                 updateTimerForCard(newCard);
+
+                // Efecto visual para destacar el cambio
+                newCard.classList.add('animate-pulse', 'bg-yellow-50');
+                setTimeout(() => {
+                    newCard.classList.remove('animate-pulse', 'bg-yellow-50');
+                }, 3000);
             }
         }
     
@@ -227,5 +223,26 @@
             const cards = document.querySelectorAll('.order-card');
             cards.forEach(updateTimerForCard);
         }
+
+        // --- Lógica de Pusher para Tiempo Real ---
+        document.addEventListener('DOMContentLoaded', function() {
+            const PUSHER_KEY = "{{ PUSHER_KEY }}";
+            const PUSHER_CLUSTER = "{{ PUSHER_CLUSTER }}";
+
+            if (!PUSHER_KEY) {
+                console.error("Pusher key no está configurada.");
+                return;
+            }
+
+            Pusher.logToConsole = true; // Útil para depurar
+            const pusher = new Pusher(PUSHER_KEY, { cluster: PUSHER_CLUSTER });
+
+            const cocinaChannel = pusher.subscribe('cocina-channel');
+            console.log("Escuchando en 'cocina-channel'...");
+
+            cocinaChannel.bind('nuevo-pedido', (data) => handleOrderUpdate(data.order));
+            cocinaChannel.bind('actualizacion-estado', (data) => handleOrderUpdate(data.order));
+        });
+
     </script>
 {% endblock %}

@@ -543,32 +543,7 @@
             initialOrders.forEach(order => handleOrderUpdate(order));
         }
 
-        // --- Real-time WebSocket Logic ---
-        document.addEventListener('DOMContentLoaded', () => {
-            const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-            const wsPath = wsProtocol + window.location.host + "/ws/waiter/";
-
-            const socket = new WebSocket(wsPath);
-
-            socket.onopen = function(e) {
-                console.log("WebSocket connection established.");
-            };
-
-            socket.onmessage = function(e) {
-                const data = JSON.parse(e.data);
-                console.log("Data received from server: ", data);
-                // La estructura que envía Django Channels es { "type": "order_update", "order": {...} }
-                if (data.type === 'order_update') {
-                    handleOrderUpdate(data.order);
-                }
-            };
-
-            socket.onclose = function(e) {
-                console.error('WebSocket closed unexpectedly. Trying to reconnect...');
-                // Aquí podrías implementar una lógica de reconexión.
-            };
-
-            // --- Event Delegation for dynamically created buttons ---
+        document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('served-orders-list-monitor').addEventListener('click', function(e) {
                 // Find the closest charge-btn parent or the element itself
                 const chargeButton = e.target.closest('.charge-btn');
@@ -1349,5 +1324,39 @@
         }
 
         renderOrder();
+
+        // --- Lógica de Pusher para Tiempo Real ---
+        const PUSHER_KEY = "{{ PUSHER_KEY }}";
+        const PUSHER_CLUSTER = "{{ PUSHER_CLUSTER }}";
+
+        if (!PUSHER_KEY) {
+            console.error("Pusher key no está configurada.");
+            return;
+        }
+
+        Pusher.logToConsole = true;
+        const pusher = new Pusher(PUSHER_KEY, { cluster: PUSHER_CLUSTER });
+
+        // Canal para eventos de pedidos
+        const garzonChannel = pusher.subscribe('garzon-channel');
+        console.log("Escuchando en 'garzon-channel'...");
+
+        garzonChannel.bind('actualizacion-estado', (data) => handleOrderUpdate(data.order));
+        garzonChannel.bind('pedido-listo', (data) => handleOrderUpdate(data.order));
+
+        // Canal para disponibilidad de menú (compartido con admin)
+        const adminChannel = pusher.subscribe('admin-channel');
+        console.log("Escuchando en 'admin-channel' para cambios de menú...");
+
+        adminChannel.bind('item-disponibilidad', function(data) {
+            const menuItemButton = document.querySelector(`.add-to-order-btn[onclick*="addToOrder(${data.item_id},"]`);
+            if (menuItemButton) {
+                menuItemButton.disabled = !data.available;
+                const menuItemDiv = menuItemButton.closest('.menu-item');
+                if (menuItemDiv) {
+                    menuItemDiv.style.opacity = data.available ? '1' : '0.5';
+                }
+            }
+        });
     </script>
 {% endblock %}

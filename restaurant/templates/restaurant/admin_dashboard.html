@@ -668,29 +668,38 @@
             }
 
             // --- WEBSOCKETS ---
-            function initWebSockets() {
-                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-                const ws = new WebSocket(`${protocol}//${window.location.host}/ws/admin-updates/`);
+            function initPusher() {
+                const PUSHER_KEY = "{{ PUSHER_KEY }}";
+                const PUSHER_CLUSTER = "{{ PUSHER_CLUSTER }}";
 
-                ws.onmessage = (e) => {
-                    const update = JSON.parse(e.data).message; // La data viene anidada en 'message'
-                    if (!update) return;
+                if (!PUSHER_KEY) {
+                    console.error("Pusher key no está configurada.");
+                    return;
+                }
 
-                    if (update.stats) {
-                        updateDashboardStats(update.stats);
-                    }
-                    if (update.order) {
-                        updateRecentOrderInUI(update.order);
-                    }
-                    if (update.model === 'menu_item') {
-                        updateMenuItemInUI(update.data, update.action);
-                    }
-                };
+                Pusher.logToConsole = true;
+                const pusher = new Pusher(PUSHER_KEY, { cluster: PUSHER_CLUSTER });
 
-                ws.onclose = () => {
-                    console.error('Admin WebSocket closed unexpectedly. Reloading in 5s...');
-                    setTimeout(() => location.reload(), 5000);
-                };
+                const adminChannel = pusher.subscribe('admin-channel');
+                console.log("Escuchando en 'admin-channel'...");
+
+                // Escuchar todos los eventos relevantes para el admin
+                adminChannel.bind('nuevo-pedido', function(data) {
+                    console.log('Admin vio un nuevo pedido:', data);
+                    updateRecentOrderInUI(data.order);
+                    // Podríamos también actualizar los contadores aquí si el backend no los envía
+                });
+
+                adminChannel.bind('actualizacion-estado', function(data) {
+                    console.log('Admin vio una actualización de estado:', data);
+                    updateRecentOrderInUI(data.order);
+                });
+
+                adminChannel.bind('item-disponibilidad', function(data) {
+                    console.log('Admin vio un cambio de disponibilidad:', data);
+                    const action = data.available ? 'updated' : 'updated'; // Simular acción para la UI
+                    updateMenuItemInUI(data, action);
+                });
             }
 
             function updateDashboardStats(stats) {
@@ -1032,7 +1041,7 @@
             function initialize() {
                 initUIComponents();
                 initNavigation();
-                initWebSockets();
+                initPusher(); // Reemplazamos la función de WebSockets por la de Pusher
                 initMenuManagement();
                 initPinManagement();
                 initUserManagement();
