@@ -39,7 +39,16 @@ APP_HOSTNAME = os.environ.get('KOYEB_APP_URL', '').split('://')[-1] or os.enviro
 if APP_HOSTNAME:
     ALLOWED_HOSTS.append(APP_HOSTNAME)
 
+# For Koyeb deployment, ensure we allow the app URL
+KOYEB_APP_URL = os.environ.get('KOYEB_APP_URL')
+if KOYEB_APP_URL:
+    ALLOWED_HOSTS.append(KOYEB_APP_URL.split('://')[-1])
+
 CSRF_TRUSTED_ORIGINS = ['https://*.ngrok-free.app', 'https://*.onrender.com', 'https://*.koyeb.app']
+
+# Ensure CSRF trusted origins include Koyeb
+if KOYEB_APP_URL:
+    CSRF_TRUSTED_ORIGINS.append(KOYEB_APP_URL)
 
 # Application definition
 
