@@ -101,10 +101,9 @@ if DEBUG:
         }
     }
 else:
-    # Configuración para producción (Render - PostgreSQL)
-    DATABASES = {'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': 'dummy.db'}}
-    if 'DATABASE_URL' in os.environ:
-        DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
+    # Configuración para producción (Koyeb - Neon PostgreSQL)
+    # La URL de Neon ya incluye los parámetros de SSL, así que solo necesitamos pasarla.
+    DATABASES = {'default': dj_database_url.config(conn_max_age=600)}
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
