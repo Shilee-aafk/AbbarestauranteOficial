@@ -14,7 +14,16 @@ unset PYTHONHOME
 EOF
 chmod +x .profile.d/python.sh
 
+# Create migrate wrapper script
+cat > migrate.sh << 'EOF'
+#!/bin/bash
+# Wrapper script to run migrate with proper Python environment
+unset PYTHONHOME
+python3 manage.py migrate
+EOF
+chmod +x migrate.sh
+
 pip install -r requirements.txt
 
 python3 manage.py collectstatic --no-input
-python3 manage.py migrate
+./migrate.sh
