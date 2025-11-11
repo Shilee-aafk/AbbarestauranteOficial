@@ -1,52 +1,30 @@
-# Entorno Virtual
+# Archivos de configuración de Django que NUNCA deben estar en la raíz
+/settings.py
+/wsgi.py
+/asgi.py
+/urls.py
+
+# Entorno virtual
 venv/
-env/
-.venv/
 
 # Archivos de caché de Python
 __pycache__/
-*.py[cod]
-*$py.class
+*.pyc
 
-# Archivos de configuración de IDEs
-.idea/
-.vscode/
-
-# Archivos de base de datos local (aunque uses MySQL, es buena práctica)
+# Base de datos local (si usaras SQLite)
+*.sqlite3
 db.sqlite3
-db.sqlite3-journal
 
-# Archivos estáticos recolectados por collectstatic
-staticfiles/
+# Archivos de configuración del editor
+.vscode/
+.idea/
 
-# Archivos de media subidos por usuarios (si los tuvieras)
-media/
+# Archivos de sistema operativo
+.DS_Store
+Thumbs.db
 
 # Archivos de logs
 *.log
 
-# Archivos generados por la aplicación
-*.sql
-*.dump
-reporte_pedidos_*.xlsx
-
-# Archivos de secretos y configuración local
-# ¡Muy importante para no subir tus contraseñas a GitHub!
-.env
-*.env
-local_settings.py
-
-# Archivos generados por el sistema operativo
-.DS_Store
-Thumbs.db
-
-# Reportes de cobertura de tests
-.coverage
-.coverage.*
-htmlcov/
-
-# Paquetes y distribución de Python
-build/
-dist/
-*.egg-info/
-*.egg
+# Archivos de media subidos por los usuarios
+media/
