@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 import os
 import dj_database_url
+from urllib.parse import urlparse, urlunparse, parse_qs, urlencode
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -101,29 +102,20 @@ if DEBUG:
         }
     }
 else:
-    # Configuración para producción (Koyeb - Neon PostgreSQL).
-    # Inicializamos con una base de datos dummy para asegurar que DATABASES siempre esté definida.
-    DATABASES = {'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': 'dummy.db'}}
-    
-    database_url = os.environ.get('DATABASE_URL')
-    if database_url:
-        try:
-            # El parámetro 'channel_binding' de Neon no es compatible con psycopg2.
-            # Usamos urllib para eliminarlo de forma segura de la URL.
-            from urllib.parse import urlparse, urlunparse, parse_qs, urlencode
-            url_parts = urlparse(database_url)
-            query_params = parse_qs(url_parts.query)
-            query_params.pop('channel_binding', None) # Elimina la clave si existe
-            new_query = urlencode(query_params, doseq=True)
-            
-            # Reconstruimos la URL sin el parámetro problemático
-            safe_database_url = urlunparse(url_parts._replace(query=new_query))
-            
-            DATABASES['default'] = dj_database_url.parse(safe_database_url, conn_max_age=600)
-        except Exception as e:
-            print(f"ERROR: No se pudo configurar la base de datos desde DATABASE_URL: {e}")
-    else:
-        print("ADVERTENCIA: La variable de entorno DATABASE_URL no está configurada en producción.")
+    # Configuración para producción (Koyeb - Neon PostgreSQL)
+    DATABASE_URL = os.environ.get('DATABASE_URL', None)
+    if not DATABASE_URL:
+        raise ValueError("La variable de entorno DATABASE_URL no está configurada en producción.")
+
+    # El parámetro 'channel_binding' de Neon no es compatible con psycopg2.
+    # Lo eliminamos de la URL de forma segura antes de que Django la use.
+    url_parts = urlparse(DATABASE_URL)
+    query_params = parse_qs(url_parts.query)
+    query_params.pop('channel_binding', None)  # Elimina la clave si existe
+    new_query = urlencode(query_params, doseq=True)
+    safe_database_url = urlunparse(url_parts._replace(query=new_query))
+
+    DATABASES = {'default': dj_database_url.parse(safe_database_url, conn_max_age=600)}
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
