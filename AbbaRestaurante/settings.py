@@ -25,7 +25,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-9q340snr7*@mbs+7z06vv
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # En producción, DEBUG debe ser False. La variable de entorno 'DEBUG' no estará presente en Koyeb.
-DEBUG = os.environ.get('DEBUG', 'False') == 'True' # Se mantiene True solo si la variable de entorno es 'True'
+DEBUG = os.environ.get('DEBUG', 'True') == 'True' # Por defecto es True para desarrollo local
 
 ALLOWED_HOSTS = []
 
@@ -51,7 +51,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'restaurant.apps.RestaurantConfig',
-    'channels',
     
 ]
 
@@ -86,27 +85,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'AbbaRestaurante.wsgi.application'
 
-ASGI_APPLICATION = 'AbbaRestaurante.asgi.application'
-
-# Configuración de Channels para desarrollo y producción
-if DEBUG:
-    # En desarrollo, usa la capa en memoria que es más simple
-    CHANNEL_LAYERS = {
-        'default': {
-            'BACKEND': 'channels.layers.InMemoryChannelLayer',
-        },
-    }
-else:
-    # En producción, usa Redis
-    CHANNEL_LAYERS = {
-        "default": {
-            "BACKEND": "channels_redis.core.RedisChannelLayer",
-            "CONFIG": {
-                "hosts": [os.environ.get('REDIS_URL', 'redis://localhost:6379')],
-            },
-        },
-    }
-
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
@@ -118,7 +96,7 @@ if DEBUG:
             'ENGINE': 'django.db.backends.mysql',
             'NAME': 'abbarestaurante_db',
             'USER': 'root',
-            'PASSWORD': 'Inacap.2025',
+            'PASSWORD': 'root',
             'HOST': 'localhost',
             'PORT': '3306',
             'OPTIONS': {

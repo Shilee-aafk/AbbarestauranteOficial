@@ -545,22 +545,28 @@
 
         // --- Real-time WebSocket Logic ---
         document.addEventListener('DOMContentLoaded', () => {
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const ws = new WebSocket(`${protocol}//${window.location.host}/ws/waiter-updates/`);
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+            const wsPath = wsProtocol + window.location.host + "/ws/waiter/";
 
-            ws.onmessage = function(e) {
+            const socket = new WebSocket(wsPath);
+
+            socket.onopen = function(e) {
+                console.log("WebSocket connection established.");
+            };
+
+            socket.onmessage = function(e) {
                 const data = JSON.parse(e.data);
+                console.log("Data received from server: ", data);
+                // La estructura que envía Django Channels es { "type": "order_update", "order": {...} }
                 if (data.type === 'order_update') {
                     handleOrderUpdate(data.order);
                 }
             };
 
-            ws.onclose = function(e) {
-                console.error('Waiter WebSocket closed unexpectedly');
-            };
-            ws.onopen = () => {
-                initializeMonitor(); // Cargar los pedidos iniciales cuando el socket esté listo
-            };
+            socket.onclose = function(e) {
+                console.error('WebSocket closed unexpectedly. Trying to reconnect...');
+                // Aquí podrías implementar una lógica de reconexión.
+            });
 
             // --- Event Delegation for dynamically created buttons ---
             document.getElementById('served-orders-list-monitor').addEventListener('click', function(e) {
@@ -571,8 +577,7 @@
                     }
                     // Find the closest edit-btn parent or the element itself
                     const editButton = e.target.closest('.edit-btn');
-                    if (editButton) {
-                        editOrderFromMonitor(editButton.dataset.orderId);
+                    if (editButton) {          editOrderFromMonitor(editButton.dataset.orderId);
                 }
             });
 
