@@ -55,7 +55,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'restaurant.apps.RestaurantConfig',
-    'channels',
     
 ]
 
@@ -83,18 +82,15 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'AbbaRestaurante.context_processors.export_settings',
             ],
         },
     },
 ]
 
 WSGI_APPLICATION = 'AbbaRestaurante.wsgi.application'
-
-ASGI_APPLICATION = 'AbbaRestaurante.asgi.application'
-
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
 # Configuración de la base de datos para desarrollo y producción
 if DEBUG:
     # Configuración para desarrollo local (MySQL)
@@ -111,24 +107,11 @@ if DEBUG:
             },
         }
     }
-    # En desarrollo, usa la capa en memoria que es más simple
-    CHANNEL_LAYERS = {
-        'default': {
-            'BACKEND': 'channels.layers.InMemoryChannelLayer',
-        },
-    }
 else:
     # Configuración para producción (Render - PostgreSQL)
     DATABASES = {'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': 'dummy.db'}}
     if 'DATABASE_URL' in os.environ:
         DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
-    # En producción, usa Redis
-    CHANNEL_LAYERS = {
-        "default": {
-            "BACKEND": "channels_redis.core.RedisChannelLayer",
-            "CONFIG": {"hosts": [os.environ.get('REDIS_URL', 'redis://localhost:6379')]},
-        },
-    }
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
@@ -143,10 +126,14 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 if not DEBUG:
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/restaurant/'
 LOGOUT_REDIRECT_URL = '/restaurant/'
+
+# PUSHER CONFIGURATION
+PUSHER_APP_ID = os.environ.get('PUSHER_APP_ID')
+PUSHER_KEY = os.environ.get('PUSHER_KEY')
+PUSHER_SECRET = os.environ.get('PUSHER_SECRET')
+PUSHER_CLUSTER = os.environ.get('PUSHER_CLUSTER')

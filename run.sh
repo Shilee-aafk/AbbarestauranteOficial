@@ -1,2 +1,2 @@
 #!/bin/bash
-daphne -b 0.0.0.0 -p $PORT AbbaRestaurante.asgi:application
+gunicorn --worker-tmp-dir /dev/shm AbbaRestaurante.wsgi:application
