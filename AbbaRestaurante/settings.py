@@ -34,21 +34,16 @@ ALLOWED_HOSTS = []
 if DEBUG:
     ALLOWED_HOSTS.extend(['localhost', '127.0.0.1', '.ngrok-free.app', '*']) # '*' es para conveniencia en desarrollo
 
-# Koyeb y otras plataformas inyectan la URL de la app en variables de entorno.
-APP_HOSTNAME = os.environ.get('KOYEB_APP_URL', '').split('://')[-1] or os.environ.get('RENDER_EXTERNAL_HOSTNAME', '')
-if APP_HOSTNAME:
-    ALLOWED_HOSTS.append(APP_HOSTNAME)
-
-# For Koyeb deployment, ensure we allow the app URL
-KOYEB_APP_URL = os.environ.get('KOYEB_APP_URL')
-if KOYEB_APP_URL:
-    ALLOWED_HOSTS.append(KOYEB_APP_URL.split('://')[-1])
-
-CSRF_TRUSTED_ORIGINS = ['https://*.ngrok-free.app', 'https://*.onrender.com', 'https://*.koyeb.app']
-
-# Ensure CSRF trusted origins include Koyeb
-if KOYEB_APP_URL:
-    CSRF_TRUSTED_ORIGINS.append(KOYEB_APP_URL)
+# Para producción, construimos los hosts permitidos a partir de variables de entorno fiables.
+if 'KOYEB_APP_NAME' in os.environ:
+    koyeb_host = f"{os.environ.get('KOYEB_APP_NAME')}.koyeb.app"
+    ALLOWED_HOSTS.append(koyeb_host)
+    CSRF_TRUSTED_ORIGINS = [f"https://{koyeb_host}"]
+else:
+    CSRF_TRUSTED_ORIGINS = ['https://*.ngrok-free.app', 'https://*.onrender.com']
+    RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+    if RENDER_EXTERNAL_HOSTNAME:
+        ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 # Application definition
 
