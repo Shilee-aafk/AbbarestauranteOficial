@@ -105,13 +105,13 @@ else:
     # Inicializamos con una base de datos dummy para asegurar que DATABASES siempre esté definida.
     DATABASES = {'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': 'dummy.db'}}
     
-    database_url_str = os.environ.get('DATABASE_URL')
-    if database_url_str:
+    database_url = os.environ.get('DATABASE_URL')
+    if database_url:
         try:
             # El parámetro 'channel_binding' de Neon no es compatible con psycopg2.
             # Usamos urllib para eliminarlo de forma segura de la URL.
             from urllib.parse import urlparse, urlunparse, parse_qs, urlencode
-            url_parts = urlparse(database_url_str)
+            url_parts = urlparse(database_url)
             query_params = parse_qs(url_parts.query)
             query_params.pop('channel_binding', None) # Elimina la clave si existe
             new_query = urlencode(query_params, doseq=True)
