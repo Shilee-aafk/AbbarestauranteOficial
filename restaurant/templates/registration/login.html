@@ -1,8 +1,23 @@
 {% extends 'restaurant/base.html' %}
+{% load static %}
 
 {% block title %}Iniciar Sesión - Abba Hotel Restaurante{% endblock %}
 
 {% block body_class %}bg-amber-50{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Estilos para el botón del ojo */
+    .toggle-password {
+        position: absolute;
+        top: 50%;
+        right: 0.75rem; /* 12px */
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #6b7280; /* gray-500 */
+    }
+</style>
+{% endblock %}
 
 {% block content %}
     <div class="flex min-h-screen items-center justify-center">
@@ -10,10 +25,7 @@
             
             <!-- Logo y Título -->
             <div>
-                <div class="flex items-center justify-center text-amber-900">
-                    <svg class="w-10 h-10 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                    <span class="text-3xl font-bold">Abba Hotel </span>
-                </div>
+                <img class="mx-auto h-24 w-auto" src="{% static 'restaurant/images/logo_d.png' %}" alt="Logo AbbaHotel">
                 <h2 class="mt-6 text-center text-2xl font-bold tracking-tight text-gray-900">
                     Inicia sesión en tu cuenta
                 </h2>
@@ -38,11 +50,21 @@
                                class="relative block w-full appearance-none rounded-none rounded-t-md border border-gray-300 px-3 py-3 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-amber-500 focus:outline-none focus:ring-amber-500 sm:text-sm" 
                                placeholder="Nombre de usuario">
                     </div>
-                    <div>
+                    <!-- Contenedor relativo para posicionar el ojo -->
+                    <div class="relative">
                         <label for="id_password" class="sr-only">Contraseña</label>
                         <input id="id_password" name="password" type="password" autocomplete="current-password" required 
                                class="relative block w-full appearance-none rounded-none rounded-b-md border border-gray-300 px-3 py-3 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-amber-500 focus:outline-none focus:ring-amber-500 sm:text-sm" 
                                placeholder="Contraseña">
+                        <!-- Botón del ojo -->
+                        <button type="button" id="toggle-password-btn" class="toggle-password">
+                            <svg id="eye-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                            <svg id="eye-closed" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7 1.274-4.057 5.064-7 9.542-7 .847 0 1.67.127 2.454.364m-6.082 3.945a3 3 0 104.243 4.243m-4.243-4.243L6.125 6.125m11.75 11.75l-4.243-4.243"></path>
+                            </svg>
+                        </button>
                     </div>
                 </div>
 
@@ -84,4 +106,28 @@
         </div>
     </div>
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const togglePasswordBtn = document.getElementById('toggle-password-btn');
+        const passwordInput = document.getElementById('id_password');
+        const eyeOpenIcon = document.getElementById('eye-open');
+        const eyeClosedIcon = document.getElementById('eye-closed');
+
+        togglePasswordBtn.addEventListener('click', function () {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+
+            if (type === 'password') {
+                eyeOpenIcon.classList.remove('hidden');
+                eyeClosedIcon.classList.add('hidden');
+            } else {
+                eyeOpenIcon.classList.add('hidden');
+                eyeClosedIcon.classList.remove('hidden');
+            }
+        });
+    });
+</script>
 {% endblock %}
