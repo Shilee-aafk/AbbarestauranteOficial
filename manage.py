@@ -3,6 +3,9 @@
 import os
 import sys
 
+# Unset PYTHONHOME to avoid conflicts in containerized environments like Koyeb
+os.environ.pop('PYTHONHOME', None)
+
 
 def main():
     """Run administrative tasks."""

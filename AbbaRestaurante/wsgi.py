@@ -11,6 +11,9 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
+# Unset PYTHONHOME to avoid conflicts in containerized environments like Koyeb
+os.environ.pop('PYTHONHOME', None)
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'AbbaRestaurante.settings')
 
 application = get_wsgi_application()
