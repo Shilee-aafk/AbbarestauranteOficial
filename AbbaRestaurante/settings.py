@@ -101,21 +101,22 @@ if DEBUG:
         }
     }
 else:
-    # Configuración para producción (Koyeb - Neon PostgreSQL)
+    # Configuración para producción (Koyeb - Neon PostgreSQL).
+    # Inicializamos con una base de datos dummy para asegurar que DATABASES siempre esté definida.
+    DATABASES = {'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': 'dummy.db'}}
+    
     DATABASE_URL = os.environ.get('DATABASE_URL')
     if DATABASE_URL:
-        # El parámetro 'channel_binding' de Neon no es compatible con psycopg2.
-        # Lo eliminamos de la URL antes de que Django la use.
-        if 'channel_binding' in DATABASE_URL:
-            DATABASE_URL = DATABASE_URL.replace('&channel_binding=require', '')
-            DATABASE_URL = DATABASE_URL.replace('?channel_binding=require', '') # Por si es el único parámetro
-
-        DATABASES = {
-            'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)
-        }
+        try:
+            # Limpiamos la URL del parámetro incompatible con psycopg2
+            if 'channel_binding' in DATABASE_URL:
+                DATABASE_URL = DATABASE_URL.replace('&channel_binding=require', '')
+            
+            DATABASES['default'] = dj_database_url.parse(DATABASE_URL, conn_max_age=600)
+        except Exception as e:
+            print(f"ERROR: No se pudo configurar la base de datos desde DATABASE_URL: {e}")
     else:
         print("ADVERTENCIA: La variable de entorno DATABASE_URL no está configurada en producción.")
-        DATABASES = {'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': 'dummy.db'}}
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
