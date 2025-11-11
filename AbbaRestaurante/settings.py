@@ -27,18 +27,16 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-9q340snr7*@mbs+7z06vv
 # En producción, DEBUG debe ser False. La variable de entorno 'DEBUG' no estará presente en Koyeb.
 DEBUG = os.environ.get('DEBUG', 'True') == 'True' # Por defecto es True para desarrollo local
 
-ALLOWED_HOSTS = []
-
-# En producción, los hosts se añaden desde las variables de entorno.
-# En desarrollo, permitimos localhost y los dominios de ngrok.
 if DEBUG:
-    ALLOWED_HOSTS.extend(['localhost', '127.0.0.1', '.ngrok-free.app', '*']) # '*' es para conveniencia en desarrollo
+    # En desarrollo, permitimos cualquier host para mayor flexibilidad.
+    ALLOWED_HOSTS = ['*']
 else:
-    # En producción, obtenemos el dominio directamente de la variable de entorno de Koyeb.
+    # En producción, solo permitimos el dominio específico de Koyeb.
     koyeb_domain = os.environ.get('KOYEB_PUBLIC_DOMAIN')
-    if koyeb_domain:
-        ALLOWED_HOSTS.append(koyeb_domain)
-        CSRF_TRUSTED_ORIGINS = [f"https://{koyeb_domain}"]
+    ALLOWED_HOSTS = [koyeb_domain] if koyeb_domain else []
+    
+    # Es crucial decirle a Django que confíe en este dominio para peticiones POST seguras (HTTPS).
+    CSRF_TRUSTED_ORIGINS = [f'https://{koyeb_domain}'] if koyeb_domain else []
 
 # Application definition
 
