@@ -8,7 +8,7 @@ mysqlclient==2.2.7
 openpyxl==3.1.2
 pyasn1==0.6.1
 pyasn1_modules==0.4.2
-pycparser==2.23
+pycparser==2.23 # pyOpenSSL depende de esto
 pusher==3.3.0
 pyOpenSSL==25.3.0
 psycopg2-binary
