@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'restaurant.apps.RestaurantConfig',
+    'channels',
     
 ]
 
@@ -85,6 +86,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'AbbaRestaurante.wsgi.application'
 
+ASGI_APPLICATION = 'AbbaRestaurante.asgi.application'
+
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
@@ -103,6 +106,15 @@ if DEBUG:
                 'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
             },
         }
+    }
+    # Configuración de Channels para producción
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {
+                "hosts": [os.environ.get('REDIS_URL', 'redis://localhost:6379')],
+            },
+        },
     }
 else:
     # Configuración para producción (Render - PostgreSQL)
