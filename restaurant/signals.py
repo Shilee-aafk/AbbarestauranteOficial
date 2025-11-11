@@ -24,13 +24,13 @@ def notify_new_order(sender, instance, created, **kwargs):
         # Serializa los datos del pedido que quieres enviar
         order_data = {
             'id': instance.id,
-            'table_number': instance.table.number if instance.table else 'N/A',
+            'client_identifier': instance.client_identifier,
             'status': instance.status,
             'created_at': instance.created_at.isoformat(),
         }
 
         # Dispara el evento en el canal 'cocina-channel'
         pusher_client.trigger('cocina-channel', 'nuevo-pedido', {
-            'message': f"Nuevo pedido para la mesa {order_data['table_number']}",
+            'message': f"Nuevo pedido de: {order_data['client_identifier']}",
             'order': order_data
         })
