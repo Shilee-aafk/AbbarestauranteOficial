@@ -27,7 +27,7 @@ cat > migrate.sh << 'EOF'
 export PATH="/usr/bin:$PATH"
 unset PYTHONHOME
 unset PYTHONPATH
-/usr/bin/python3 manage.py migrate
+exec /usr/bin/python3 manage.py migrate
 EOF
 chmod +x migrate.sh
 

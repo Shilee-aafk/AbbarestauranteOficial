@@ -11,10 +11,11 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-# Unset PYTHONHOME to avoid conflicts in containerized environments like Koyeb
-os.environ.pop('PYTHONHOME', None)
-# Clear PYTHONPATH to avoid path conflicts
-os.environ.pop('PYTHONPATH', None)
+# Force use of system Python paths
+if 'PYTHONHOME' in os.environ:
+    del os.environ['PYTHONHOME']
+if 'PYTHONPATH' in os.environ:
+    del os.environ['PYTHONPATH']
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'AbbaRestaurante.settings')
 
