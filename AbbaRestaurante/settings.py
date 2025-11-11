@@ -107,25 +107,24 @@ if DEBUG:
             },
         }
     }
-    # Configuración de Channels para producción
+    # En desarrollo, usa la capa en memoria que es más simple
     CHANNEL_LAYERS = {
-        "default": {
-            "BACKEND": "channels_redis.core.RedisChannelLayer",
-            "CONFIG": {
-                "hosts": [os.environ.get('REDIS_URL', 'redis://localhost:6379')],
-            },
+        'default': {
+            'BACKEND': 'channels.layers.InMemoryChannelLayer',
         },
     }
 else:
     # Configuración para producción (Render - PostgreSQL)
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': 'dummy.db', # Base de datos dummy para la fase de build
-        }
-    }
+    DATABASES = {'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': 'dummy.db'}}
     if 'DATABASE_URL' in os.environ:
         DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
+    # En producción, usa Redis
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {"hosts": [os.environ.get('REDIS_URL', 'redis://localhost:6379')]},
+        },
+    }
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
