@@ -14,11 +14,15 @@ from channels.auth import AuthMiddlewareStack
 from django.core.asgi import get_asgi_application
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'AbbaRestaurante.settings')
-django.setup()
-import restaurant.routing
+
+# La importación de get_asgi_application() debe hacerse ANTES de django.setup()
+http_application = get_asgi_application()
+
+# Ahora, después de obtener la aplicación http, importamos el enrutamiento de channels
+import restaurant.routing # noqa
 
 application = ProtocolTypeRouter({
-    'http': get_asgi_application(),
+    'http': http_application,
     'websocket': AuthMiddlewareStack(
         URLRouter(
             restaurant.routing.websocket_urlpatterns
