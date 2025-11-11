@@ -101,9 +101,14 @@ if DEBUG:
         }
     }
 else:
-    # Configuración para producción (Koyeb - Neon PostgreSQL)
-    # La URL de Neon ya incluye los parámetros de SSL, así que solo necesitamos pasarla.
-    DATABASES = {'default': dj_database_url.config(conn_max_age=600)}
+    # Configuración para producción (Koyeb - Neon PostgreSQL).
+    # Hacemos la configuración a prueba de fallos.
+    try:
+        DATABASES = {'default': dj_database_url.config(conn_max_age=600)}
+    except Exception as e:
+        print(f"ERROR: No se pudo configurar la base de datos desde DATABASE_URL: {e}")
+        # Si falla, configuramos una base de datos dummy para evitar que la app se rompa al iniciar.
+        DATABASES = {'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': 'dummy.db'}}
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
