@@ -566,7 +566,7 @@
             socket.onclose = function(e) {
                 console.error('WebSocket closed unexpectedly. Trying to reconnect...');
                 // Aquí podrías implementar una lógica de reconexión.
-            });
+            };
 
             // --- Event Delegation for dynamically created buttons ---
             document.getElementById('served-orders-list-monitor').addEventListener('click', function(e) {
