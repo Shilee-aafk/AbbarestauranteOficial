@@ -11,6 +11,7 @@ cat > .profile.d/python.sh << 'EOF'
 #!/bin/bash
 # Unset PYTHONHOME to avoid conflicts in Koyeb's containerized environment
 unset PYTHONHOME
+export PYTHONPATH=""
 EOF
 chmod +x .profile.d/python.sh
 
@@ -19,6 +20,7 @@ cat > migrate.sh << 'EOF'
 #!/bin/bash
 # Wrapper script to run migrate with proper Python environment
 unset PYTHONHOME
+export PYTHONPATH=""
 python3 manage.py migrate
 EOF
 chmod +x migrate.sh

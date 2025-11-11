@@ -15,6 +15,8 @@ from django.core.asgi import get_asgi_application
 
 # Unset PYTHONHOME to avoid conflicts in containerized environments like Koyeb
 os.environ.pop('PYTHONHOME', None)
+# Clear PYTHONPATH to avoid path conflicts
+os.environ.pop('PYTHONPATH', None)
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'AbbaRestaurante.settings')
 
