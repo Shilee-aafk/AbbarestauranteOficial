@@ -24,7 +24,7 @@ chmod +x .profile.d/python.sh
 cat > migrate.sh << 'EOF'
 #!/bin/bash
 # Force system Python for migrate with clean environment
-exec env -i HOME="$HOME" PATH="/usr/bin:/bin:/usr/local/bin" /usr/bin/python3 manage.py migrate
+exec env -i HOME="$HOME" PATH="/usr/bin:/bin:/usr/local/bin" PYTHONUNBUFFERED=1 /usr/bin/python3 manage.py migrate
 EOF
 chmod +x migrate.sh
 
