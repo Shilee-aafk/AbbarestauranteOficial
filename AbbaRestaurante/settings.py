@@ -128,7 +128,7 @@ LOGIN_REDIRECT_URL = '/restaurant/'
 LOGOUT_REDIRECT_URL = '/restaurant/'
 
 # PUSHER CONFIGURATION
-PUSHER_APP_ID = os.environ.get('PUSHER_APP_ID')
-PUSHER_KEY = os.environ.get('PUSHER_KEY')
-PUSHER_SECRET = os.environ.get('PUSHER_SECRET')
-PUSHER_CLUSTER = os.environ.get('PUSHER_CLUSTER')
+PUSHER_APP_ID = os.environ.get('PUSHER_APP_ID', '')
+PUSHER_KEY = os.environ.get('PUSHER_KEY', '')
+PUSHER_SECRET = os.environ.get('PUSHER_SECRET', '')
+PUSHER_CLUSTER = os.environ.get('PUSHER_CLUSTER', '')
