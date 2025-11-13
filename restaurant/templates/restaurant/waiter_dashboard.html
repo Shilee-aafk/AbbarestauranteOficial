@@ -1344,8 +1344,8 @@ function removeReadyOrder(orderId) {
         renderOrder();
 
         // --- Lógica de Pusher para Tiempo Real ---
-        const PUSHER_KEY = "{{5a22ae579434e52df130}}";
-        const PUSHER_CLUSTER = "{{sa1}}";
+        const PUSHER_KEY = "{{ PUSHER_KEY }}";
+        const PUSHER_CLUSTER = "{{ PUSHER_CLUSTER }}";
 
         if (PUSHER_KEY) {
             Pusher.logToConsole = true;

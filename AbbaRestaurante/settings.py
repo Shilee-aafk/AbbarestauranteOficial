@@ -13,6 +13,7 @@ import os
 import dj_database_url
 from urllib.parse import urlparse, urlunparse, parse_qs, urlencode
 from pathlib import Path
+import pusher
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -135,8 +136,6 @@ else:
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
-PUSHER_SSL = os.environ.get('DJANGO_ENV') == 'production' # O simplemente True en tu settings de producción
-
 STATIC_URL = '/static/'
 
 # La ruta donde `collectstatic` dejará los archivos estáticos.
@@ -158,3 +157,15 @@ PUSHER_APP_ID = os.environ.get('PUSHER_APP_ID', '')
 PUSHER_KEY = os.environ.get('PUSHER_KEY', '')
 PUSHER_SECRET = os.environ.get('PUSHER_SECRET', '')
 PUSHER_CLUSTER = os.environ.get('PUSHER_CLUSTER', '')
+
+# Instancia del cliente Pusher para ser usada en las vistas
+# En producción, ssl=True es crucial para usar wss://
+PUSHER_SSL = not DEBUG
+
+pusher_client = pusher.Pusher(
+  app_id=PUSHER_APP_ID,
+  key=PUSHER_KEY,
+  secret=PUSHER_SECRET,
+  cluster=PUSHER_CLUSTER,
+  ssl=PUSHER_SSL
+)
