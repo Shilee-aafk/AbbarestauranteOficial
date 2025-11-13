@@ -29,8 +29,8 @@
             opacity: 1;
             transform: translate(-50%, 0);
         }
-        .toast.success { background-color: #89f3a9; color: #263d2c; } /* green-200, green-900 */
-        .toast.error { background-color: #e98989; color: #631818; } /* red-300, red-900 */
+        .toast.success { background-color: #89f3a9; color: green; } /* green-200, green */
+        .toast.error { background-color: #e98989; color: red; } /* red-300, red */
         .toast.info { background-color: #93c5fd; color: #1e3a8a; } /* blue-300, blue-900 */
         #welcome-banner { transition: opacity 0.5s ease, transform 0.5s ease; }
         .banner-hidden {
@@ -1344,8 +1344,8 @@ function removeReadyOrder(orderId) {
         renderOrder();
 
         // --- Lógica de Pusher para Tiempo Real ---
-        const PUSHER_KEY = "{{ PUSHER_KEY }}";
-        const PUSHER_CLUSTER = "{{ PUSHER_CLUSTER }}";
+        const PUSHER_KEY = "{{5a22ae579434e52df130}}";
+        const PUSHER_CLUSTER = "{{sa1}}";
 
         if (PUSHER_KEY) {
             Pusher.logToConsole = true;

@@ -100,7 +100,7 @@ if DEBUG and not IS_PYTHONANYWHERE:
             'ENGINE': 'django.db.backends.mysql',
             'NAME': 'abbarestaurante_db',
             'USER': 'root',
-            'PASSWORD': 'root',
+            'PASSWORD': 'Inacap.2024',
             'HOST': 'localhost',
             'PORT': '3306',
             'OPTIONS': {
@@ -135,6 +135,7 @@ else:
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
+PUSHER_SSL = os.environ.get('DJANGO_ENV') == 'production' # O simplemente True en tu settings de producción
 
 STATIC_URL = '/static/'
 
