@@ -34,7 +34,7 @@ def order_status_changed(sender, instance, created, **kwargs):
         'created_at': instance.created_at.isoformat(),
         'user_id': instance.user.id, # ID del garzón que creó el pedido
         'room_number': instance.room_number, # Número de habitación para recepción
-        'total': instance.total_amount, # Total del pedido para actualizaciones de ventas
+        'total': float(instance.total_amount) if instance.total_amount else 0, # Total del pedido para actualizaciones de ventas
     }
 
     if created:
