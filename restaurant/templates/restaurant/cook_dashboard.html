@@ -10,9 +10,31 @@
             transition: all 0.3s ease-in-out;
             border-left-width: 8px;
         }
-        .order-card-new { border-color: #FBBF24; } /* amber-400 */
-        .order-card-medium { border-color: #D97706; } /* amber-600 */
-        .order-card-old { border-color: #92400E; } /* amber-800 */
+        .order-card-new { 
+            border-color: #FBBF24; /* amber-400 */
+            background-color: #FFFBEB; /* amber-50 */
+        }
+        .order-card-medium { 
+            border-color: #D97706; /* amber-600 */
+            background-color: #FEF3C7; /* amber-100 */
+        }
+        .order-card-old { 
+            border-color: #92400E; /* amber-800 */
+            background-color: #FED7AA; /* amber-200 */
+        }
+        .order-card-urgent {
+            border-color: #EF4444; /* red-500 */
+            background-color: #FECACA; /* red-200 */
+        }
+        .order-card-critical {
+            border-color: #DC2626; /* red-600 */
+            background-color: #FCA5A5; /* red-300 */
+            animation: pulse-critical 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse-critical {
+            0%, 100% { background-color: #FCA5A5; }
+            50% { background-color: #F87171; }
+        }
 
         /* Ocultar la barra de scroll pero permitir el desplazamiento */
         .no-scrollbar::-webkit-scrollbar {
@@ -202,10 +224,21 @@
                 
                 card.querySelector('.timer').textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
-                // Actualizar color del borde según la antigüedad
-                if (minutes >= 10) card.classList.add('order-card-old');
-                else if (minutes >= 5) card.classList.add('order-card-medium');
-                else card.classList.add('order-card-new');
+                // Remover todas las clases de color previas
+                card.classList.remove('order-card-new', 'order-card-medium', 'order-card-old', 'order-card-urgent', 'order-card-critical');
+
+                // Actualizar color del borde y fondo según la antigüedad
+                if (minutes >= 15) {
+                    card.classList.add('order-card-critical'); // Rojo pulsante
+                } else if (minutes >= 10) {
+                    card.classList.add('order-card-urgent'); // Rojo fuerte
+                } else if (minutes >= 7) {
+                    card.classList.add('order-card-old'); // Ámbar oscuro
+                } else if (minutes >= 5) {
+                    card.classList.add('order-card-medium'); // Ámbar medio
+                } else {
+                    card.classList.add('order-card-new'); // Ámbar claro
+                }
             });
         }
 
