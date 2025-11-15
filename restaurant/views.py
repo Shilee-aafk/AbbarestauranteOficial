@@ -313,9 +313,9 @@ def save_order(request):
                 
                 order.total_amount = subtotal + tip_amount # El total ahora incluye la propina desde el inicio
                 order.save() # Save again to update total_amount
-            return JsonResponse({'success': True, 'order_id': order.id})
+            return JsonResponse({'success': True, 'order_id': order.id}, json_encoder_class=DecimalEncoder)
         except (KeyError, MenuItem.DoesNotExist, Exception) as e:
-            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+            return JsonResponse({'success': False, 'error': str(e)}, status=400, json_encoder_class=DecimalEncoder)
 
 @csrf_exempt
 @login_required
@@ -351,7 +351,7 @@ def api_waiter_order_detail(request, pk):
             'identifier': order.room_number or order.client_identifier,
             'room_number': order.room_number, # Asegurarse de que este campo siempre esté presente
         }
-        return JsonResponse(data)
+        return JsonResponse(data, json_encoder_class=DecimalEncoder)
 
     if request.method == 'PUT':
         data = json.loads(request.body)
@@ -369,7 +369,7 @@ def api_waiter_order_detail(request, pk):
             
             order.total_amount = subtotal + order.tip_amount # Recalcular total_amount con el nuevo subtotal
             order.save() # Trigger the post_save signal
-            return JsonResponse({'success': True, 'order_id': order.id})
+            return JsonResponse({'success': True, 'order_id': order.id}, json_encoder_class=DecimalEncoder)
 
 @csrf_exempt
 @user_passes_test(lambda u: u.groups.filter(name='Recepcionista').exists())
@@ -497,7 +497,7 @@ def api_order_detail(request, pk):
             'tip_amount': tip_amount,
             'total': subtotal + tip_amount,
         }
-        return JsonResponse(data)
+        return JsonResponse(data, json_encoder_class=DecimalEncoder)
 
     if request.method == 'PUT':
         data = json.loads(request.body)
@@ -506,7 +506,7 @@ def api_order_detail(request, pk):
         order.status = data.get('status', order.status)
 
         order.save()
-        return JsonResponse({'success': True, 'order_id': order.id})
+        return JsonResponse({'success': True, 'order_id': order.id}, json_encoder_class=DecimalEncoder)
 
     if request.method == 'DELETE':
         order.delete()
@@ -531,7 +531,7 @@ def api_order_status(request, pk):
             order.total_amount = subtotal + order.tip_amount
 
         order.save() # This will trigger the post_save signal
-        return JsonResponse({'success': True, 'status': order.status, 'total_amount': float(order.total_amount)})
+        return JsonResponse({'success': True, 'status': order.status, 'total_amount': float(order.total_amount)}, json_encoder_class=DecimalEncoder)
     return JsonResponse({'error': 'Invalid method'}, status=405) # Added total_amount to response
 
 @csrf_exempt
@@ -548,7 +548,7 @@ def api_menu_items(request):
             'id': m.id, 'name': m.name, 'description': m.description,
             'price': float(m.price), 'category': m.category, 'available': m.available
         } for m in menu_items]
-        return JsonResponse(data, safe=False)
+        return JsonResponse(data, safe=False, json_encoder_class=DecimalEncoder)
 
     if request.method == 'POST':
         try:
@@ -652,7 +652,7 @@ def api_orders_report(request):
                 'total': float(order.total_amount or 0), # Usar el nuevo campo total_amount
             })
 
-        return JsonResponse(data, safe=False)
+        return JsonResponse(data, safe=False, json_encoder_class=DecimalEncoder)
 
     return JsonResponse({'error': 'Invalid method'}, status=405)
 
@@ -684,7 +684,7 @@ def api_dashboard_charts(request):
         sales_dict = {s['date'].strftime('%b %d'): float(s['daily_total']) for s in sales_data}
         data = [sales_dict.get(label, 0) for label in labels]
 
-        return JsonResponse({'labels': labels, 'data': data})
+        return JsonResponse({'labels': labels, 'data': data}, json_encoder_class=DecimalEncoder)
 
     if chart_type == 'top_dishes':
         # Top 5 platos más vendidos
@@ -711,7 +711,7 @@ def api_dashboard_charts(request):
         sales_dict = {s['hour']: float(s['hourly_total']) for s in sales_data}
         data = [sales_dict.get(h, 0) for h in range(24)]
         
-        return JsonResponse({'labels': labels, 'data': data})
+        return JsonResponse({'labels': labels, 'data': data}, json_encoder_class=DecimalEncoder)
 
     if chart_type == 'waiter_performance':
         # Rendimiento de garzones (pedidos atendidos hoy)
@@ -728,7 +728,7 @@ def api_dashboard_charts(request):
         data_orders = [d['order_count'] for d in performance_data]
         data_sales = [float(d['total_sales'] or 0) for d in performance_data]
 
-        return JsonResponse({'labels': labels, 'orders': data_orders, 'sales': data_sales})
+        return JsonResponse({'labels': labels, 'orders': data_orders, 'sales': data_sales}, json_encoder_class=DecimalEncoder)
 
     if chart_type == 'sales_by_category':
         # Ventas de hoy por categoría de producto
@@ -740,7 +740,7 @@ def api_dashboard_charts(request):
         ).order_by('-total')
         labels = [c['menu_item__category'] for c in category_sales]
         data = [float(c['total']) for c in category_sales]
-        return JsonResponse({'labels': labels, 'data': data})
+        return JsonResponse({'labels': labels, 'data': data}, json_encoder_class=DecimalEncoder)
 
     return JsonResponse({'error': 'Invalid chart type'}, status=400)
 
