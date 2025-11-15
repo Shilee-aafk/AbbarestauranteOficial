@@ -112,7 +112,7 @@ def admin_dashboard(request):
         'user': o.user.username,
         'created_at': o.created_at.isoformat(),
         'total': float(o.total_amount), # Usar el nuevo campo total_amount
-    } for o in orders])
+    } for o in orders], cls=DecimalEncoder)
     menu_items_json = json.dumps([{
         'id': m.id,
         'name': m.name,
@@ -120,7 +120,7 @@ def admin_dashboard(request):
         'price': float(m.price),
         'category': m.category,
         'available': m.available
-    } for m in menu_items])
+    } for m in menu_items], cls=DecimalEncoder)
     return render(request, 'restaurant/admin_dashboard.html', {
         'reservations': reservations,
         'orders': orders,
@@ -195,7 +195,7 @@ def cook_dashboard(request):
 
     return render(request, 'restaurant/cook_dashboard.html', {
         'orders': orders,
-        'orders_json': json.dumps(orders_data)
+        'orders_json': json.dumps(orders_data, cls=DecimalEncoder)
     })
 
 @login_required
@@ -211,7 +211,7 @@ def waiter_dashboard(request):
     all_categories = menu_items.values_list('category', flat=True)
     normalized_categories = {cat.capitalize() for cat in all_categories}
     categories = sorted(list(normalized_categories))
-    menu_items_json = json.dumps([{'id': item.id, 'name': item.name, 'price': float(item.price)} for item in menu_items])
+    menu_items_json = json.dumps([{'id': item.id, 'name': item.name, 'price': float(item.price)} for item in menu_items], cls=DecimalEncoder)
 
     # --- Datos para el monitor de pedidos (carga inicial) ---
     # Usamos prefetch_related para cargar los items de una vez y evitar N+1 queries
@@ -235,7 +235,7 @@ def waiter_dashboard(request):
             } for item in order.orderitem_set.all()]
         })
 
-    initial_orders_json = json.dumps(initial_orders_data)
+    initial_orders_json = json.dumps(initial_orders_data, cls=DecimalEncoder)
 
     user_role = request.user.groups.first().name if request.user.groups.exists() else None
 
