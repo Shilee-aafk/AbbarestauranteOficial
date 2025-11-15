@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: abbarestaurante
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --no-input
+    startCommand: python manage.py migrate && gunicorn AbbaRestaurante.wsgi:application
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: DEBUG
+        value: false
+      - key: SECRET_KEY
+        fromSecret: SECRET_KEY
+      - key: DATABASE_URL
+        fromSecret: DATABASE_URL
+      - key: PUSHER_APP_ID
+        fromSecret: PUSHER_APP_ID
+      - key: PUSHER_KEY
+        fromSecret: PUSHER_KEY
+      - key: PUSHER_SECRET
+        fromSecret: PUSHER_SECRET
+      - key: PUSHER_CLUSTER
+        fromSecret: PUSHER_CLUSTER

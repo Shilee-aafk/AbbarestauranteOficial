@@ -105,6 +105,48 @@ daphne AbbaRestaurante.asgi:application
 
 El servidor también estará disponible en **http://127.0.0.1:8000/**.
 
+---
+
+## 🚀 Despliegue en Producción
+
+Este proyecto está configurado para desplegar en **Render**, una plataforma moderna de hosting.
+
+### Opción 1: Despliegue Rápido en Render
+
+Para desplegar tu app en Render, sigue estos pasos:
+
+1. **Sube los cambios a GitHub:**
+   ```bash
+   git add .
+   git commit -m "Configuración para despliegue en Render"
+   git push origin main
+   ```
+
+2. **Ve a https://render.com** y crea una cuenta (gratuita)
+
+3. **Conecta tu repositorio GitHub** a Render
+
+4. **Sigue la guía detallada** en [`RENDER_DEPLOYMENT.md`](RENDER_DEPLOYMENT.md)
+
+### Opción 2: Verificar Configuración Antes de Desplegar
+
+Puedes ejecutar este script para verificar que todo está listo:
+
+```bash
+python check_render_deployment.py
+```
+
+### Variables de Entorno Necesarias
+
+El archivo `.env.example` contiene un template. En Render, debes configurar:
+
+- `SECRET_KEY`: Tu clave secreta de Django
+- `DATABASE_URL`: URL de conexión a PostgreSQL (Supabase recomendado)
+- `DEBUG`: `False` (en producción)
+- `PUSHER_APP_ID`, `PUSHER_KEY`, `PUSHER_SECRET`, `PUSHER_CLUSTER`: Para WebSockets en tiempo real
+
+---
+
 ## 🔑 Usuarios de Prueba
 
 Puedes usar las siguientes credenciales para iniciar sesión y probar los diferentes roles. La contraseña para todos es `password123`.

@@ -21,31 +21,44 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-# La SECRET_KEY se leerá desde las variables de entorno en producción
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-9q340snr7*@mbs+7z06vv=pq0j#voi*%&+hvw1l+8wn!90$i@p')
+# --- Configuración de Entorno (Desarrollo, Render, Koyeb, PythonAnywhere) ---
 
-# --- Configuración de Entorno (Desarrollo, Koyeb, PythonAnywhere) ---
-
-# Detectar si estamos en PythonAnywhere
+# Detectar si estamos en diferentes plataformas
 IS_PYTHONANYWHERE = 'PYTHONANYWHERE_DOMAIN' in os.environ
+IS_RENDER = 'RENDER' in os.environ
+IS_KOYEB = 'KOYEB_PUBLIC_DOMAIN' in os.environ
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # En producción, DEBUG debe ser False.
-DEBUG = os.environ.get('DEBUG', 'True') == 'True' and not IS_PYTHONANYWHERE
+DEBUG = os.environ.get('DEBUG', 'True') == 'True' and not (IS_PYTHONANYWHERE or IS_RENDER or IS_KOYEB)
+
+# SECURITY WARNING: keep the secret key used in production secret!
+# La SECRET_KEY se leerá desde las variables de entorno en producción
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = 'django-insecure-9q340snr7*@mbs+7z06vv=pq0j#voi*%&+hvw1l+8wn!90$i@p'
+    else:
+        raise ValueError("SECRET_KEY environment variable must be set in production")
 
 if DEBUG:
     # En desarrollo, permitimos cualquier host para mayor flexibilidad.
     ALLOWED_HOSTS = ['*']
+elif IS_RENDER:
+    # En producción en Render
+    render_domain = os.environ.get('RENDER_EXTERNAL_HOSTNAME', '')
+    ALLOWED_HOSTS = [render_domain] if render_domain else ['*']
+    CSRF_TRUSTED_ORIGINS = [f'https://{render_domain}'] if render_domain else []
 elif IS_PYTHONANYWHERE:
-    # En producción en PythonAnywhere, solo permitimos el dominio específico.
-    ALLOWED_HOSTS = [os.environ.get('PYTHONANYWHERE_DOMAIN')]
-else:
-    # En producción en Koyeb, solo permitimos el dominio específico.
-    koyeb_domain = os.environ.get('KOYEB_PUBLIC_DOMAIN')
+    # En producción en PythonAnywhere
+    ALLOWED_HOSTS = [os.environ.get('PYTHONANYWHERE_DOMAIN', '')]
+elif IS_KOYEB:
+    # En producción en Koyeb
+    koyeb_domain = os.environ.get('KOYEB_PUBLIC_DOMAIN', '')
     ALLOWED_HOSTS = [koyeb_domain] if koyeb_domain else []
-    # Es crucial decirle a Django que confíe en este dominio para peticiones POST seguras (HTTPS).
     CSRF_TRUSTED_ORIGINS = [f'https://{koyeb_domain}'] if koyeb_domain else []
+else:
+    ALLOWED_HOSTS = []
 
 # Application definition
 
@@ -90,28 +103,23 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'AbbaRestaurante.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 # Configuración de la base de datos para desarrollo y producción
 if DEBUG and not IS_PYTHONANYWHERE:
-    # Configuración para desarrollo local (MySQL)
+    # Configuración para desarrollo local (Supabase PostgreSQL)
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': 'abbarestaurante_db',
-            'USER': 'root',
-            'PASSWORD': 'Inacap.2024',
-            'HOST': 'localhost',
-            'PORT': '3306',
-            'OPTIONS': {
-                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-            },
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'postgres',
+            'USER': 'postgres',
+            'PASSWORD': 'Camilo885',  # Tu contraseña de Supabase
+            'HOST': 'db.fudssspvlzkfxhrjnqeh.supabase.co',
+            'PORT': '5432',
         }
     }
 elif IS_PYTHONANYWHERE:
     # Configuración para producción en PythonAnywhere (SQLite por defecto para plan gratuito)
-    # Si usas un plan de pago con MySQL, puedes cambiar esto para usar las credenciales de tu DB en PythonAnywhere.
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -119,20 +127,13 @@ elif IS_PYTHONANYWHERE:
         }
     }
 else:
-    # Configuración para producción (Koyeb - Neon PostgreSQL)
-    DATABASE_URL = os.environ.get('DATABASE_URL', None)
+    # Configuración para producción (Render/Koyeb - Supabase PostgreSQL)
+    DATABASE_URL = os.environ.get('DATABASE_URL')
+    
     if not DATABASE_URL:
-        raise ValueError("La variable de entorno DATABASE_URL no está configurada en producción.")
+        raise ValueError("DATABASE_URL environment variable must be set in production")
 
-    # El parámetro 'channel_binding' de Neon no es compatible con psycopg2.
-    # Lo eliminamos de la URL de forma segura antes de que Django la use.
-    url_parts = urlparse(DATABASE_URL)
-    query_params = parse_qs(url_parts.query)
-    query_params.pop('channel_binding', None)  # Elimina la clave si existe
-    new_query = urlencode(query_params, doseq=True)
-    safe_database_url = urlunparse(url_parts._replace(query=new_query))
-
-    DATABASES = {'default': dj_database_url.parse(safe_database_url, conn_max_age=600)}
+    DATABASES = {'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)}
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
