@@ -90,18 +90,35 @@ Añade las siguientes variables:
 
 ---
 
-## ✅ Paso 5: Ejecutar Migraciones (Importante)
+## ✅ Paso 5: Ejecutar Migraciones Automáticamente
 
-Después de desplegar:
+**¡Buena noticia!** Con la configuración actual, las migraciones se ejecutan automáticamente durante el build en Render.
 
-1. Abre la terminal de Render (en el dashboard del servicio)
-2. Ejecuta:
-   ```bash
-   python manage.py migrate
-   python manage.py crear_usuarios
-   ```
+### ¿Cómo funciona?
 
-O simplemente haz un nuevo push a tu repositorio (Render redesplegará automáticamente).
+1. **Durante el Build** (sin acceso a terminal):
+   - Se instalan las dependencias
+   - Se recopilan archivos estáticos
+   - **Se ejecutan las migraciones automáticamente**
+   - **Se crean usuarios y datos iniciales automáticamente**
+
+2. **Luego se inicia tu app** con Gunicorn
+
+### Si algo falla:
+
+Si las migraciones fallan durante el build:
+1. Revisa los **Logs** en Render (en el dashboard)
+2. Busca el error específico
+3. Puedes crear un issue en GitHub o contactarme
+
+### Script de inicialización (Alternativa)
+
+Si necesitas control manual, existe `init_render.py` que puedes ejecutar:
+```bash
+python init_render.py
+```
+
+Pero **no es necesario** ya que se ejecuta automáticamente.
 
 ---
 
