@@ -655,6 +655,7 @@ def api_orders_report(request):
     """
     if request.method == 'GET':
         from django.db.models import Q
+        from datetime import datetime
         orders = Order.objects.all() # total_amount is now a stored field
 
         # Filtering
@@ -673,11 +674,19 @@ def api_orders_report(request):
 
         date_from_query = request.GET.get('date_from', '')
         if date_from_query:
-            orders = orders.filter(created_at__date__gte=date_from_query)
+            try:
+                date_from = datetime.strptime(date_from_query, '%Y-%m-%d').date()
+                orders = orders.filter(created_at__date__gte=date_from)
+            except ValueError:
+                pass  # Si la fecha no es válida, ignorar el filtro
 
         date_to_query = request.GET.get('date_to', '')
         if date_to_query:
-            orders = orders.filter(created_at__date__lte=date_to_query)
+            try:
+                date_to = datetime.strptime(date_to_query, '%Y-%m-%d').date()
+                orders = orders.filter(created_at__date__lte=date_to)
+            except ValueError:
+                pass  # Si la fecha no es válida, ignorar el filtro
 
         orders = orders.order_by('-created_at')
 
