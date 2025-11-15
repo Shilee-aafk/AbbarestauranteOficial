@@ -521,11 +521,23 @@ let currentRoomNumber = '';
 
         function showMainSectionView() {
             // Muestra la sección principal que estaba activa antes de entrar a tomar pedido
-            const activeSectionId = document.querySelector('.nav-link.active').dataset.section;
-            document.querySelectorAll('.content-section').forEach(s => s.classList.add('hidden'));
-            document.getElementById(activeSectionId).classList.remove('hidden');
-            document.getElementById('order-view').classList.add('hidden');
-            resetCategoryFilters(); // Restaura la visibilidad de todos los filtros de categoría
+            try {
+                const activeSectionId = document.querySelector('.nav-link.active')?.dataset.section || 'dashboard';
+                document.querySelectorAll('.content-section').forEach(s => s.classList.add('hidden'));
+                const targetSection = document.getElementById(activeSectionId);
+                if (targetSection) {
+                    targetSection.classList.remove('hidden');
+                }
+                document.getElementById('order-view').classList.add('hidden');
+                resetCategoryFilters(); // Restaura la visibilidad de todos los filtros de categoría
+            } catch (error) {
+                console.error('Error in showMainSectionView:', error);
+                // Fallback: mostrar el dashboard
+                document.querySelectorAll('.content-section').forEach(s => s.classList.add('hidden'));
+                const dashboardSection = document.getElementById('dashboard');
+                if (dashboardSection) dashboardSection.classList.remove('hidden');
+                document.getElementById('order-view').classList.add('hidden');
+            }
         }
 
         function showOrderView() {

@@ -830,18 +830,23 @@
             }
 
             function initPinManagement() {
-                document.getElementById('generate-pin-form').addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    const groupId = document.getElementById('pin-group-select').value;
-                    try {
-                        const result = await apiRequest("{% url 'restaurant:api_registration_pins' %}", 'POST', { group_id: groupId });
-                        document.getElementById('new-pin-code').textContent = result.pin;
-                        document.getElementById('new-pin-display').classList.remove('hidden');
-                        loadAndRenderPins();
-                    } catch (error) {
-                        alert(`Error generando PIN: ${error.message}`);
-                    }
-                });
+                const form = document.getElementById('generate-pin-form');
+                if (form) {
+                    form.addEventListener('submit', async (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        const groupId = document.getElementById('pin-group-select').value;
+                        try {
+                            const result = await apiRequest("{% url 'restaurant:api_registration_pins' %}", 'POST', { group_id: groupId });
+                            document.getElementById('new-pin-code').textContent = result.pin;
+                            document.getElementById('new-pin-display').classList.remove('hidden');
+                            loadAndRenderPins();
+                        } catch (error) {
+                            alert(`Error generando PIN: ${error.message}`);
+                        }
+                    });
+                }
             }
 
             // --- USERS MANAGEMENT ---
