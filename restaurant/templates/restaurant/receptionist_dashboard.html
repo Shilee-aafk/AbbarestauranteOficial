@@ -316,6 +316,10 @@
                     e.preventDefault();
                     const section = this.getAttribute('data-section');
 
+                    // Cerrar todos los modales antes de cambiar de sección
+                    document.getElementById('payment-modal')?.classList.add('hidden');
+                    document.getElementById('modal-charge-to-room-btn')?.classList.add('hidden');
+
                     // Remove active class from all links
                     navLinks.forEach(l => {
                         l.classList.remove('active', 'text-amber-800', 'bg-amber-100', 'border-r-4', 'border-amber-500');
