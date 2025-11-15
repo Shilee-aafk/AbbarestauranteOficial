@@ -15,25 +15,6 @@ if all([settings.PUSHER_APP_ID, settings.PUSHER_KEY, settings.PUSHER_SECRET, set
         ssl=True
     )
 
-# Almacenar el estado anterior de las órdenes para detectar cambios
-_order_state_before_save = {}
-
-# Signal pre_save para capturar el estado anterior
-from django.db.models.signals import pre_save
-
-@receiver(pre_save, sender=Order)
-def capture_order_state(sender, instance, **kwargs):
-    """Captura el estado de la orden ANTES de guardar para detectar cambios"""
-    try:
-        old_instance = Order.objects.get(pk=instance.pk)
-        _order_state_before_save[instance.pk] = {
-            'status': old_instance.status,
-            'total_amount': old_instance.total_amount,
-        }
-    except Order.DoesNotExist:
-        # Es una orden nueva
-        _order_state_before_save[instance.pk] = None
-
 # --- Señales para Pedidos (Order) ---
 @receiver(post_save, sender=Order)
 def order_status_changed(sender, instance, created, **kwargs):
@@ -58,46 +39,46 @@ def order_status_changed(sender, instance, created, **kwargs):
 
     if created:
         # 1. Notificar a COCINA y ADMIN sobre un NUEVO pedido
-        pusher_client.trigger(['cocina-channel', 'admin-channel'], 'nuevo-pedido', {
-            'message': f"Nuevo pedido de: {order_data['client_identifier']}",
-            'order': order_data
-        })
-    else:
-        # Obtener el estado anterior
-        old_state = _order_state_before_save.get(instance.pk)
-        
-        # Solo enviar notificaciones si el ESTADO cambió (no por cambios en total_amount)
-        if old_state and old_state['status'] != instance.status:
-            # 2. Notificar a TODOS los roles sobre una actualización general.
-            #    Esto es útil para el admin y para mantener la consistencia.
-            pusher_client.trigger(['cocina-channel', 'garzon-channel', 'admin-channel'], 'actualizacion-estado', {
+        try:
+            pusher_client.trigger(['cocina-channel', 'admin-channel'], 'nuevo-pedido', {
+                'message': f"Nuevo pedido de: {order_data['client_identifier']}",
                 'order': order_data
             })
-
-            # 3. Notificaciones ESPECÍFICAS por estado:
-            if instance.status == 'ready':
-                # Notificar a GARZONES y ADMIN que un pedido está LISTO para recoger.
-                pusher_client.trigger(['garzon-channel', 'admin-channel'], 'pedido-listo', {
-                    'message': f"¡El pedido para '{instance.client_identifier}' está listo!",
-                    'order': order_data
-                })
-
-            if instance.status == 'charged_to_room':
-                # Notificar a RECEPCIÓN y ADMIN que un pedido se cargó a una habitación.
-                pusher_client.trigger(['recepcion-channel', 'admin-channel'], 'cargo-habitacion', {
-                    'message': f"Se cargó un pedido a la habitación {instance.room_number}",
-                    'order': order_data
-                })
-
-            if instance.status == 'paid':
-                # Notificar a RECEPCIÓN y ADMIN que un pedido fue pagado.
-                pusher_client.trigger(['recepcion-channel', 'admin-channel'], 'pedido-pagado', {
-                    'message': f"Pedido pagado: {order_data['client_identifier']}",
-                    'order': order_data
-                })
+        except Exception as e:
+            print(f"Error sending nuevo-pedido notification: {str(e)}")
+    else:
+        # Para órdenes existentes, SOLO notificar si update_fields está vacío o contiene 'status'
+        # Esto evita notificaciones cuando solo se actualiza total_amount
+        update_fields = kwargs.get('update_fields')
         
-        # Limpiar el estado almacenado después de procesarlo
-        _order_state_before_save.pop(instance.pk, None)
+        # Si update_fields es None (guardado completo) o contiene 'status', enviar notificación
+        if update_fields is None or 'status' in update_fields:
+            try:
+                # 2. Notificar a TODOS los roles sobre una actualización general.
+                pusher_client.trigger(['cocina-channel', 'garzon-channel', 'admin-channel'], 'actualizacion-estado', {
+                    'order': order_data
+                })
+
+                # 3. Notificaciones ESPECÍFICAS por estado:
+                if instance.status == 'ready':
+                    pusher_client.trigger(['garzon-channel', 'admin-channel'], 'pedido-listo', {
+                        'message': f"¡El pedido para '{instance.client_identifier}' está listo!",
+                        'order': order_data
+                    })
+
+                elif instance.status == 'charged_to_room':
+                    pusher_client.trigger(['recepcion-channel', 'admin-channel'], 'cargo-habitacion', {
+                        'message': f"Se cargó un pedido a la habitación {instance.room_number}",
+                        'order': order_data
+                    })
+
+                elif instance.status == 'paid':
+                    pusher_client.trigger(['recepcion-channel', 'admin-channel'], 'pedido-pagado', {
+                        'message': f"Pedido pagado: {order_data['client_identifier']}",
+                        'order': order_data
+                    })
+            except Exception as e:
+                print(f"Error sending status update notification: {str(e)}")
 
 # --- Señales para Items del Menú (MenuItem) ---
 @receiver(post_save, sender=MenuItem)

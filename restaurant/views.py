@@ -550,6 +550,7 @@ def api_order_status(request, pk):
                 return JsonResponse({'success': False, 'error': 'Status is required'}, status=400)
             
             order.status = new_status
+            update_fields = ['status']
             
             # Solo recalcular el total si se envía explícitamente una nueva propina.
             # Esto evita que el modal de recepción recalcule el total con propinas antiguas.
@@ -558,10 +559,11 @@ def api_order_status(request, pk):
                     order.tip_amount = decimal.Decimal(str(data['tip_amount'])) # Ensure it's a Decimal
                     subtotal = calculate_order_subtotal(order)
                     order.total_amount = subtotal + order.tip_amount
+                    update_fields.extend(['tip_amount', 'total_amount'])
                 except (ValueError, decimal.InvalidOperation) as e:
                     return JsonResponse({'success': False, 'error': f'Invalid tip amount: {str(e)}'}, status=400)
 
-            order.save() # This will trigger the post_save signal
+            order.save(update_fields=update_fields)  # Only trigger signal for fields we actually changed
             return JsonResponse({'success': True, 'status': order.status, 'total_amount': float(order.total_amount)})
         except Order.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Order not found'}, status=404)
