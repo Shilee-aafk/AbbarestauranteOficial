@@ -286,7 +286,7 @@ def save_order(request):
         try:
             data = json.loads(request.body)
             items = data.get('items', [])
-            tip_amount = decimal.Decimal(data.get('tip_amount', '0.00'))
+            tip_amount = decimal.Decimal(str(data.get('tip_amount', '0.00')))
 
             # Usar una transacción atómica para asegurar la integridad de los datos.
             # O todo se crea, o nada se crea si hay un error.
@@ -314,8 +314,15 @@ def save_order(request):
                 order.total_amount = subtotal + tip_amount # El total ahora incluye la propina desde el inicio
                 order.save() # Save again to update total_amount
             return JsonResponse({'success': True, 'order_id': order.id}, json_encoder_class=DecimalEncoder)
-        except (KeyError, MenuItem.DoesNotExist, Exception) as e:
-            return JsonResponse({'success': False, 'error': str(e)}, status=400, json_encoder_class=DecimalEncoder)
+        except MenuItem.DoesNotExist as e:
+            return JsonResponse({'success': False, 'error': f'MenuItem not found: {str(e)}'}, status=400, json_encoder_class=DecimalEncoder)
+        except json.JSONDecodeError as e:
+            return JsonResponse({'success': False, 'error': f'Invalid JSON: {str(e)}'}, status=400, json_encoder_class=DecimalEncoder)
+        except Exception as e:
+            import traceback
+            print(f"Error in save_order: {str(e)}")
+            print(traceback.format_exc())
+            return JsonResponse({'success': False, 'error': f'Server error: {str(e)}'}, status=500, json_encoder_class=DecimalEncoder)
 
 @csrf_exempt
 @login_required
