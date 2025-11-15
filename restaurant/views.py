@@ -8,7 +8,6 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Sum, Count, F, Q, Prefetch, ExpressionWrapper, fields
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
-import json, decimal
 from django.contrib.auth.models import User
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill
@@ -16,9 +15,12 @@ from openpyxl.utils import get_column_letter
 from .forms import CustomUserCreationForm
 from django.contrib.auth.forms import AuthenticationForm
 from .models import Reservation, Order, OrderItem, MenuItem, Group, RegistrationPin
+import json
+import decimal
 
-# Custom JSON Encoder para manejar Decimal y otros tipos
+
 class DecimalEncoder(json.JSONEncoder):
+    """Custom JSON encoder for Decimal objects"""
     def default(self, obj):
         if isinstance(obj, decimal.Decimal):
             return float(obj)
@@ -282,11 +284,8 @@ def calculate_order_subtotal(order_instance):
 def save_order(request):
     if request.method == 'POST':
         try:
-            print(f"[DEBUG] save_order request.body: {request.body}")
             data = json.loads(request.body)
-            print(f"[DEBUG] Datos recibidos: {data}")
             items = data.get('items', [])
-            print(f"[DEBUG] Items: {items}")
             tip_amount = decimal.Decimal(data.get('tip_amount', '0.00'))
 
             # Usar una transacción atómica para asegurar la integridad de los datos.
@@ -314,12 +313,9 @@ def save_order(request):
                 
                 order.total_amount = subtotal + tip_amount # El total ahora incluye la propina desde el inicio
                 order.save() # Save again to update total_amount
-            return JsonResponse({'success': True, 'order_id': order.id}, cls=DecimalEncoder)
+            return JsonResponse({'success': True, 'order_id': order.id})
         except (KeyError, MenuItem.DoesNotExist, Exception) as e:
-            print(f"[DEBUG] Error en save_order: {type(e).__name__}: {str(e)}")
-            import traceback
-            traceback.print_exc()
-            return JsonResponse({'success': False, 'error': str(e)}, status=400, cls=DecimalEncoder)
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
 @csrf_exempt
 @login_required
@@ -355,7 +351,7 @@ def api_waiter_order_detail(request, pk):
             'identifier': order.room_number or order.client_identifier,
             'room_number': order.room_number, # Asegurarse de que este campo siempre esté presente
         }
-        return JsonResponse(data, cls=DecimalEncoder)
+        return JsonResponse(data)
 
     if request.method == 'PUT':
         data = json.loads(request.body)
@@ -373,7 +369,7 @@ def api_waiter_order_detail(request, pk):
             
             order.total_amount = subtotal + order.tip_amount # Recalcular total_amount con el nuevo subtotal
             order.save() # Trigger the post_save signal
-            return JsonResponse({'success': True, 'order_id': order.id}, cls=DecimalEncoder)
+            return JsonResponse({'success': True, 'order_id': order.id})
 
 @csrf_exempt
 @user_passes_test(lambda u: u.groups.filter(name='Recepcionista').exists())
@@ -502,7 +498,6 @@ def api_order_detail(request, pk):
             'total': subtotal + tip_amount,
         }
         return JsonResponse(data)
-        return JsonResponse(data, cls=DecimalEncoder)
 
     if request.method == 'PUT':
         data = json.loads(request.body)
@@ -512,7 +507,6 @@ def api_order_detail(request, pk):
 
         order.save()
         return JsonResponse({'success': True, 'order_id': order.id})
-        return JsonResponse({'success': True, 'order_id': order.id}, cls=DecimalEncoder)
 
     if request.method == 'DELETE':
         order.delete()
@@ -538,7 +532,6 @@ def api_order_status(request, pk):
 
         order.save() # This will trigger the post_save signal
         return JsonResponse({'success': True, 'status': order.status, 'total_amount': float(order.total_amount)})
-        return JsonResponse({'success': True, 'status': order.status, 'total_amount': order.total_amount}, cls=DecimalEncoder)
     return JsonResponse({'error': 'Invalid method'}, status=405) # Added total_amount to response
 
 @csrf_exempt
@@ -556,7 +549,6 @@ def api_menu_items(request):
             'price': float(m.price), 'category': m.category, 'available': m.available
         } for m in menu_items]
         return JsonResponse(data, safe=False)
-        return JsonResponse(data, safe=False, cls=DecimalEncoder)
 
     if request.method == 'POST':
         try:
@@ -571,7 +563,7 @@ def api_menu_items(request):
             return JsonResponse({
                 'id': item.id, 'name': item.name, 'description': item.description,
                 'price': float(item.price), 'category': item.category, 'available': item.available
-            }, status=201, cls=DecimalEncoder)  # <-- Solo una llave de cierre
+            }, status=201)
         except (ValidationError, IntegrityError, ValueError, KeyError) as e:
             return JsonResponse({'error': f'Invalid data: {str(e)}'}, status=400)
 
@@ -595,7 +587,6 @@ def api_menu_item_detail(request, pk):
             'id': item.id, 'name': item.name, 'description': item.description,
             'price': float(item.price), 'category': item.category, 'available': item.available
         })
-        }, cls=DecimalEncoder)
 
     if request.method == 'PUT':
         data = json.loads(request.body)
@@ -609,7 +600,6 @@ def api_menu_item_detail(request, pk):
             'id': item.id, 'name': item.name, 'description': item.description,
             'price': float(item.price), 'category': item.category, 'available': item.available
         })
-        }, cls=DecimalEncoder)
 
     if request.method == 'DELETE':
         item.delete()
@@ -662,7 +652,7 @@ def api_orders_report(request):
                 'total': float(order.total_amount or 0), # Usar el nuevo campo total_amount
             })
 
-        return JsonResponse(data, safe=False, cls=DecimalEncoder)
+        return JsonResponse(data, safe=False)
 
     return JsonResponse({'error': 'Invalid method'}, status=405)
 
@@ -695,7 +685,6 @@ def api_dashboard_charts(request):
         data = [sales_dict.get(label, 0) for label in labels]
 
         return JsonResponse({'labels': labels, 'data': data})
-        return JsonResponse({'labels': labels, 'data': data}, cls=DecimalEncoder)
 
     if chart_type == 'top_dishes':
         # Top 5 platos más vendidos
@@ -706,7 +695,6 @@ def api_dashboard_charts(request):
         labels = [item.name for item in top_dishes]
         data = [item.total_sold for item in top_dishes]
         return JsonResponse({'labels': labels, 'data': data})
-        return JsonResponse({'labels': labels, 'data': data}, cls=DecimalEncoder)
 
     if chart_type == 'sales_by_hour':
         # Ventas de hoy por hora
@@ -724,7 +712,6 @@ def api_dashboard_charts(request):
         data = [sales_dict.get(h, 0) for h in range(24)]
         
         return JsonResponse({'labels': labels, 'data': data})
-        return JsonResponse({'labels': labels, 'data': data}, cls=DecimalEncoder)
 
     if chart_type == 'waiter_performance':
         # Rendimiento de garzones (pedidos atendidos hoy)
@@ -742,7 +729,6 @@ def api_dashboard_charts(request):
         data_sales = [float(d['total_sales'] or 0) for d in performance_data]
 
         return JsonResponse({'labels': labels, 'orders': data_orders, 'sales': data_sales})
-        return JsonResponse({'labels': labels, 'orders': data_orders, 'sales': data_sales}, cls=DecimalEncoder)
 
     if chart_type == 'sales_by_category':
         # Ventas de hoy por categoría de producto
@@ -755,7 +741,6 @@ def api_dashboard_charts(request):
         labels = [c['menu_item__category'] for c in category_sales]
         data = [float(c['total']) for c in category_sales]
         return JsonResponse({'labels': labels, 'data': data})
-        return JsonResponse({'labels': labels, 'data': data}, cls=DecimalEncoder)
 
     return JsonResponse({'error': 'Invalid chart type'}, status=400)
 
@@ -820,7 +805,7 @@ def api_registration_pins(request, pk=None):
     return JsonResponse({'error': f'Método {request.method} no permitido.'}, status=405)
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
+@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name__in=['Administrador', 'Recepcionista']).exists())
 def export_orders_excel(request):
     """
     Exports a filtered list of orders to an Excel file (.xlsx).
