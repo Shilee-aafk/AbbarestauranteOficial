@@ -16,10 +16,11 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'AbbaRestaurante.settings')
 
 application = get_wsgi_application()
 
-# Auto-run migrations on Render startup
-try:
-    from AbbaRestaurante.auto_migrate import run_migrations_if_needed
-    run_migrations_if_needed()
-except Exception as e:
-    print(f"Warning: Could not run auto-migrations: {e}", file=sys.stderr)
+# Auto-run migrations on Render startup (disabled - migraciones ya ejecutadas)
+# try:
+#     from AbbaRestaurante.auto_migrate import run_migrations_if_needed
+#     run_migrations_if_needed()
+# except Exception as e:
+#     print(f"Warning: Could not run auto-migrations: {e}", file=sys.stderr)
+
 
