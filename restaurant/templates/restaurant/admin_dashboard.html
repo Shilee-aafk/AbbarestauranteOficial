@@ -675,9 +675,6 @@
 
             // --- WEBSOCKETS ---
             function initPusher() {
-                const PUSHER_KEY = "{{ PUSHER_KEY }}";
-                const PUSHER_CLUSTER = "{{ PUSHER_CLUSTER }}";
-
                 if (!PUSHER_KEY) {
                     console.error("Pusher key no está configurada.");
                     return;

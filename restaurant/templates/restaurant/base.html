@@ -32,6 +32,12 @@
 
     {% block content %}{% endblock %}
 
+    <!-- Global Pusher Configuration -->
+    <script>
+        const PUSHER_KEY = "{{ PUSHER_KEY }}";
+        const PUSHER_CLUSTER = "{{ PUSHER_CLUSTER }}";
+    </script>
+
     {% block extra_js %}{% endblock %}
 </body>
 </html>
