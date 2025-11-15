@@ -541,20 +541,38 @@ def api_order_detail(request, pk):
 @user_passes_test(lambda u: u.is_superuser or u.groups.filter(name__in=['Administrador', 'Garzón', 'Cocinero', 'Recepcionista']).exists())
 def api_order_status(request, pk):
     if request.method == 'PUT':
-        data = json.loads(request.body)
-        order = Order.objects.get(pk=pk)
-        order.status = data.get('status')
-        
-        # Solo recalcular el total si se envía explícitamente una nueva propina.
-        # Esto evita que el modal de recepción recalcule el total con propinas antiguas.
-        if data.get('status') in ['paid', 'charged_to_room'] and 'tip_amount' in data:
-            order.tip_amount = decimal.Decimal(data['tip_amount']) # Ensure it's a Decimal
-            subtotal = calculate_order_subtotal(order)
-            order.total_amount = subtotal + order.tip_amount
+        try:
+            data = json.loads(request.body)
+            order = Order.objects.get(pk=pk)
+            new_status = data.get('status')
+            
+            if not new_status:
+                return JsonResponse({'success': False, 'error': 'Status is required'}, status=400)
+            
+            order.status = new_status
+            
+            # Solo recalcular el total si se envía explícitamente una nueva propina.
+            # Esto evita que el modal de recepción recalcule el total con propinas antiguas.
+            if new_status in ['paid', 'charged_to_room'] and 'tip_amount' in data:
+                try:
+                    order.tip_amount = decimal.Decimal(str(data['tip_amount'])) # Ensure it's a Decimal
+                    subtotal = calculate_order_subtotal(order)
+                    order.total_amount = subtotal + order.tip_amount
+                except (ValueError, decimal.InvalidOperation) as e:
+                    return JsonResponse({'success': False, 'error': f'Invalid tip amount: {str(e)}'}, status=400)
 
-        order.save() # This will trigger the post_save signal
-        return JsonResponse({'success': True, 'status': order.status, 'total_amount': float(order.total_amount)})
-    return JsonResponse({'error': 'Invalid method'}, status=405) # Added total_amount to response
+            order.save() # This will trigger the post_save signal
+            return JsonResponse({'success': True, 'status': order.status, 'total_amount': float(order.total_amount)})
+        except Order.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Order not found'}, status=404)
+        except json.JSONDecodeError as e:
+            return JsonResponse({'success': False, 'error': f'Invalid JSON: {str(e)}'}, status=400)
+        except Exception as e:
+            import traceback
+            print(f"Error in api_order_status: {str(e)}")
+            print(traceback.format_exc())
+            return JsonResponse({'success': False, 'error': f'Server error: {str(e)}'}, status=500)
+    return JsonResponse({'error': 'Invalid method'}, status=405)
 
 @csrf_exempt
 @login_required
