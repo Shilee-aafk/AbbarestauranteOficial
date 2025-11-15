@@ -836,22 +836,34 @@
             }
 
             function initPinManagement() {
+                console.log('Iniciando Pin Management...');
                 const btn = document.getElementById('generate-pin-btn');
+                console.log('Botón encontrado:', btn);
+                
                 if (btn) {
                     btn.addEventListener('click', async (e) => {
+                        console.log('Click en botón generar PIN');
                         e.preventDefault();
                         e.stopPropagation();
                         
                         const groupId = document.getElementById('pin-group-select').value;
+                        console.log('Group ID seleccionado:', groupId);
+                        
                         try {
+                            console.log('Enviando solicitud a:', "{% url 'restaurant:api_registration_pins' %}");
                             const result = await apiRequest("{% url 'restaurant:api_registration_pins' %}", 'POST', { group_id: groupId });
+                            console.log('Respuesta recibida:', result);
+                            
                             document.getElementById('new-pin-code').textContent = result.pin;
                             document.getElementById('new-pin-display').classList.remove('hidden');
                             loadAndRenderPins();
                         } catch (error) {
+                            console.error('Error en initPinManagement:', error);
                             alert(`Error generando PIN: ${error.message}`);
                         }
                     });
+                } else {
+                    console.error('Botón generate-pin-btn no encontrado');
                 }
             }
 
