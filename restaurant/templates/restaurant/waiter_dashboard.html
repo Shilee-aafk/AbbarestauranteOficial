@@ -422,9 +422,6 @@ let currentRoomNumber = '';
                 sidebarOverlay.addEventListener('click', toggleSidebar);
             }
 
-            // Iniciar el temporizador global que actualiza todas las tarjetas del garzón
-            setInterval(updateWaiterTimers, 1000);
-
             // Inicializar el monitor con los pedidos iniciales
             initializeMonitor();
 
@@ -639,7 +636,6 @@ let currentRoomNumber = '';
                 <div class="flex-grow">
                     <div class="flex justify-between items-center">
                         <p class="font-semibold">${order.identifier} - Pedido #${order.id}</p>
-                        <span class="waiter-timer text-sm font-medium text-gray-600">00:00</span>
                     </div>
                     <p class="text-sm text-gray-700 mt-1">Total: $${order.total.toLocaleString('es-CL')}</p>
                 </div>
@@ -699,7 +695,6 @@ function removeServedOrder(orderId) {
                         <p class="font-semibold">Pedido #${order.id} (${order.identifier})</p>
                         <span class="px-2 py-1 text-xs font-medium rounded-full ${order.status_class}">${order.status_display}</span>
                     </div>
-                    <span class="waiter-timer text-lg font-bold text-gray-700">00:00</span>
                 </div>
                 <div class="text-sm text-gray-600 mt-1">
                     <p>Total: $${order.total.toLocaleString('es-CL')}</p>
@@ -776,7 +771,6 @@ function removeInProgressOrder(orderId) {
                         <p class="font-semibold">Pedido #${order.id} (${order.identifier})</p>
                         <span class="px-2 py-1 text-xs font-medium rounded-full ${order.status_class}">${order.status_display}</span>
                     </div>
-                    <span class="waiter-timer text-lg font-bold text-green-700">00:00</span>
                 </div>
                 <div class="text-sm text-gray-600 mt-1">
                     <ul class="list-disc list-inside pl-1"></ul>
@@ -830,26 +824,6 @@ function removeReadyOrder(orderId) {
                     }
                 }, 500); // Debe coincidir con la duración de la transición en CSS
             }
-        }
-
-        /**
-         * Itera sobre todas las tarjetas de pedido del garzón y actualiza sus temporizadores.
-         */
-        function updateWaiterTimers() {
-            const cards = document.querySelectorAll('#monitor li[data-updated-at], #payments li[data-updated-at]');
-            cards.forEach(card => {
-                const updatedAt = new Date(card.dataset.updatedAt);
-                const now = new Date();
-                const diffSeconds = Math.floor((now - updatedAt) / 1000);
-                
-                const minutes = Math.floor(diffSeconds / 60);
-                const seconds = diffSeconds % 60;
-                
-                const timerEl = card.querySelector('.waiter-timer');
-                if (timerEl) {
-                    timerEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-                }
-            });
         }
 
         function showToast(message, type = 'info') {
