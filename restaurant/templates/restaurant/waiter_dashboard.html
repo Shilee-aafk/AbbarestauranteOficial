@@ -1308,12 +1308,14 @@ function removeReadyOrder(orderId) {
                 items: currentOrder, 
                 client_identifier: currentClientIdentifier,
                 room_number: currentRoomNumber,
+                tip_amount: '0.00'  // Propina por defecto (puede agregarse interfaz después)
             };
 
             console.log(`Enviando ${isEditing ? 'actualización de' : ''} pedido:`, {
                 url: url,
                 method: method,
-                body: body
+                body: body,
+                itemsDetail: currentOrder.map(item => ({ id: item.id, quantity: item.quantity, note: item.note }))
             });
 
             try {
@@ -1330,8 +1332,18 @@ function removeReadyOrder(orderId) {
                 console.log('Respuesta del servidor:', {
                     status: response.status,
                     success: result.success,
-                    orderId: result.order_id
+                    orderId: result.order_id,
+                    error: result.error
                 });
+                
+                if (!response.ok || !result.success) {
+                    const errorMsg = result.error || result.message || 'Error desconocido';
+                    showToast(`Error al ${isEditing ? 'actualizar' : 'guardar'} el pedido: ${errorMsg}`, 'error');
+                    console.error('Error respuesta del servidor:', errorMsg);
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = isEditing ? 'Actualizar Pedido' : 'Guardar Pedido';
+                    return;
+                }
                 
                 if (result.success) {
                     const message = isEditing ? `Pedido #${result.order_id} actualizado exitosamente.` : `Pedido #${result.order_id} creado exitosamente.`;
@@ -1352,10 +1364,6 @@ function removeReadyOrder(orderId) {
                     clearAndPrepareNewOrder(); // Resetear el formulario y variables después de guardar
                     submitBtn.disabled = false; // Reactivar el botón para el próximo pedido
                     submitBtn.textContent = 'Guardar Pedido';
-                } else {
-                    showToast(`Error al ${isEditing ? 'actualizar' : 'guardar'} el pedido: ${result.message || 'Error desconocido'}`, 'error');
-                    submitBtn.disabled = false; // Reactivar si hay error
-                    submitBtn.textContent = isEditing ? 'Actualizar Pedido' : 'Guardar Pedido';
                 }
             } catch (error) {
                 console.error('Error submitting order:', error);

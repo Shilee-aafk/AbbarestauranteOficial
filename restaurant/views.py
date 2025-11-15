@@ -275,8 +275,11 @@ def calculate_order_subtotal(order_instance):
 def save_order(request):
     if request.method == 'POST':
         try:
+            print(f"[DEBUG] save_order request.body: {request.body}")
             data = json.loads(request.body)
+            print(f"[DEBUG] Datos recibidos: {data}")
             items = data.get('items', [])
+            print(f"[DEBUG] Items: {items}")
             tip_amount = decimal.Decimal(data.get('tip_amount', '0.00'))
 
             # Usar una transacción atómica para asegurar la integridad de los datos.
@@ -306,6 +309,9 @@ def save_order(request):
                 order.save() # Save again to update total_amount
             return JsonResponse({'success': True, 'order_id': order.id})
         except (KeyError, MenuItem.DoesNotExist, Exception) as e:
+            print(f"[DEBUG] Error en save_order: {type(e).__name__}: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
 @csrf_exempt
