@@ -571,8 +571,7 @@ def api_menu_items(request):
             return JsonResponse({
                 'id': item.id, 'name': item.name, 'description': item.description,
                 'price': float(item.price), 'category': item.category, 'available': item.available
-            }, status=201)
-            }, status=201, cls=DecimalEncoder)
+            }, status=201, cls=DecimalEncoder)  # <-- Solo una llave de cierre
         except (ValidationError, IntegrityError, ValueError, KeyError) as e:
             return JsonResponse({'error': f'Invalid data: {str(e)}'}, status=400)
 
@@ -821,7 +820,7 @@ def api_registration_pins(request, pk=None):
     return JsonResponse({'error': f'Método {request.method} no permitido.'}, status=405)
 
 @login_required
-@user_passes_test(lambda u: u.groups.filter(name__in=['Administrador', 'Recepcionista']).exists())
+@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
 def export_orders_excel(request):
     """
     Exports a filtered list of orders to an Excel file (.xlsx).
