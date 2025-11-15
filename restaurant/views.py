@@ -16,6 +16,14 @@ from openpyxl.utils import get_column_letter
 from .forms import CustomUserCreationForm
 from django.contrib.auth.forms import AuthenticationForm
 from .models import Reservation, Order, OrderItem, MenuItem, Group, RegistrationPin
+from django.conf import settings
+
+def get_pusher_context():
+    """Helper function to add Pusher configuration to context"""
+    return {
+        'PUSHER_KEY': settings.PUSHER_KEY,
+        'PUSHER_CLUSTER': settings.PUSHER_CLUSTER,
+    }
 
 def home(request):
     if request.user.is_authenticated:

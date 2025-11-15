@@ -21,16 +21,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-# --- Configuración de Entorno (Desarrollo, Render, Koyeb, PythonAnywhere) ---
+# --- Configuración de Entorno (Desarrollo, Render, Koyeb) ---
 
 # Detectar si estamos en diferentes plataformas
-IS_PYTHONANYWHERE = 'PYTHONANYWHERE_DOMAIN' in os.environ
 IS_RENDER = 'RENDER' in os.environ
 IS_KOYEB = 'KOYEB_PUBLIC_DOMAIN' in os.environ
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # En producción, DEBUG debe ser False.
-DEBUG = os.environ.get('DEBUG', 'True') == 'True' and not (IS_PYTHONANYWHERE or IS_RENDER or IS_KOYEB)
+DEBUG = os.environ.get('DEBUG', 'True') == 'True' and not (IS_RENDER or IS_KOYEB)
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # La SECRET_KEY se leerá desde las variables de entorno en producción
@@ -49,9 +48,6 @@ elif IS_RENDER:
     render_domain = os.environ.get('RENDER_EXTERNAL_HOSTNAME', '')
     ALLOWED_HOSTS = [render_domain] if render_domain else ['*']
     CSRF_TRUSTED_ORIGINS = [f'https://{render_domain}'] if render_domain else []
-elif IS_PYTHONANYWHERE:
-    # En producción en PythonAnywhere
-    ALLOWED_HOSTS = [os.environ.get('PYTHONANYWHERE_DOMAIN', '')]
 elif IS_KOYEB:
     # En producción en Koyeb
     koyeb_domain = os.environ.get('KOYEB_PUBLIC_DOMAIN', '')
@@ -106,7 +102,7 @@ TEMPLATES = [
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 # Configuración de la base de datos para desarrollo y producción
-if DEBUG and not (IS_PYTHONANYWHERE or IS_RENDER or IS_KOYEB):
+if DEBUG and not (IS_RENDER or IS_KOYEB):
     # Configuración para desarrollo local (Supabase PostgreSQL)
     DATABASES = {
         'default': {
@@ -116,14 +112,6 @@ if DEBUG and not (IS_PYTHONANYWHERE or IS_RENDER or IS_KOYEB):
             'PASSWORD': 'Camilo885',  # Tu contraseña de Supabase
             'HOST': 'db.fudssspvlzkfxhrjnqeh.supabase.co',
             'PORT': '5432',
-        }
-    }
-elif IS_PYTHONANYWHERE:
-    # Configuración para producción en PythonAnywhere (SQLite por defecto para plan gratuito)
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
 else:
@@ -140,11 +128,10 @@ else:
 STATIC_URL = '/static/'
 
 # La ruta donde `collectstatic` dejará los archivos estáticos.
-# En PythonAnywhere, esto debe apuntar a una ruta accesible públicamente.
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Configuración de WhiteNoise para servir archivos estáticos en producción
-if not DEBUG or IS_PYTHONANYWHERE:
+if not DEBUG:
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
