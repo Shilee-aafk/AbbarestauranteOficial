@@ -29,9 +29,9 @@
             opacity: 1;
             transform: translate(-50%, 0);
         }
-        .toast.success { background-color: #89f3a9; color: green; } /* green-200, green */
-        .toast.error { background-color: #e98989; color: red; } /* red-300, red */
-        .toast.info { background-color: #93c5fd; color: #1e3a8a; } /* blue-300, blue-900 */
+        .toast.success { background-color: transparent; color: #22c55e; } /* Green text only */
+        .toast.error { background-color: transparent; color: #ef4444; } /* Red text only */
+        .toast.info { background-color: transparent; color: #3b82f6; } /* Blue text only */
         #welcome-banner { transition: opacity 0.5s ease, transform 0.5s ease; }
         .banner-hidden {
             opacity: 0;
@@ -1311,6 +1311,12 @@ function removeReadyOrder(orderId) {
                 room_number: currentRoomNumber,
             };
 
+            console.log(`Enviando ${isEditing ? 'actualización de' : ''} pedido:`, {
+                url: url,
+                method: method,
+                body: body
+            });
+
             try {
                 const response = await fetch(url, {
                     method: method,
@@ -1321,6 +1327,13 @@ function removeReadyOrder(orderId) {
                     body: JSON.stringify(body),
                 });
                 const result = await response.json();
+                
+                console.log('Respuesta del servidor:', {
+                    status: response.status,
+                    success: result.success,
+                    orderId: result.order_id
+                });
+                
                 if (result.success) {
                     const message = isEditing ? `Pedido #${result.order_id} actualizado exitosamente.` : `Pedido #${result.order_id} creado exitosamente.`;
                     showToast(message, 'success');
@@ -1330,6 +1343,7 @@ function removeReadyOrder(orderId) {
                         fetch(`/restaurant/api/waiter/orders/${result.order_id}/`)
                             .then(response => response.json())
                             .then(data => {
+                                console.log('Pedido cargado para el monitor:', data);
                                 handleOrderUpdate(data);
                             })
                             .catch(error => console.error('Error fetching new order:', error));
@@ -1340,12 +1354,13 @@ function removeReadyOrder(orderId) {
                     submitBtn.disabled = false; // Reactivar el botón para el próximo pedido
                     submitBtn.textContent = 'Guardar Pedido';
                 } else {
-                    showToast(`Error al ${isEditing ? 'actualizar' : 'guardar'} el pedido.`, 'error');
+                    showToast(`Error al ${isEditing ? 'actualizar' : 'guardar'} el pedido: ${result.message || 'Error desconocido'}`, 'error');
                     submitBtn.disabled = false; // Reactivar si hay error
                     submitBtn.textContent = isEditing ? 'Actualizar Pedido' : 'Guardar Pedido';
                 }
             } catch (error) {
                 console.error('Error submitting order:', error);
+                showToast('Error en la conexión. Por favor, intenta de nuevo.', 'error');
                 submitBtn.disabled = false; // Reactivar si hay error
                 submitBtn.textContent = isEditing ? 'Actualizar Pedido' : 'Guardar Pedido';
             }
