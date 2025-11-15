@@ -106,7 +106,7 @@ TEMPLATES = [
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 # Configuración de la base de datos para desarrollo y producción
-if DEBUG and not IS_PYTHONANYWHERE:
+if DEBUG and not (IS_PYTHONANYWHERE or IS_RENDER or IS_KOYEB):
     # Configuración para desarrollo local (Supabase PostgreSQL)
     DATABASES = {
         'default': {
