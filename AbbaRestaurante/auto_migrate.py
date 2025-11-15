@@ -4,16 +4,6 @@ Ejecuta migraciones automáticamente al iniciar la app.
 """
 import os
 import sys
-import django
-from pathlib import Path
-
-# Setup Django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'AbbaRestaurante.settings')
-django.setup()
-
-from django.core.management import call_command
-from django.db import connection
-from django.db.migrations.recorder import MigrationRecorder
 
 
 def run_migrations_if_needed():
@@ -24,12 +14,12 @@ def run_migrations_if_needed():
     """
     try:
         # Detectar si estamos en producción
-        DEBUG = os.environ.get('DEBUG', 'True') == 'True'
         IS_RENDER = 'RENDER' in os.environ
         IS_KOYEB = 'KOYEB_PUBLIC_DOMAIN' in os.environ
+        IS_PYTHONANYWHERE = 'PYTHONANYWHERE_DOMAIN' in os.environ
         
         # Solo ejecutar en producción
-        if not (IS_RENDER or IS_KOYEB or 'PYTHONANYWHERE_DOMAIN' in os.environ):
+        if not (IS_RENDER or IS_KOYEB or IS_PYTHONANYWHERE):
             return
         
         # No ejecutar si se especifica lo contrario
@@ -38,20 +28,30 @@ def run_migrations_if_needed():
         
         print("🔄 Checking if migrations are needed...")
         
+        # Importar Django después de la configuración inicial
+        import django
+        from django.core.management import call_command
+        from django.db import connection
+        from django.db.migrations.recorder import MigrationRecorder
+        
+        # Setup Django si no está configurado
+        if not django.apps.apps.ready:
+            os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'AbbaRestaurante.settings')
+            django.setup()
+        
         # Verificar si la tabla de migraciones existe
-        with connection.cursor() as cursor:
-            try:
-                recorder = MigrationRecorder(connection)
-                applied = list(recorder.applied_migrations())
-                
-                if applied:
-                    print(f"✅ Migrations already applied ({len(applied)} migrations)")
-                    return
-                else:
-                    print("⚠️ No migrations applied yet, running migrations...")
-            except Exception as e:
-                print(f"⚠️ Could not check migrations: {e}")
+        try:
+            recorder = MigrationRecorder(connection)
+            applied = list(recorder.applied_migrations())
+            
+            if applied:
+                print(f"✅ Migrations already applied ({len(applied)} migrations)")
                 return
+            else:
+                print("⚠️ No migrations applied yet, running migrations...")
+        except Exception as e:
+            print(f"⚠️ Could not check migrations: {e}")
+            # Intentar ejecutar migraciones de todas formas
         
         # Ejecutar migraciones
         try:
@@ -60,9 +60,13 @@ def run_migrations_if_needed():
         except Exception as e:
             print(f"❌ Error running migrations: {e}")
             # No fallar, solo advertir
+            import traceback
+            traceback.print_exc()
     
     except Exception as e:
         print(f"⚠️ Auto-migration check failed: {e}")
+        import traceback
+        traceback.print_exc()
 
 
 if __name__ == '__main__':
