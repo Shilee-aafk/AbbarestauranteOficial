@@ -683,7 +683,9 @@ function removeServedOrder(orderId) {
             const inProgressList = document.getElementById('in-progress-orders-list-monitor');
             let orderLi = document.getElementById(`inprogress-order-${order.id}`);
 
-            const itemsHTML = order.items.map(item => `<li>${item.quantity}x ${item.name}</li>`).join('');
+            const itemsHTML = (order.items && Array.isArray(order.items)) 
+                ? order.items.map(item => `<li>${item.quantity}x ${item.name}</li>`).join('')
+                : '<li>Items no disponibles</li>';
 
             const statusOptions = ` 
                 <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pendiente</option>
@@ -764,7 +766,9 @@ function removeInProgressOrder(orderId) {
             const readyList = document.getElementById('ready-orders-list-monitor');
             let orderLi = document.getElementById(`ready-order-${order.id}`);
 
-            const itemsHTML = order.items.map(item => `<li>${item.quantity}x ${item.name}</li>`).join('');
+            const itemsHTML = (order.items && Array.isArray(order.items))
+                ? order.items.map(item => `<li>${item.quantity}x ${item.name}</li>`).join('')
+                : '<li>Items no disponibles</li>';
 
             const orderHTML = `
                 <div class="flex justify-between items-center">
