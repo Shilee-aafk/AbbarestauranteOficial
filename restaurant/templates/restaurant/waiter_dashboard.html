@@ -375,10 +375,23 @@ let currentRoomNumber = '';
             const navLinks = document.querySelectorAll('.nav-link');
             const contentSections = document.querySelectorAll('.content-section');
 
+            // Función para cerrar todos los modales
+            function closeAllModals() {
+                document.getElementById('payment-modal').classList.add('hidden');
+                document.getElementById('serve-confirmation-modal').classList.add('hidden');
+                document.getElementById('order-view').classList.add('hidden');
+                // Resetear el estado del modal de pago
+                document.getElementById('modal-charge-to-room-btn').classList.add('hidden');
+                document.getElementById('mark-served-btn').classList.add('hidden');
+            }
+
             navLinks.forEach(link => {
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
                     const section = this.getAttribute('data-section');
+
+                    // Cerrar todos los modales antes de cambiar de sección
+                    closeAllModals();
 
                     navLinks.forEach(l => {
                         l.classList.remove('active', 'text-amber-800', 'bg-amber-100', 'border-r-4', 'border-amber-500');
