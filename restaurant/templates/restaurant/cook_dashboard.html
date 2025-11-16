@@ -137,12 +137,12 @@
                 <ul class="space-y-2 mb-4">${itemsHtml}</ul>
                 <div class="flex justify-end space-x-3 mt-4">
                     ${order.status === 'pending' ? `
-                        <button class="start-btn amber-800 text-white px-5 py-2 rounded-lg font-semibold hover:amber-900" data-order-id="${order.id}">
+                        <button class="start-btn bg-yellow-500 text-white px-5 py-2 rounded-lg font-semibold hover:amber-900" data-order-id="${order.id}">
                             Empezar Preparación
                         </button>
                     ` : ''}
                     ${order.status === 'preparing' ? `
-                        <button class="ready-btn bg-green-900 text-white px-5 py-2 rounded-lg font-semibold hover:bg-green-800" data-order-id="${order.id}">
+                        <button class="ready-btn bg-green-900 text-white px-5 py-2 rounded-lg font-semibold hover:bg-green-900" data-order-id="${order.id}">
                             Marcar como Listo
                         </button>
                     ` : ''}
@@ -280,8 +280,7 @@
             try {
                 const response = await fetch("{% url 'restaurant:api_orders' %}");
                 if (!response.ok) {
-                    const text = await response.text();
-                    console.error(`[SYNC] Error ${response.status}: ${text.substring(0, 200)}`);
+                    console.error('[SYNC] Error en respuesta:', response.status);
                     return;
                 }
                 
@@ -324,7 +323,7 @@
                     domOrder.element.remove();
                 });
             } catch (error) {
-                console.error('[SYNC] Error sincronizando órdenes:', error.message);
+                console.error('[SYNC] Error sincronizando órdenes:', error);
             }
         }
 
