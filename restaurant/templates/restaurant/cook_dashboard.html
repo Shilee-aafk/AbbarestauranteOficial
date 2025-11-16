@@ -254,11 +254,13 @@
             const channel = pusher.subscribe('cocina-channel');
 
             channel.bind('nuevo-pedido', function(data) {
+                console.log('Nuevo pedido recibido via Pusher:', data.order);
                 showToast(`Nuevo pedido para ${data.order.identifier}`, 'info');
                 addOrderToDOM(data.order);
             });
 
             channel.bind('actualizacion-estado', function(data) {
+                console.log('Actualización de estado recibida:', data.order);
                 const order = data.order;
                 if (order.status === 'preparing') {
                     moveOrderToPreparing(order.id);
@@ -268,10 +270,49 @@
             });
         }
 
+        // --- Polling automático como backup (cada 10 segundos) ---
+        async function syncOrdersWithServer() {
+            try {
+                const response = await fetch("{% url 'restaurant:api_orders' %}");
+                if (!response.ok) return;
+                
+                const newOrders = await response.json();
+                console.log('[SYNC] Órdenes desde servidor:', newOrders);
+                
+                // Sincronizar órdenes: agregar nuevas y remover completadas
+                const currentOrderIds = new Set();
+                document.querySelectorAll('[data-order-id]').forEach(el => {
+                    currentOrderIds.add(parseInt(el.getAttribute('data-order-id')));
+                });
+                
+                // Agregar órdenes nuevas
+                newOrders.forEach(order => {
+                    if (!currentOrderIds.has(order.id)) {
+                        console.log(`[SYNC] Agregando nueva orden: ${order.id}`);
+                        addOrderToDOM(order);
+                    }
+                });
+                
+                // Remover órdenes completadas
+                document.querySelectorAll('[data-order-id]').forEach(el => {
+                    const orderId = parseInt(el.getAttribute('data-order-id'));
+                    if (!newOrders.some(o => o.id === orderId)) {
+                        console.log(`[SYNC] Removiendo orden completada: ${orderId}`);
+                        el.remove();
+                    }
+                });
+            } catch (error) {
+                console.error('[SYNC] Error sincronizando órdenes:', error);
+            }
+        }
+
         // --- Inicialización ---
         initialOrders.forEach(addOrderToDOM);
         setInterval(updateTimers, 1000);
         setupPusher();
+        
+        // Polling cada 10 segundos como backup
+        setInterval(syncOrdersWithServer, 10000);
     });
 </script>
 {% endblock %}
