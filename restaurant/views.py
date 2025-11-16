@@ -438,7 +438,7 @@ def update_order_status(request, order_id):
 
 @csrf_exempt
 @login_required
-@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
+@user_passes_test(lambda u: u.groups.filter(name__in=['Administrador', 'Cocinero']).exists())
 @login_required
 def api_orders(request):
     """

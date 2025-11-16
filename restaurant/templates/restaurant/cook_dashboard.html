@@ -164,10 +164,23 @@
             const card = document.getElementById(`order-${orderId}`);
             if (card) {
                 card.remove();
-                // Simulamos la actualización del estado y volvemos a renderizar
-                const orderData = initialOrders.find(o => o.id === orderId);
+                // Buscar la orden en el DOM por data-order-id
+                const orderElements = document.querySelectorAll('[data-order-id]');
+                let orderData = null;
+                
+                orderElements.forEach(el => {
+                    if (parseInt(el.getAttribute('data-order-id')) === orderId) {
+                        orderData = {
+                            id: orderId,
+                            status: 'preparing',
+                            identifier: el.querySelector('p span')?.textContent || 'Unknown',
+                            items: [], // No necesitamos los items aquí
+                            created_at: el.getAttribute('data-order-created-at')
+                        };
+                    }
+                });
+                
                 if (orderData) {
-                    orderData.status = 'preparing';
                     addOrderToDOM(orderData);
                 }
             }
@@ -276,16 +289,26 @@
         }
 
         // --- Polling automático como backup (cada 2 segundos) ---
+        let lastSyncTimestamp = 0;
         async function syncOrdersWithServer() {
             try {
+                const now = Date.now();
+                if (now - lastSyncTimestamp < 1500) {
+                    return; // Evitar sincronizaciones muy frecuentes
+                }
+                lastSyncTimestamp = now;
+
+                console.log('[SYNC] Sincronizando órdenes...');
                 const response = await fetch("{% url 'restaurant:api_orders' %}");
                 if (!response.ok) {
-                    console.error('[SYNC] Error en respuesta:', response.status);
+                    console.error('[SYNC] Error en respuesta:', response.status, response.statusText);
+                    const text = await response.text();
+                    console.error('[SYNC] Respuesta:', text.substring(0, 200));
                     return;
                 }
                 
                 const newOrders = await response.json();
-                console.log('[SYNC] Órdenes desde servidor:', newOrders.length, 'órdenes');
+                console.log('[SYNC] Órdenes desde servidor:', newOrders.length);
                 
                 // Obtener IDs de órdenes en pantalla
                 const domOrderMap = new Map();
@@ -295,17 +318,19 @@
                     domOrderMap.set(orderId, { element: el, status: status });
                 });
                 
+                console.log('[SYNC] Órdenes en DOM:', domOrderMap.size);
+                
                 // Procesar cada orden del servidor
                 newOrders.forEach(order => {
                     const domOrder = domOrderMap.get(order.id);
                     
                     if (!domOrder) {
                         // Orden nueva: agregar a pantalla
-                        console.log(`[SYNC] ✅ Agregando nueva orden: ${order.id}`);
+                        console.log(`[SYNC] ✅ Nueva orden: #${order.id} (${order.identifier})`);
                         addOrderToDOM(order);
                     } else if (domOrder.status !== order.status) {
                         // Orden con estado diferente: actualizar
-                        console.log(`[SYNC] 📝 Actualizando orden ${order.id}: ${domOrder.status} → ${order.status}`);
+                        console.log(`[SYNC] 📝 Estado cambió: #${order.id} ${domOrder.status} → ${order.status}`);
                         
                         if (order.status === 'preparing') {
                             moveOrderToPreparing(order.id);
@@ -319,21 +344,25 @@
                 
                 // Remover órdenes que ya no están en el servidor
                 domOrderMap.forEach((domOrder, orderId) => {
-                    console.log(`[SYNC] ❌ Removiendo orden completada/cancelada: ${orderId}`);
+                    console.log(`[SYNC] ❌ Removiendo orden: #${orderId}`);
                     domOrder.element.remove();
                 });
             } catch (error) {
-                console.error('[SYNC] Error sincronizando órdenes:', error);
+                console.error('[SYNC] Error:', error.message, error);
             }
         }
 
         // --- Inicialización ---
+        console.log('[INIT] Iniciando cook dashboard. Órdenes iniciales:', initialOrders.length);
         initialOrders.forEach(addOrderToDOM);
         setInterval(updateTimers, 1000);
         setupPusher();
         
-        // Polling cada 2 segundos como backup (más rápido)
+        // Ejecutar sync inmediatamente y luego cada 2 segundos
+        syncOrdersWithServer(); // Primera sincronización inmediata
         setInterval(syncOrdersWithServer, 2000);
+        
+        console.log('[INIT] Dashboard listo. Esperando órdenes...');
     });
 </script>
 {% endblock %}
