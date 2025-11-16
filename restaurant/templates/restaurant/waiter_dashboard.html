@@ -652,6 +652,10 @@ let currentRoomNumber = '';
 
             if (orderLi) {
                 orderLi.innerHTML = orderHTML;
+                // Clonar y reemplazar para eliminar listeners antiguos
+                const newOrderLi = orderLi.cloneNode(true);
+                orderLi.parentNode.replaceChild(newOrderLi, orderLi);
+                orderLi = newOrderLi;
             } else {
                 orderLi = document.createElement('li');
                 orderLi.id = `served-order-monitor-${order.id}`;
@@ -717,6 +721,10 @@ function removeServedOrder(orderId) {
 
             if (orderLi) {
                 orderLi.innerHTML = orderHTML;
+                // Clonar y reemplazar para eliminar listeners antiguos
+                const newOrderLi = orderLi.cloneNode(true);
+                orderLi.parentNode.replaceChild(newOrderLi, orderLi);
+                orderLi = newOrderLi;
             } else {
                 orderLi = document.createElement('li');
                 orderLi.id = `inprogress-order-${order.id}`;
@@ -788,6 +796,10 @@ function removeInProgressOrder(orderId) {
 
             if (orderLi) {
                 orderLi.innerHTML = orderHTML;
+                // Clonar y reemplazar para eliminar listeners antiguos
+                const newOrderLi = orderLi.cloneNode(true);
+                orderLi.parentNode.replaceChild(newOrderLi, orderLi);
+                orderLi = newOrderLi;
             } else {
                 orderLi = document.createElement('li');
                 orderLi.id = `ready-order-${order.id}`;
