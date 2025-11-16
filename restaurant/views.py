@@ -436,31 +436,36 @@ def update_order_status(request, order_id):
 @csrf_exempt
 @login_required
 @user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
+@login_required
 def api_orders(request):
     """
     GET: Returns a list of all orders with items (para cook dashboard y polling).
     POST: Creates a new order.
     """
     if request.method == 'GET':
-        # Para cocina: solo órdenes pendientes y en preparación
-        orders = Order.objects.filter(
-            status__in=['pending', 'preparing']
-        ).select_related('user').prefetch_related('orderitem_set__menu_item').order_by('created_at')
-        
-        data = []
-        for o in orders:
-            data.append({
-                'id': o.id,
-                'identifier': o.room_number or o.client_identifier,
-                'status': o.status,
-                'created_at': o.created_at.isoformat(),
-                'items': [{
-                    'name': item.menu_item.name,
-                    'quantity': item.quantity,
-                    'note': item.note or ''
-                } for item in o.orderitem_set.all()]
-            })
-        return JsonResponse(data, safe=False)
+        try:
+            # Para cocina: solo órdenes pendientes y en preparación
+            orders = Order.objects.filter(
+                status__in=['pending', 'preparing']
+            ).select_related('user').prefetch_related('orderitem_set__menu_item').order_by('created_at')
+            
+            data = []
+            for o in orders:
+                data.append({
+                    'id': o.id,
+                    'identifier': o.room_number or o.client_identifier,
+                    'status': o.status,
+                    'created_at': o.created_at.isoformat(),
+                    'items': [{
+                        'name': item.menu_item.name,
+                        'quantity': item.quantity,
+                        'note': item.note or ''
+                    } for item in o.orderitem_set.all()]
+                })
+            return JsonResponse(data, safe=False)
+        except Exception as e:
+            print(f"[ERROR] api_orders GET: {str(e)}")
+            return JsonResponse({'error': str(e)}, status=500)
 
     if request.method == 'POST':
         try:
@@ -478,6 +483,7 @@ def api_orders(request):
                 'status': order.status
             }, status=201)
         except Exception as e:
+            print(f"[ERROR] api_orders POST: {str(e)}")
             return JsonResponse({'error': str(e)}, status=400)
 
 
