@@ -365,11 +365,10 @@
         let editingOrderId = null; // To track if we are editing an order
         const initialOrders = {{ initial_orders_json|safe }};
         let selectedTableId = null; // To track the selected table without a dropdown
-let currentOrder = [];
+        let currentOrder = [];
 let currentClientIdentifier = '';
 let currentRoomNumber = '';
-
-        // --- Sidebar Navigation Logic ---
+let playedSoundForOrders = new Set(); // Track which orders have had their ready sound played        // --- Sidebar Navigation Logic ---
         document.addEventListener('DOMContentLoaded', function() {
             const navLinks = document.querySelectorAll('.nav-link');
             const contentSections = document.querySelectorAll('.content-section');
@@ -627,6 +626,7 @@ let currentRoomNumber = '';
                 removeInProgressOrder(order.id);
                 removeReadyOrder(order.id);
                 removeServedOrder(order.id);
+                playedSoundForOrders.delete(order.id); // Clean up the sound flag
                 return;
             }
 
@@ -639,9 +639,14 @@ let currentRoomNumber = '';
                 removeInProgressOrder(order.id);
                 removeServedOrder(order.id);
                 addOrUpdateReadyOrder(order);
-                showToast(`¡El pedido para ${order.identifier} está listo!`, 'info');
-                const notificationSound = new Audio("{% static 'restaurant/sounds/notification.mp3' %}");
-                notificationSound.play().catch(e => console.warn("La interacción del usuario es necesaria para reproducir audio."));
+                
+                // Solo reproducir el sonido si no se ha reproducido antes para este pedido
+                if (!playedSoundForOrders.has(order.id)) {
+                    showToast(`¡El pedido para ${order.identifier} está listo!`, 'info');
+                    const notificationSound = new Audio("{% static 'restaurant/sounds/notification.mp3' %}");
+                    notificationSound.play().catch(e => console.warn("La interacción del usuario es necesaria para reproducir audio."));
+                    playedSoundForOrders.add(order.id); // Mark that we've played the sound for this order
+                }
             } else { // Si está pendiente o en preparación, va a la columna En Curso
                 removeReadyOrder(order.id);
                 removeServedOrder(order.id);
