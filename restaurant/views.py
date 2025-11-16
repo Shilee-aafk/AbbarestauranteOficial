@@ -620,7 +620,8 @@ def api_menu_items(request):
 def api_menu_item_detail(request, pk):
     """
     GET: Returns a single menu item.
-    PUT: Updates a menu item.
+    PUT: Updates a menu item completely.
+    PATCH: Partially updates a menu item.
     DELETE: Deletes a menu item.
     """
     try:
@@ -634,13 +635,28 @@ def api_menu_item_detail(request, pk):
             'price': float(item.price), 'category': item.category, 'available': item.available
         })
 
-    if request.method == 'PUT':
+    if request.method in ['PUT', 'PATCH']:
         data = json.loads(request.body)
-        item.name = data.get('name', item.name)
-        item.description = data.get('description', item.description)
-        item.price = data.get('price', item.price)
-        item.category = data.get('category', item.category)
-        item.available = data.get('available', item.available)
+        if request.method == 'PUT':
+            # PUT: replace all fields
+            item.name = data.get('name', item.name)
+            item.description = data.get('description', item.description)
+            item.price = data.get('price', item.price)
+            item.category = data.get('category', item.category)
+            item.available = data.get('available', item.available)
+        else:
+            # PATCH: only update provided fields
+            if 'name' in data:
+                item.name = data['name']
+            if 'description' in data:
+                item.description = data['description']
+            if 'price' in data:
+                item.price = data['price']
+            if 'category' in data:
+                item.category = data['category']
+            if 'available' in data:
+                item.available = data['available']
+        
         item.save()
         return JsonResponse({
             'id': item.id, 'name': item.name, 'description': item.description,
