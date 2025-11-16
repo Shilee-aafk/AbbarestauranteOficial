@@ -9,6 +9,7 @@ from django.db.models import Sum, Count, F, Q, Prefetch, ExpressionWrapper, fiel
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.contrib.auth.models import User
+from django.conf import settings
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill
 from openpyxl.utils import get_column_letter
@@ -195,7 +196,9 @@ def cook_dashboard(request):
 
     return render(request, 'restaurant/cook_dashboard.html', {
         'orders': orders,
-        'orders_json': json.dumps(orders_data, cls=DecimalEncoder)
+        'orders_json': json.dumps(orders_data, cls=DecimalEncoder),
+        'PUSHER_KEY': settings.PUSHER_KEY,
+        'PUSHER_CLUSTER': settings.PUSHER_CLUSTER,
     })
 
 @login_required
