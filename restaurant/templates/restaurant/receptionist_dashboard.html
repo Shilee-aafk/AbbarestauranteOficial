@@ -335,8 +335,22 @@
 
                     // Show selected section
                     document.getElementById(section).classList.remove('hidden');
+                    
+                    // Guardar la sección activa en localStorage
+                    localStorage.setItem('activeReceptionistSection', section);
                 });
             });
+
+            // Restaurar la sección guardada al cargar la página
+            const savedSection = localStorage.getItem('activeReceptionistSection') || 'dashboard';
+            const savedLink = document.querySelector(`.nav-link[data-section="${savedSection}"]`);
+            if (savedLink) {
+                savedLink.click();
+            } else {
+                // Fallback si la sección guardada no existe
+                const dashboardLink = document.querySelector('.nav-link[data-section="dashboard"]');
+                if (dashboardLink) dashboardLink.click();
+            }
 
             // Close banner functionality
             document.getElementById('close-banner').addEventListener('click', () => {

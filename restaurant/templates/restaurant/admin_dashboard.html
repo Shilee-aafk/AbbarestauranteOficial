@@ -562,6 +562,9 @@
                     link.classList.toggle('text-gray-600', link.dataset.section !== sectionId);
                     link.classList.toggle('hover:bg-gray-100', link.dataset.section !== sectionId);
                 });
+                
+                // Guardar la sección activa en localStorage
+                localStorage.setItem('activeAdminSection', sectionId);
 
                 // Cargar datos de la sección si es la primera vez que se muestra
                 if (!appState.loadedSections.has(sectionId)) {
@@ -1066,8 +1069,10 @@
                 initPinManagement();
                 initUserManagement();
 
-                // Cargar la sección inicial desde la URL o por defecto
-                const initialSection = new URLSearchParams(window.location.search).get('section') || 'dashboard';
+                // Cargar la sección guardada o desde la URL
+                const savedSection = localStorage.getItem('activeAdminSection');
+                const urlSection = new URLSearchParams(window.location.search).get('section');
+                const initialSection = urlSection || savedSection || 'dashboard';
                 showSection(initialSection);
             }
 

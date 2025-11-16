@@ -401,8 +401,22 @@ let playedSoundForOrders = new Set(); // Track which orders have had their ready
 
                     contentSections.forEach(s => s.classList.add('hidden'));
                     document.getElementById(section).classList.remove('hidden');
+                    
+                    // Guardar la sección activa en localStorage
+                    localStorage.setItem('activeWaiterSection', section);
                 });
             });
+
+            // Restaurar la sección guardada al cargar la página
+            const savedSection = localStorage.getItem('activeWaiterSection') || 'dashboard';
+            const savedLink = document.querySelector(`.nav-link[data-section="${savedSection}"]`);
+            if (savedLink) {
+                savedLink.click();
+            } else {
+                // Fallback si la sección guardada no existe
+                const dashboardLink = document.querySelector('.nav-link[data-section="dashboard"]');
+                if (dashboardLink) dashboardLink.click();
+            }
 
             // --- Sidebar Toggle Logic for Mobile ---
             const sidebar = document.getElementById('sidebar');
