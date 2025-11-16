@@ -438,16 +438,28 @@ def update_order_status(request, order_id):
 @user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
 def api_orders(request):
     """
-    GET: Returns a list of all orders.
+    GET: Returns a list of all orders with items (para cook dashboard y polling).
     POST: Creates a new order.
     """
     if request.method == 'GET':
-        orders = Order.objects.select_related('user').all().order_by('-created_at')
-        data = [{
-            'id': o.id,
-            'identifier': o.room_number or o.client_identifier,
-            'status': o.get_status_display(),
-        } for o in orders]
+        # Para cocina: solo órdenes pendientes y en preparación
+        orders = Order.objects.filter(
+            status__in=['pending', 'preparing']
+        ).select_related('user').prefetch_related('orderitem_set__menu_item').order_by('created_at')
+        
+        data = []
+        for o in orders:
+            data.append({
+                'id': o.id,
+                'identifier': o.room_number or o.client_identifier,
+                'status': o.status,
+                'created_at': o.created_at.isoformat(),
+                'items': [{
+                    'name': item.menu_item.name,
+                    'quantity': item.quantity,
+                    'note': item.note or ''
+                } for item in o.orderitem_set.all()]
+            })
         return JsonResponse(data, safe=False)
 
     if request.method == 'POST':
@@ -463,7 +475,7 @@ def api_orders(request):
             return JsonResponse({
                 'id': order.id,
                 'identifier': order.room_number or order.client_identifier,
-                'status': order.get_status_display()
+                'status': order.status
             }, status=201)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)

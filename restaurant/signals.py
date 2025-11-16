@@ -25,21 +25,33 @@ def order_status_changed(sender, instance, created, **kwargs):
     if not pusher_client:
         return
 
+    # Obtener items del pedido
+    items = []
+    for item in instance.orderitem_set.all():
+        items.append({
+            'name': item.menu_item.name,
+            'quantity': item.quantity,
+            'note': item.note or ''
+        })
+
     order_data = {
         'id': instance.id,
         'client_identifier': instance.client_identifier,
+        'identifier': instance.room_number or instance.client_identifier,
         'status': instance.status,
         'status_display': instance.get_status_display(),
         'status_class': instance.status_class,
         'created_at': instance.created_at.isoformat(),
-        'user_id': instance.user.id, # ID del garzón que creó el pedido
-        'room_number': instance.room_number, # Número de habitación para recepción
-        'total': float(instance.total_amount) if instance.total_amount else 0, # Total del pedido para actualizaciones de ventas
+        'user_id': instance.user.id,
+        'room_number': instance.room_number,
+        'total': float(instance.total_amount) if instance.total_amount else 0,
+        'items': items,  # AGREGADO: Items del pedido para cocina
     }
 
     if created:
         # 1. Notificar a COCINA y ADMIN sobre un NUEVO pedido
         try:
+            print(f"[PUSHER] Enviando nuevo-pedido #{instance.id} a cocina-channel")
             pusher_client.trigger(['cocina-channel', 'admin-channel'], 'nuevo-pedido', {
                 'message': f"Nuevo pedido de: {order_data['client_identifier']}",
                 'order': order_data
