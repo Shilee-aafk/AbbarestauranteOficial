@@ -613,7 +613,6 @@ def api_menu_items(request):
         except (ValidationError, IntegrityError, ValueError, KeyError) as e:
             return JsonResponse({'error': f'Invalid data: {str(e)}'}, status=400)
 
-
 @csrf_exempt
 @login_required
 @user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
@@ -636,7 +635,12 @@ def api_menu_item_detail(request, pk):
         })
 
     if request.method in ['PUT', 'PATCH']:
-        data = json.loads(request.body)
+        try:
+            data = json.loads(request.body)
+            print(f"[DEBUG] PATCH/PUT request for item {pk}: {data}")
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+            
         if request.method == 'PUT':
             # PUT: replace all fields
             item.name = data.get('name', item.name)
@@ -658,6 +662,7 @@ def api_menu_item_detail(request, pk):
                 item.available = data['available']
         
         item.save()
+        print(f"[DEBUG] Item {pk} saved. Available: {item.available}")
         return JsonResponse({
             'id': item.id, 'name': item.name, 'description': item.description,
             'price': float(item.price), 'category': item.category, 'available': item.available

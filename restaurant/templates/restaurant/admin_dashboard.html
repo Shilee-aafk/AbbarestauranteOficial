@@ -781,11 +781,23 @@
             // Toggle rápido de disponibilidad SIN abrir modal
             async function toggleItemAvailabilityQuick(itemId, newAvailability) {
                 try {
-                    await apiRequest(`/restaurant/api/menu-items/${itemId}/`, 'PATCH', {
+                    console.log(`Toggling item ${itemId} to available=${newAvailability}`);
+                    const response = await apiRequest(`/restaurant/api/menu-items/${itemId}/`, 'PATCH', {
                         available: newAvailability
                     });
-                    // La actualización de la UI se manejará vía Pusher
+                    console.log('PATCH response:', response);
+                    
+                    // Actualizar la tabla localmente de inmediato (no esperar a Pusher)
+                    if (response) {
+                        const row = document.querySelector(`#menu-table tr[data-item-id="${itemId}"]`);
+                        if (row) {
+                            row.innerHTML = getMenuItemRowHTML(response).match(/<td.*<\/td>/gs).join('');
+                        }
+                    }
+                    
+                    // La actualización vía Pusher también llegará momentos después para sincronización
                 } catch (error) {
+                    console.error('Error al cambiar disponibilidad:', error);
                     alert(`Error al cambiar disponibilidad: ${error.message}`);
                 }
             }
