@@ -566,7 +566,22 @@ let currentRoomNumber = '';
         }
 
         function initializeMonitor() {
-            initialOrders.forEach(order => handleOrderUpdate(order));
+            // Solo renderizar los pedidos iniciales sin enviar notificaciones a Pusher
+            initialOrders.forEach(order => {
+                // Renderizar directamente sin llamar a handleOrderUpdate para evitar notificaciones duplicadas
+                if (['paid', 'cancelled', 'charged_to_room'].includes(order.status)) {
+                    // Los pedidos finalizados no se muestran en el monitor
+                    return;
+                }
+                
+                if (order.status === 'served') {
+                    addOrUpdateServedOrder(order);
+                } else if (order.status === 'ready') {
+                    addOrUpdateReadyOrder(order);
+                } else {
+                    addOrUpdateInProgressOrder(order);
+                }
+            });
         }
 
         document.addEventListener('DOMContentLoaded', function() {
