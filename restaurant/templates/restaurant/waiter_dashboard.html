@@ -1449,6 +1449,13 @@ function removeReadyOrder(orderId) {
             const garzonChannel = pusher.subscribe('garzon-channel');
             console.log("Escuchando en 'garzon-channel'...");
 
+            garzonChannel.bind('nuevo-pedido', (data) => {
+                console.log('Nuevo pedido recibido:', data.order);
+                // Cuando se crea un nuevo pedido (desde cualquier garzón), agregarlo al monitor
+                handleOrderUpdate(data.order);
+                showToast(`Nuevo pedido creado: ${data.order.identifier}`, 'info');
+            });
+
             garzonChannel.bind('actualizacion-estado', (data) => {
                 handleOrderUpdate(data.order);
             });

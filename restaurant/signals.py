@@ -49,10 +49,10 @@ def order_status_changed(sender, instance, created, **kwargs):
     }
 
     if created:
-        # 1. Notificar a COCINA y ADMIN sobre un NUEVO pedido
+        # 1. Notificar a COCINA, ADMIN y GARZON sobre un NUEVO pedido
         try:
-            print(f"[PUSHER] Enviando nuevo-pedido #{instance.id} a cocina-channel")
-            pusher_client.trigger(['cocina-channel', 'admin-channel'], 'nuevo-pedido', {
+            print(f"[PUSHER] Enviando nuevo-pedido #{instance.id} a cocina-channel, admin-channel y garzon-channel")
+            pusher_client.trigger(['cocina-channel', 'admin-channel', 'garzon-channel'], 'nuevo-pedido', {
                 'message': f"Nuevo pedido de: {order_data['client_identifier']}",
                 'order': order_data
             })
