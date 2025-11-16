@@ -589,12 +589,18 @@ let currentRoomNumber = '';
                 // Find the closest charge-btn parent or the element itself
                 const chargeButton = e.target.closest('.charge-btn');
                 if (chargeButton) {
-                    openPaymentModal(chargeButton.dataset.orderId);
+                    const orderId = chargeButton.dataset.orderId;
+                    if (orderId && orderId !== 'undefined') {
+                        openPaymentModal(orderId);
+                    }
                 }
                     // Find the closest edit-btn parent or the element itself
                     const editButton = e.target.closest('.edit-btn');
                     if (editButton) {
-                        editOrderFromMonitor(editButton.dataset.orderId);
+                        const orderId = editButton.dataset.orderId;
+                        if (orderId && orderId !== 'undefined') {
+                            editOrderFromMonitor(orderId);
+                        }
                     }
             });
 
@@ -897,6 +903,13 @@ function removeReadyOrder(orderId) {
         }
 
         async function updateOrderStatus(orderId, newStatus, statusText = null) {
+            // Validar que orderId sea válido
+            if (!orderId || orderId === 'undefined') {
+                console.error('Invalid orderId:', orderId);
+                showToast('Error: ID de pedido inválido', 'error');
+                return;
+            }
+            
             const body = { status: newStatus };
 
             // Si estamos finalizando el pedido (pagado o cargado a habitación), obtener y añadir la propina solo si la casilla está marcada.
@@ -934,6 +947,13 @@ function removeReadyOrder(orderId) {
         });
 
         async function openPaymentModal(orderId) {
+            // Validar que orderId sea válido
+            if (!orderId || orderId === 'undefined') {
+                console.error('Invalid orderId:', orderId);
+                showToast('Error: ID de pedido inválido', 'error');
+                return;
+            }
+            
     try {
         const response = await fetch(`/restaurant/api/waiter/orders/${orderId}/`);
                 if (!response.ok) throw new Error('Failed to fetch order details');
@@ -1099,6 +1119,13 @@ function removeReadyOrder(orderId) {
         }
 
         async function editOrderFromMonitor(orderId) {
+            // Validar que orderId sea válido
+            if (!orderId || orderId === 'undefined') {
+                console.error('Invalid orderId:', orderId);
+                showToast('Error: ID de pedido inválido', 'error');
+                return;
+            }
+            
     try {
         const response = await fetch(`/restaurant/api/waiter/orders/${orderId}/`);
                 if (!response.ok) {
@@ -1135,6 +1162,13 @@ function removeReadyOrder(orderId) {
         }
 
         async function openServeConfirmationModal(orderId) {
+            // Validar que orderId sea válido
+            if (!orderId || orderId === 'undefined') {
+                console.error('Invalid orderId:', orderId);
+                showToast('Error: ID de pedido inválido', 'error');
+                return;
+            }
+            
     try {
         const response = await fetch(`/restaurant/api/waiter/orders/${orderId}/`);
                 if (!response.ok) throw new Error('Failed to fetch order details for confirmation');
@@ -1354,17 +1388,9 @@ function removeReadyOrder(orderId) {
                     const message = isEditing ? `Pedido #${result.order_id} actualizado exitosamente.` : `Pedido #${result.order_id} creado exitosamente.`;
                     showToast(message, 'success');
 
-                    // Actualizar el monitor en tiempo real con el nuevo pedido
-                    if (!isEditing) {
-                        fetch(`/restaurant/api/waiter/orders/${result.order_id}/`)
-                            .then(response => response.json())
-                            .then(data => {
-                                console.log('Pedido cargado para el monitor:', data);
-                                handleOrderUpdate(data);
-                            })
-                            .catch(error => console.error('Error fetching new order:', error));
-                    }
-
+                    // No hacer fetch adicional - dejar que Pusher maneje la sincronización en tiempo real
+                    // Las notificaciones de Pusher se encargarán de actualizar el monitor automáticamente
+                    
                     showMainSectionView(); // Volver a la vista principal (Mesas o Bar)
                     clearAndPrepareNewOrder(); // Resetear el formulario y variables después de guardar
                     submitBtn.disabled = false; // Reactivar el botón para el próximo pedido

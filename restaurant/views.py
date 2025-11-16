@@ -292,31 +292,35 @@ def save_order(request):
             # Usar una transacción atómica para asegurar la integridad de los datos.
             # O todo se crea, o nada se crea si hay un error.
             with transaction.atomic():
+                subtotal = decimal.Decimal('0.00')
+                
+                # Pre-calculate subtotal before creating the order
+                for item in items:
+                    try:
+                        menu_item = MenuItem.objects.get(id=item['id'])
+                        subtotal += menu_item.price * int(item.get('quantity', 1))
+                    except MenuItem.DoesNotExist:
+                        raise ValueError(f"MenuItem with id {item['id']} not found")
+                
+                # Create order with final total amount in one go
                 order = Order.objects.create(
                     client_identifier=data.get('client_identifier'),
                     room_number=data.get('room_number'),
                     user=request.user, 
                     status='pending',
-                    tip_amount=tip_amount
-                    # total_amount will be calculated after order items are added
+                    tip_amount=tip_amount,
+                    total_amount=subtotal + tip_amount  # Set total_amount on creation
                 )
 
-                subtotal = decimal.Decimal('0.00')
+                # Create order items
                 for item in items:
-                    try:
-                        menu_item = MenuItem.objects.get(id=item['id'])
-                        OrderItem.objects.create(
-                            order=order,
-                            menu_item=menu_item,
-                            quantity=int(item.get('quantity', 1)),
-                            note=str(item.get('note', ''))
-                        )
-                        subtotal += menu_item.price * int(item.get('quantity', 1))
-                    except MenuItem.DoesNotExist:
-                        raise ValueError(f"MenuItem with id {item['id']} not found")
-                
-                order.total_amount = subtotal + tip_amount # El total ahora incluye la propina desde el inicio
-                order.save() # Save again to update total_amount
+                    menu_item = MenuItem.objects.get(id=item['id'])
+                    OrderItem.objects.create(
+                        order=order,
+                        menu_item=menu_item,
+                        quantity=int(item.get('quantity', 1)),
+                        note=str(item.get('note', ''))
+                    )
             
             if order:
                 return JsonResponse({'success': True, 'order_id': order.id})
@@ -390,7 +394,7 @@ def api_waiter_order_detail(request, pk):
                 subtotal += menu_item.price * item_data['quantity']
             
             order.total_amount = subtotal + order.tip_amount # Recalcular total_amount con el nuevo subtotal
-            order.save() # Trigger the post_save signal
+            order.save(update_fields=['total_amount'])  # Only update total_amount to avoid unnecessary signals
             return JsonResponse({'success': True, 'order_id': order.id})
 
 @csrf_exempt
