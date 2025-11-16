@@ -1463,51 +1463,58 @@ function removeReadyOrder(orderId) {
             console.log("Escuchando en 'admin-channel' para cambios de menú...");
 
             adminChannel.bind('item-disponibilidad', function(data) {
+                console.log('Cambio de disponibilidad recibido:', data);
                 const message = data.available ? `'${data.name}' está disponible de nuevo.` : `¡ATENCIÓN! El plato '${data.name}' ya no está disponible.`;
                 showToast(message, data.available ? 'info' : 'error');
-                const menuItemButton = document.querySelector(`.add-to-order-btn[onclick*="addToOrder(${data.item_id},"]`);
+                
+                // Find menu item by data-item-id attribute (more reliable)
+                const menuItemDiv = document.querySelector(`.menu-item[data-item-id="${data.item_id}"]`);
+                if (!menuItemDiv) {
+                    console.log(`Menu item with id ${data.item_id} not found in DOM`);
+                    return;
+                }
+                
+                const menuItemButton = menuItemDiv.querySelector('.add-to-order-btn');
                 if (menuItemButton) {
                     menuItemButton.disabled = !data.available;
-                    const menuItemDiv = menuItemButton.closest('.menu-item');
-                    if (menuItemDiv) {
-                        // Get the title and description elements
-                        const titleElement = menuItemDiv.querySelector('h3');
-                        const descriptionElement = menuItemDiv.querySelector('p.text-xs');
-                        const priceElement = menuItemDiv.querySelector('p.text-gray-700');
-                        
-                        if (data.available) {
-                            // Available: restore normal styling
-                            menuItemDiv.style.opacity = '1';
-                            if (titleElement) {
-                                titleElement.style.textDecoration = 'none';
-                                titleElement.style.color = '';
-                            }
-                            if (descriptionElement) {
-                                descriptionElement.style.textDecoration = 'none';
-                                descriptionElement.style.color = '';
-                            }
-                            if (priceElement) {
-                                // Restore original price from data attribute
-                                const originalPrice = menuItemDiv.getAttribute('data-item-price');
-                                priceElement.textContent = `$${originalPrice}`;
-                                priceElement.style.color = '';
-                            }
-                        } else {
-                            // Not available: apply strikethrough and gray out
-                            menuItemDiv.style.opacity = '0.6';
-                            if (titleElement) {
-                                titleElement.style.textDecoration = 'line-through';
-                                titleElement.style.color = '#999';
-                            }
-                            if (descriptionElement) {
-                                descriptionElement.style.textDecoration = 'line-through';
-                                descriptionElement.style.color = '#999';
-                            }
-                            if (priceElement) {
-                                priceElement.textContent = 'No disponible';
-                                priceElement.style.color = '#ef4444'; // Red color for unavailable
-                            }
-                        }
+                }
+                
+                // Get the title and description elements
+                const titleElement = menuItemDiv.querySelector('h3');
+                const descriptionElement = menuItemDiv.querySelector('p.text-xs');
+                const priceElement = menuItemDiv.querySelector('p.text-gray-700');
+                
+                if (data.available) {
+                    // Available: restore normal styling
+                    menuItemDiv.style.opacity = '1';
+                    if (titleElement) {
+                        titleElement.style.textDecoration = 'none';
+                        titleElement.style.color = '';
+                    }
+                    if (descriptionElement) {
+                        descriptionElement.style.textDecoration = 'none';
+                        descriptionElement.style.color = '';
+                    }
+                    if (priceElement) {
+                        // Restore original price from data attribute
+                        const originalPrice = menuItemDiv.getAttribute('data-item-price');
+                        priceElement.textContent = `$${originalPrice}`;
+                        priceElement.style.color = '';
+                    }
+                } else {
+                    // Not available: apply strikethrough and gray out
+                    menuItemDiv.style.opacity = '0.6';
+                    if (titleElement) {
+                        titleElement.style.textDecoration = 'line-through';
+                        titleElement.style.color = '#999';
+                    }
+                    if (descriptionElement) {
+                        descriptionElement.style.textDecoration = 'line-through';
+                        descriptionElement.style.color = '#999';
+                    }
+                    if (priceElement) {
+                        priceElement.textContent = 'No disponible';
+                        priceElement.style.color = '#ef4444'; // Red color for unavailable
                     }
                 }
             });

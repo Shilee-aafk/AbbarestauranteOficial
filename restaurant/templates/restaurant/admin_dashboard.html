@@ -762,7 +762,13 @@
                         <td class="p-3">${item.name}</td>
                         <td class="p-3">$${item.price.toFixed(0)}</td>
                         <td class="p-3">${item.category}</td>
-                        <td class="p-3">${item.available ? 'Sí' : 'No'}</td>
+                        <td class="p-3">
+                            <button class="px-3 py-1 rounded-full text-sm font-medium transition-colors ${item.available ? 'bg-green-100 text-green-800 hover:bg-red-100 hover:text-red-800' : 'bg-red-100 text-red-800 hover:bg-green-100 hover:text-green-800'}" 
+                                    onclick="toggleItemAvailabilityQuick(${item.id}, ${!item.available})" 
+                                    title="Click para cambiar disponibilidad">
+                                ${item.available ? 'Disponible' : 'No Disponible'}
+                            </button>
+                        </td>
                         <td class="p-3">
                             <div class="flex items-center space-x-2">
                                 <button class="text-gray-500 hover:text-yellow-600 p-1" onclick="editMenuItem(${item.id})" title="Editar"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z"></path></svg></button>
@@ -770,6 +776,18 @@
                             </div>
                         </td>
                     </tr>`;
+            }
+
+            // Toggle rápido de disponibilidad SIN abrir modal
+            async function toggleItemAvailabilityQuick(itemId, newAvailability) {
+                try {
+                    await apiRequest(`/restaurant/api/menu-items/${itemId}/`, 'PATCH', {
+                        available: newAvailability
+                    });
+                    // La actualización de la UI se manejará vía Pusher
+                } catch (error) {
+                    alert(`Error al cambiar disponibilidad: ${error.message}`);
+                }
             }
 
             function updateMenuItemInUI(item, action) {
