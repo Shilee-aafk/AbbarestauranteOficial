@@ -1,4 +1,5 @@
 {% load static %}
+{% load menu_tags %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -9,12 +10,18 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Font Awesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
             font-family: 'Roboto', sans-serif;
         }
         h1, h2 {
             font-family: 'Playfair Display', serif;
+        }
+        .category-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
         }
     </style>
 </head>
@@ -35,13 +42,18 @@
 
             {% for category, items in grouped_menu.items %}
             <section>
-                <!-- Título de la Categoría -->
-                <div class="relative text-center mb-6">
+                <!-- Título de la Categoría con Icono -->
+                <div class="relative text-center mb-8">
                     <div class="absolute inset-0 flex items-center" aria-hidden="true">
                         <div class="w-full border-t border-amber-200"></div>
                     </div>
-                    <div class="relative flex justify-center">
-                        <h2 class="bg-amber-50 px-4 text-2xl sm:text-3xl font-bold text-amber-800">{{ category }}</h2>
+                    <div class="relative flex flex-col items-center">
+                        {% with icon=category_icons|get_item:category.lower %}
+                            <div class="category-icon text-amber-800 mb-2">
+                                <i class="{{ icon }}"></i>
+                            </div>
+                        {% endwith %}
+                        <h2 class="bg-amber-50 px-4 text-2xl sm:text-3xl font-bold text-amber-800 uppercase tracking-wide">{{ category }}</h2>
                     </div>
                 </div>
 
