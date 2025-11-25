@@ -256,9 +256,9 @@ def public_menu_view(request):
     Vista pública para mostrar el menú del restaurante, ideal para un código QR.
     No requiere autenticación.
     """
-    # Obtener solo los items disponibles y ordenarlos por categoría
+    # Obtener TODOS los items (disponibles e indisponibles) y ordenarlos por categoría
     menu_url = request.build_absolute_uri()
-    menu_items = MenuItem.objects.filter(available=True).order_by('category', 'name')
+    menu_items = MenuItem.objects.all().order_by('category', 'name')
 
     # Agrupar items por categoría en un diccionario
     grouped_menu = {}
