@@ -190,7 +190,8 @@ def cook_dashboard(request):
             'items': [{
                 'name': item.menu_item.name,
                 'quantity': item.quantity,
-                'note': item.note or ''
+                'note': item.note or '',
+                'is_prepared': item.is_prepared  # Agregar estado de preparado
             } for item in order.orderitem_set.all()]
         })
 
@@ -387,17 +388,38 @@ def api_waiter_order_detail(request, pk):
         items_data = data.get('items', [])
 
         with transaction.atomic(): # Add transaction for atomicity
-            # Delete old items and create new ones (simpler than diffing)
+            # Obtener items viejos antes de actualizar
+            old_items = set(order.orderitem_set.values_list('menu_item_id', flat=True))
+            new_item_ids = set(item_data['id'] for item_data in items_data)
+            
+            # Identificar items que están siendo agregados (no estaban antes)
+            added_items = new_item_ids - old_items
+            
+            # Si el pedido estaba "ready" y se agregan items nuevos, cambiar a "preparing"
+            if order.status == 'ready' and added_items:
+                # Marcar items viejos como preparados
+                order.orderitem_set.filter(menu_item_id__in=old_items).update(is_prepared=True)
+                # Cambiar estado a preparing
+                order.status = 'preparing'
+            
+            # Delete old items and create new ones
             order.orderitem_set.all().delete()
 
             subtotal = decimal.Decimal('0.00')
             for item_data in items_data:
                 menu_item = MenuItem.objects.get(id=item_data['id'])
-                OrderItem.objects.create(order=order, menu_item=menu_item, quantity=item_data['quantity'], note=item_data.get('note', ''))
+                # Los items nuevos NO están preparados (is_prepared=False por defecto)
+                OrderItem.objects.create(
+                    order=order, 
+                    menu_item=menu_item, 
+                    quantity=item_data['quantity'], 
+                    note=item_data.get('note', ''),
+                    is_prepared=False
+                )
                 subtotal += menu_item.price * item_data['quantity']
             
             order.total_amount = subtotal + order.tip_amount # Recalcular total_amount con el nuevo subtotal
-            order.save(update_fields=['total_amount'])  # Only update total_amount to avoid unnecessary signals
+            order.save(update_fields=['total_amount', 'status'])  # Actualizar status si fue modificado
             return JsonResponse({'success': True, 'order_id': order.id})
 
 @csrf_exempt

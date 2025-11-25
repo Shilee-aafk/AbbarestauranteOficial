@@ -150,10 +150,13 @@ PUSHER_CLUSTER = os.environ.get('PUSHER_CLUSTER', '')
 # En producción, ssl=True es crucial para usar wss://
 PUSHER_SSL = not DEBUG
 
-pusher_client = pusher.Pusher(
-  app_id=PUSHER_APP_ID,
-  key=PUSHER_KEY,
-  secret=PUSHER_SECRET,
-  cluster=PUSHER_CLUSTER,
-  ssl=PUSHER_SSL
-)
+# Solo crear cliente Pusher si todas las variables están configuradas
+pusher_client = None
+if all([PUSHER_APP_ID, PUSHER_KEY, PUSHER_SECRET, PUSHER_CLUSTER]):
+    pusher_client = pusher.Pusher(
+      app_id=PUSHER_APP_ID,
+      key=PUSHER_KEY,
+      secret=PUSHER_SECRET,
+      cluster=PUSHER_CLUSTER,
+      ssl=PUSHER_SSL
+    )

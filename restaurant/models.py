@@ -63,6 +63,7 @@ class OrderItem(models.Model):
     menu_item = models.ForeignKey(MenuItem, on_delete=models.CASCADE)
     quantity = models.IntegerField()
     note = models.TextField(blank=True, null=True)
+    is_prepared = models.BooleanField(default=False, help_text="Marca si este item ya fue preparado/completado")
 
     def __str__(self):
         return f"{self.quantity} x {self.menu_item.name}"
