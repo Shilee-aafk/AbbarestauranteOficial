@@ -255,20 +255,6 @@ def public_menu_view(request):
     Vista pública para mostrar el menú del restaurante, ideal para un código QR.
     No requiere autenticación.
     """
-    # Mapeo de categorías a iconos de Font Awesome (outline/vacíos)
-    category_icons = {
-        'pichangas': 'far fa-bowl-food',  # Bol de comida vacío
-        'colaciones': 'far fa-leaf',  # Hoja vacía
-        'chorrillanas': 'far fa-fire',  # Fuego vacío
-        'sandwich': 'far fa-bread-slice',  # Pan vacío
-        'hamburguesas': 'far fa-burger',  # Hamburguesa vacía
-        'completos': 'far fa-hot-dog',  # Hot dog vacío
-        'pizza': 'far fa-pizza-slice',  # Pizza vacía
-        'bebidas': 'far fa-bottle-water',  # Botella vacía
-        'postres': 'far fa-ice-cream',  # Helado vacío
-        'otros': 'far fa-utensils'  # Por defecto vacío
-    }
-    
     # Obtener solo los items disponibles y ordenarlos por categoría
     menu_url = request.build_absolute_uri()
     menu_items = MenuItem.objects.filter(available=True).order_by('category', 'name')
@@ -285,7 +271,6 @@ def public_menu_view(request):
 
     return render(request, 'restaurant/public_menu.html', {
         'grouped_menu': grouped_menu,
-        'category_icons': category_icons,
         # Puedes añadir más contexto si lo necesitas, como el nombre del restaurante
         'restaurant_name': 'Restaurante AbbaHotel',
         'menu_url': menu_url

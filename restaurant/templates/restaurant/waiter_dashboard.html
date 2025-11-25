@@ -1452,8 +1452,8 @@ function removeReadyOrder(orderId) {
             garzonChannel.bind('nuevo-pedido', (data) => {
                 console.log('Nuevo pedido recibido:', data.order);
                 // Cuando se crea un nuevo pedido (desde cualquier garzón), agregarlo al monitor
+                // Pero NO mostrar toast porque el garzón que lo creó ya vio su confirmación
                 handleOrderUpdate(data.order);
-                showToast(`Nuevo pedido creado: ${data.order.identifier}`, 'info');
             });
 
             garzonChannel.bind('actualizacion-estado', (data) => {
