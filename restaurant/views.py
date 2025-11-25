@@ -181,18 +181,23 @@ def cook_dashboard(request):
     # Preparar datos JSON para el frontend
     orders_data = []
     for order in orders:
+        items_list = []
+        for item in order.orderitem_set.all():
+            if item.menu_item:  # Validar que menu_item no sea nulo
+                items_list.append({
+                    'name': item.menu_item.name,
+                    'quantity': item.quantity,
+                    'note': item.note or '',
+                    'is_prepared': getattr(item, 'is_prepared', False)  # Usar getattr para manejo seguro
+                })
+        
         orders_data.append({
             'id': order.id,
             'status': order.status,
             'identifier': order.room_number or order.client_identifier,
             'user_username': order.user.username,
-            'created_at': order.created_at.isoformat(), # No need to change, total is not here
-            'items': [{
-                'name': item.menu_item.name,
-                'quantity': item.quantity,
-                'note': item.note or '',
-                'is_prepared': item.is_prepared  # Agregar estado de preparado
-            } for item in order.orderitem_set.all()]
+            'created_at': order.created_at.isoformat(),
+            'items': items_list
         })
 
     return render(request, 'restaurant/cook_dashboard.html', {
@@ -208,48 +213,58 @@ def waiter_dashboard(request):
     import json
     from django.utils import timezone
 
-    # --- Datos para la toma de pedidos ---
-    menu_items = MenuItem.objects.filter(available=True)
-    # Obtenemos todas las categorías, las normalizamos en Python y eliminamos duplicados.
-    # Esto asegura que 'Pizzas' y 'pizzas' se traten como una sola categoría en los filtros.
-    all_categories = menu_items.values_list('category', flat=True)
-    normalized_categories = {cat.capitalize() for cat in all_categories}
-    categories = sorted(list(normalized_categories))
-    menu_items_json = json.dumps([{'id': item.id, 'name': item.name, 'price': float(item.price)} for item in menu_items], cls=DecimalEncoder)
+    try:
+        # --- Datos para la toma de pedidos ---
+        menu_items = MenuItem.objects.filter(available=True)
+        # Obtenemos todas las categorías, las normalizamos en Python y eliminamos duplicados.
+        # Esto asegura que 'Pizzas' y 'pizzas' se traten como una sola categoría en los filtros.
+        all_categories = menu_items.values_list('category', flat=True)
+        normalized_categories = {cat.capitalize() for cat in all_categories}
+        categories = sorted(list(normalized_categories))
+        menu_items_json = json.dumps([{'id': item.id, 'name': item.name, 'price': float(item.price)} for item in menu_items], cls=DecimalEncoder)
 
-    # --- Datos para el monitor de pedidos (carga inicial) ---
-    # Usamos prefetch_related para cargar los items de una vez y evitar N+1 queries
-    orders_for_monitor = Order.objects.filter(
-        status__in=['pending', 'preparing', 'ready', 'served']
-    ).prefetch_related('orderitem_set__menu_item').order_by('created_at')
+        # --- Datos para el monitor de pedidos (carga inicial) ---
+        # Usamos prefetch_related para cargar los items de una vez y evitar N+1 queries
+        orders_for_monitor = Order.objects.filter(
+            status__in=['pending', 'preparing', 'ready', 'served']
+        ).prefetch_related('orderitem_set__menu_item').order_by('created_at')
 
+        initial_orders_data = []
+        for order in orders_for_monitor:
+            items_list = []
+            for item in order.orderitem_set.all():
+                if item.menu_item:  # Validar que menu_item no sea nulo
+                    items_list.append({
+                        'name': item.menu_item.name,
+                        'quantity': item.quantity,
+                    })
+            
+            initial_orders_data.append({
+                'id': order.id,
+                'status': order.status,
+                'status_display': order.get_status_display(),
+                'status_class': order.status_class,
+                'identifier': order.room_number or order.client_identifier,
+                'total': float(order.total_amount),
+                'items': items_list
+            })
 
-    initial_orders_data = []
-    for order in orders_for_monitor:
-        initial_orders_data.append({
-            'id': order.id,
-            'status': order.status,
-            'status_display': order.get_status_display(),
-            'status_class': order.status_class,
-            'identifier': order.room_number or order.client_identifier, # No need to change, total is not here
-            'total': float(order.total_amount), # Añadir el total para que el monitor lo renderice
-            'items': [{
-                'name': item.menu_item.name,
-                'quantity': item.quantity,
-            } for item in order.orderitem_set.all()]
+        initial_orders_json = json.dumps(initial_orders_data, cls=DecimalEncoder)
+
+        user_role = request.user.groups.first().name if request.user.groups.exists() else None
+
+        return render(request, 'restaurant/waiter_dashboard.html', {
+            'menu_items': menu_items,
+            'categories': categories,
+            'menu_items_json': menu_items_json,
+            'initial_orders_json': initial_orders_json,
+            'user_role': user_role,
         })
-
-    initial_orders_json = json.dumps(initial_orders_data, cls=DecimalEncoder)
-
-    user_role = request.user.groups.first().name if request.user.groups.exists() else None
-
-    return render(request, 'restaurant/waiter_dashboard.html', {
-        'menu_items': menu_items,
-        'categories': categories,
-        'menu_items_json': menu_items_json,
-        'initial_orders_json': initial_orders_json,
-        'user_role': user_role,
-    })
+    except Exception as e:
+        import traceback
+        print(f"Error en waiter_dashboard: {str(e)}")
+        print(traceback.format_exc())
+        raise
 
 def public_menu_view(request):
     """

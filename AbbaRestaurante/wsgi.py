@@ -18,6 +18,13 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'AbbaRestaurante.settings')
 # Initialize Django
 django.setup()
 
+# Run auto migrations on startup
+try:
+    from .auto_migrate import run_migrations_if_needed
+    run_migrations_if_needed()
+except Exception as e:
+    print(f"Warning: Auto-migration failed: {e}")
+
 application = get_wsgi_application()
 
 # Create default users and menu items on startup
