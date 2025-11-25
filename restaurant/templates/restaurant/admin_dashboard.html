@@ -518,28 +518,110 @@
         /* eslint-disable */
         const csrfToken = '{{ csrf_token }}';
         
+        // --- HELPER FUNCTIONS (Global Scope) ---
+        async function apiRequest(url, method = 'GET', body = null) {
+            const options = {
+                method,
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+            };
+            if (body) options.body = JSON.stringify(body);
+            
+            const response = await fetch(url, options);
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ error: 'Error de red o respuesta no válida.' }));
+                throw new Error(errorData.error || `Error ${response.status}`);
+            }
+            return response.status === 204 ? null : response.json();
+        }
+        
+        // --- FUNCIONES GLOBALES (para onclick inline) ---
+        async function toggleItemAvailabilityQuick(itemId, newAvailability) {
+            try {
+                console.log(`Toggling item ${itemId} to available=${newAvailability}`);
+                const response = await apiRequest(`/restaurant/api/menu-items/${itemId}/`, 'PATCH', {
+                    available: newAvailability
+                });
+                console.log('PATCH response:', response);
+                
+                // Actualizar la tabla localmente de inmediato (no esperar a Pusher)
+                if (response) {
+                    const row = document.querySelector(`#menu-table tr[data-item-id="${itemId}"]`);
+                    if (row) {
+                        // Re-render la fila con los datos actualizados
+                        row.innerHTML = getMenuItemRowHTML(response).match(/<td.*<\/td>/gs).join('');
+                    }
+                }
+                
+                // La actualización vía Pusher también llegará momentos después para sincronización
+            } catch (error) {
+                console.error('Error al cambiar disponibilidad:', error);
+                alert(`Error al cambiar disponibilidad: ${error.message}`);
+            }
+        }
+
+        function getMenuItemRowHTML(item) {
+            return `
+                <tr data-item-id="${item.id}" class="border-b border-gray-100">
+                    <td class="p-3">${item.name}</td>
+                    <td class="p-3">$${item.price.toFixed(0)}</td>
+                    <td class="p-3">${item.category}</td>
+                    <td class="p-3">
+                        <button class="px-3 py-1 rounded-full text-sm font-medium transition-colors ${item.available ? 'bg-green-100 text-green-800 hover:bg-red-100 hover:text-red-800' : 'bg-red-100 text-red-800 hover:bg-green-100 hover:text-green-800'}" 
+                                onclick="toggleItemAvailabilityQuick(${item.id}, ${!item.available})" 
+                                title="Click para cambiar disponibilidad">
+                            ${item.available ? 'Disponible' : 'No Disponible'}
+                        </button>
+                    </td>
+                    <td class="p-3">
+                        <div class="flex items-center space-x-2">
+                            <button class="text-gray-500 hover:text-yellow-600 p-1" onclick="editMenuItem(${item.id})" title="Editar"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z"></path></svg></button>
+                            <button class="text-gray-500 hover:text-red-600 p-1" onclick="deleteMenuItem(${item.id})" title="Eliminar"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                        </div>
+                    </td>
+                </tr>`;
+        }
+
+        function editMenuItem(itemId) {
+            const row = document.querySelector(`#menu-table tr[data-item-id="${itemId}"]`);
+            if (row) {
+                const cells = row.querySelectorAll('td');
+                document.getElementById('menu-item-id').value = itemId;
+                document.getElementById('menu-name').value = cells[0].textContent;
+                document.getElementById('menu-description').value = '';  // Esto debería venir del servidor
+                document.getElementById('menu-price').value = cells[1].textContent.replace('$', '');
+                document.getElementById('menu-category').value = cells[2].textContent;
+                document.getElementById('menu-available').checked = cells[3].textContent.includes('Disponible');
+                document.getElementById('menu-form-title').textContent = 'Editar Plato';
+                document.getElementById('menu-form-modal').classList.remove('hidden');
+            }
+        }
+
+        function deleteMenuItem(itemId) {
+            if (confirm('¿Estás seguro de que deseas eliminar este plato?')) {
+                apiRequest(`/restaurant/api/menu-items/${itemId}/`, 'DELETE')
+                    .then(() => {
+                        document.querySelector(`#menu-table tr[data-item-id="${itemId}"]`)?.remove();
+                    })
+                    .catch(err => alert(`Error al eliminar: ${err.message}`));
+            }
+        }
+
+        function editUser(userId) {
+            const row = document.querySelector(`#users-table tr[data-user-id="${userId}"]`);
+            if (row) {
+                const cells = row.querySelectorAll('td');
+                document.getElementById('user-edit-id').value = userId;
+                document.getElementById('user-edit-role').value = cells[2].textContent;
+                document.getElementById('user-edit-modal').classList.remove('hidden');
+            }
+        }
+        
         document.addEventListener('DOMContentLoaded', () => {
             const appState = {
                 activeSection: 'dashboard',
                 loadedSections: new Set(), // Para no recargar datos innecesariamente
                 charts: {} // Para almacenar instancias de Chart.js
             };
-
-            // --- HELPERS ---
-            async function apiRequest(url, method = 'GET', body = null) {
-                const options = {
-                    method,
-                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
-                };
-                if (body) options.body = JSON.stringify(body);
-                
-                const response = await fetch(url, options);
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({ error: 'Error de red o respuesta no válida.' }));
-                    throw new Error(errorData.error || `Error ${response.status}`);
-                }
-                return response.status === 204 ? null : response.json();
-            }
 
             // --- UI & NAVIGATION ---
             function showSection(sectionId) {
@@ -753,52 +835,6 @@
                     tbody.innerHTML = items.map(item => getMenuItemRowHTML(item)).join('');
                 } catch (error) {
                     console.error('Failed to load menu items:', error);
-                }
-            }
-
-            function getMenuItemRowHTML(item) {
-                return `
-                    <tr data-item-id="${item.id}" class="border-b border-gray-100">
-                        <td class="p-3">${item.name}</td>
-                        <td class="p-3">$${item.price.toFixed(0)}</td>
-                        <td class="p-3">${item.category}</td>
-                        <td class="p-3">
-                            <button class="px-3 py-1 rounded-full text-sm font-medium transition-colors ${item.available ? 'bg-green-100 text-green-800 hover:bg-red-100 hover:text-red-800' : 'bg-red-100 text-red-800 hover:bg-green-100 hover:text-green-800'}" 
-                                    onclick="toggleItemAvailabilityQuick(${item.id}, ${!item.available})" 
-                                    title="Click para cambiar disponibilidad">
-                                ${item.available ? 'Disponible' : 'No Disponible'}
-                            </button>
-                        </td>
-                        <td class="p-3">
-                            <div class="flex items-center space-x-2">
-                                <button class="text-gray-500 hover:text-yellow-600 p-1" onclick="editMenuItem(${item.id})" title="Editar"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z"></path></svg></button>
-                                <button class="text-gray-500 hover:text-red-600 p-1" onclick="deleteMenuItem(${item.id})" title="Eliminar"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
-                            </div>
-                        </td>
-                    </tr>`;
-            }
-
-            // Toggle rápido de disponibilidad SIN abrir modal
-            async function toggleItemAvailabilityQuick(itemId, newAvailability) {
-                try {
-                    console.log(`Toggling item ${itemId} to available=${newAvailability}`);
-                    const response = await apiRequest(`/restaurant/api/menu-items/${itemId}/`, 'PATCH', {
-                        available: newAvailability
-                    });
-                    console.log('PATCH response:', response);
-                    
-                    // Actualizar la tabla localmente de inmediato (no esperar a Pusher)
-                    if (response) {
-                        const row = document.querySelector(`#menu-table tr[data-item-id="${itemId}"]`);
-                        if (row) {
-                            row.innerHTML = getMenuItemRowHTML(response).match(/<td.*<\/td>/gs).join('');
-                        }
-                    }
-                    
-                    // La actualización vía Pusher también llegará momentos después para sincronización
-                } catch (error) {
-                    console.error('Error al cambiar disponibilidad:', error);
-                    alert(`Error al cambiar disponibilidad: ${error.message}`);
                 }
             }
 
