@@ -255,17 +255,17 @@ def public_menu_view(request):
     Vista pública para mostrar el menú del restaurante, ideal para un código QR.
     No requiere autenticación.
     """
-    # Mapeo de categorías a iconos de Font Awesome
+    # Mapeo de categorías a iconos de Font Awesome (más estilizados y específicos)
     category_icons = {
-        'pichangas': 'fas fa-user-friends',  # Grupo de personas
-        'colaciones': 'fas fa-utensils',  # Cubiertos
-        'chorrillanas': 'fas fa-hamburger',  # Hamburguesa
-        'sandwich': 'fas fa-sandwich',  # Sandwich
-        'hamburguesas': 'fas fa-hamburger',  # Hamburguesa
-        'completos': 'fas fa-hotdog',  # Hot dog
+        'pichangas': 'fas fa-bowl-food',  # Bol de comida
+        'colaciones': 'fas fa-leaf',  # Hoja/vegetal
+        'chorrillanas': 'fas fa-fire',  # Fuego/caliente
+        'sandwich': 'fas fa-bread-slice',  # Pan/sandwich
+        'hamburguesas': 'fas fa-burger',  # Hamburguesa específica
+        'completos': 'fas fa-hot-dog',  # Hot dog
         'pizza': 'fas fa-pizza-slice',  # Pizza
-        'bebidas': 'fas fa-wine-glass',  # Copa/bebida
-        'postres': 'fas fa-cake-candles',  # Pastel
+        'bebidas': 'fas fa-bottle-water',  # Botella/bebida
+        'postres': 'fas fa-ice-cream',  # Helado/postre
         'otros': 'fas fa-utensils'  # Por defecto
     }
     
