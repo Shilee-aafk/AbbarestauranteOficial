@@ -109,7 +109,7 @@ if DEBUG and not (IS_RENDER or IS_KOYEB):
             'ENGINE': 'django.db.backends.postgresql',
             'NAME': 'postgres',
             'USER': 'postgres',
-            'PASSWORD': 'Camilo885',  # Tu contraseña de Supabase
+            'PASSWORD': 'Camilo885',
             'HOST': 'db.fudssspvlzkfxhrjnqeh.supabase.co',
             'PORT': '5432',
         }

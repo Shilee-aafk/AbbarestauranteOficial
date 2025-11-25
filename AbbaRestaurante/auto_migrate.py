@@ -18,8 +18,11 @@ def run_migrations_if_needed():
         IS_KOYEB = 'KOYEB_PUBLIC_DOMAIN' in os.environ
         IS_PYTHONANYWHERE = 'PYTHONANYWHERE_DOMAIN' in os.environ
         
-        # Solo ejecutar en producción
-        if not (IS_RENDER or IS_KOYEB or IS_PYTHONANYWHERE):
+        # Ejecutar SIEMPRE que estemos en un entorno cloud
+        # No importa si estamos en desarrollo local o producción
+        should_migrate = IS_RENDER or IS_KOYEB or IS_PYTHONANYWHERE
+        
+        if not should_migrate:
             return
         
         # No ejecutar si se especifica lo contrario
@@ -39,22 +42,9 @@ def run_migrations_if_needed():
             os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'AbbaRestaurante.settings')
             django.setup()
         
-        # Verificar si la tabla de migraciones existe
+        # Ejecutar migraciones sin verificar primero
         try:
-            recorder = MigrationRecorder(connection)
-            applied = list(recorder.applied_migrations())
-            
-            if applied:
-                print(f"✅ Migrations already applied ({len(applied)} migrations)")
-                return
-            else:
-                print("⚠️ No migrations applied yet, running migrations...")
-        except Exception as e:
-            print(f"⚠️ Could not check migrations: {e}")
-            # Intentar ejecutar migraciones de todas formas
-        
-        # Ejecutar migraciones
-        try:
+            print("⚠️ Running migrations...")
             call_command('migrate', verbosity=2, interactive=False)
             print("✅ Migrations completed successfully")
         except Exception as e:

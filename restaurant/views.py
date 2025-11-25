@@ -174,38 +174,48 @@ def cook_dashboard(request):
     import json
     from django.utils import timezone
 
-    # Consulta optimizada para obtener pedidos y sus items
-    # Ahora que total_amount se almacena directamente, no necesitamos annotate aquí.
-    orders = Order.objects.filter(status__in=['pending', 'preparing']).select_related('user').prefetch_related('orderitem_set__menu_item').order_by('created_at')
+    try:
+        # Consulta optimizada para obtener pedidos y sus items
+        # Ahora que total_amount se almacena directamente, no necesitamos annotate aquí.
+        orders = Order.objects.filter(
+            status__in=['pending', 'preparing']
+        ).select_related('user').prefetch_related(
+            'orderitem_set__menu_item'
+        ).order_by('created_at')
 
-    # Preparar datos JSON para el frontend
-    orders_data = []
-    for order in orders:
-        items_list = []
-        for item in order.orderitem_set.all():
-            if item.menu_item:  # Validar que menu_item no sea nulo
-                items_list.append({
-                    'name': item.menu_item.name,
-                    'quantity': item.quantity,
-                    'note': item.note or '',
-                    'is_prepared': getattr(item, 'is_prepared', False)  # Usar getattr para manejo seguro
-                })
-        
-        orders_data.append({
-            'id': order.id,
-            'status': order.status,
-            'identifier': order.room_number or order.client_identifier,
-            'user_username': order.user.username,
-            'created_at': order.created_at.isoformat(),
-            'items': items_list
+        # Preparar datos JSON para el frontend
+        orders_data = []
+        for order in orders:
+            items_list = []
+            for item in order.orderitem_set.all():
+                if item.menu_item:  # Validar que menu_item no sea nulo
+                    items_list.append({
+                        'name': item.menu_item.name,
+                        'quantity': item.quantity,
+                        'note': item.note or '',
+                        'is_prepared': getattr(item, 'is_prepared', False)  # Usar getattr para manejo seguro
+                    })
+            
+            orders_data.append({
+                'id': order.id,
+                'status': order.status,
+                'identifier': order.room_number or order.client_identifier,
+                'user_username': order.user.username,
+                'created_at': order.created_at.isoformat(),
+                'items': items_list
+            })
+
+        return render(request, 'restaurant/cook_dashboard.html', {
+            'orders': orders,
+            'orders_json': json.dumps(orders_data, cls=DecimalEncoder),
+            'PUSHER_KEY': settings.PUSHER_KEY,
+            'PUSHER_CLUSTER': settings.PUSHER_CLUSTER,
         })
-
-    return render(request, 'restaurant/cook_dashboard.html', {
-        'orders': orders,
-        'orders_json': json.dumps(orders_data, cls=DecimalEncoder),
-        'PUSHER_KEY': settings.PUSHER_KEY,
-        'PUSHER_CLUSTER': settings.PUSHER_CLUSTER,
-    })
+    except Exception as e:
+        import traceback
+        print(f"Error en cook_dashboard: {str(e)}")
+        print(traceback.format_exc())
+        raise
 
 @login_required
 @user_passes_test(lambda u: u.groups.filter(name='Garzón').exists())
@@ -224,10 +234,12 @@ def waiter_dashboard(request):
         menu_items_json = json.dumps([{'id': item.id, 'name': item.name, 'price': float(item.price)} for item in menu_items], cls=DecimalEncoder)
 
         # --- Datos para el monitor de pedidos (carga inicial) ---
-        # Usamos prefetch_related para cargar los items de una vez y evitar N+1 queries
+        # Usar only() para evitar campos que pueden no existir en la BD (como is_prepared)
         orders_for_monitor = Order.objects.filter(
             status__in=['pending', 'preparing', 'ready', 'served']
-        ).prefetch_related('orderitem_set__menu_item').order_by('created_at')
+        ).select_related('user').prefetch_related(
+            'orderitem_set__menu_item'
+        ).order_by('created_at')
 
         initial_orders_data = []
         for order in orders_for_monitor:
