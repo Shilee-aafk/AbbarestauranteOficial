@@ -66,17 +66,9 @@ def order_status_changed(sender, instance, created, **kwargs):
         # Si update_fields es None (guardado completo) o contiene 'status', enviar notificación
         if update_fields is None or 'status' in update_fields:
             try:
-                # 2. Notificar a los roles apropiados sobre una actualización general.
-                # - Cocina: siempre se notifica (preparan los platos)
-                # - Garzón: siempre se notifica (necesita ver cambios de estado)
-                # - Admin: solo se notifica para ciertos estados
-                pusher_client.trigger(['cocina-channel', 'garzon-channel'], 'actualizacion-estado', {
-                    'order': order_data
-                })
-
-                # 3. Notificaciones ESPECÍFICAS por estado:
+                # 3. Notificaciones ESPECÍFICAS por estado (tienen prioridad):
                 if instance.status == 'ready':
-                    # Notificar al garzón que el pedido está listo
+                    # Solo enviar pedido-listo, sin actualizacion-estado redundante
                     pusher_client.trigger(['garzon-channel'], 'pedido-listo', {
                         'message': f"¡El pedido para '{instance.client_identifier}' está listo!",
                         'order': order_data
@@ -93,6 +85,12 @@ def order_status_changed(sender, instance, created, **kwargs):
                     # Notificar a recepción que se pagó
                     pusher_client.trigger(['recepcion-channel'], 'pedido-pagado', {
                         'message': f"Pedido pagado: {order_data['client_identifier']}",
+                        'order': order_data
+                    })
+                
+                else:
+                    # Para otros estados (pending, preparing, cancelled), enviar actualizacion-estado
+                    pusher_client.trigger(['cocina-channel', 'garzon-channel'], 'actualizacion-estado', {
                         'order': order_data
                     })
             except Exception as e:
