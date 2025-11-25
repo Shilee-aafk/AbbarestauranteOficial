@@ -255,18 +255,18 @@ def public_menu_view(request):
     Vista pública para mostrar el menú del restaurante, ideal para un código QR.
     No requiere autenticación.
     """
-    # Mapeo de categorías a iconos de Font Awesome (más estilizados y específicos)
+    # Mapeo de categorías a iconos de Font Awesome (outline/vacíos)
     category_icons = {
-        'pichangas': 'fas fa-bowl-food',  # Bol de comida
-        'colaciones': 'fas fa-leaf',  # Hoja/vegetal
-        'chorrillanas': 'fas fa-fire',  # Fuego/caliente
-        'sandwich': 'fas fa-bread-slice',  # Pan/sandwich
-        'hamburguesas': 'fas fa-burger',  # Hamburguesa específica
-        'completos': 'fas fa-hot-dog',  # Hot dog
-        'pizza': 'fas fa-pizza-slice',  # Pizza
-        'bebidas': 'fas fa-bottle-water',  # Botella/bebida
-        'postres': 'fas fa-ice-cream',  # Helado/postre
-        'otros': 'fas fa-utensils'  # Por defecto
+        'pichangas': 'far fa-bowl-food',  # Bol de comida vacío
+        'colaciones': 'far fa-leaf',  # Hoja vacía
+        'chorrillanas': 'far fa-fire',  # Fuego vacío
+        'sandwich': 'far fa-bread-slice',  # Pan vacío
+        'hamburguesas': 'far fa-burger',  # Hamburguesa vacía
+        'completos': 'far fa-hot-dog',  # Hot dog vacío
+        'pizza': 'far fa-pizza-slice',  # Pizza vacía
+        'bebidas': 'far fa-bottle-water',  # Botella vacía
+        'postres': 'far fa-ice-cream',  # Helado vacío
+        'otros': 'far fa-utensils'  # Por defecto vacío
     }
     
     # Obtener solo los items disponibles y ordenarlos por categoría
