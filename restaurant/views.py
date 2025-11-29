@@ -133,7 +133,8 @@ def admin_dashboard(request):
         'description': m.description,
         'price': float(m.price),
         'category': m.category,
-        'available': m.available
+        'available': m.available,
+        'image_url': m.image.url if m.image else None
     } for m in menu_items], cls=DecimalEncoder)
     return render(request, 'restaurant/admin_dashboard.html', {
         'orders': orders,
@@ -242,7 +243,13 @@ def waiter_dashboard(request):
         all_categories = menu_items.values_list('category', flat=True)
         normalized_categories = {cat.capitalize() for cat in all_categories}
         categories = sorted(list(normalized_categories))
-        menu_items_json = json.dumps([{'id': item.id, 'name': item.name, 'price': float(item.price)} for item in menu_items], cls=DecimalEncoder)
+        menu_items_json = json.dumps([{
+            'id': item.id, 
+            'name': item.name, 
+            'price': float(item.price),
+            'image_url': item.image.url if item.image else None,
+            'description': item.description
+        } for item in menu_items], cls=DecimalEncoder)
 
         # --- Datos para el monitor de pedidos (carga inicial) ---
         # Usar only() para evitar campos que pueden no existir en la BD (como is_prepared)

@@ -48,20 +48,30 @@
                 <!-- Lista de Platos -->
                 <div class="space-y-6">
                     {% for item in items %}
-                    <div class="flex flex-col {% if not item.available %}opacity-60{% endif %}">
-                        <div class="flex justify-between items-baseline">
-                            <h3 class="text-lg font-semibold {% if not item.available %}text-gray-400 line-through{% else %}text-gray-900{% endif %}">{{ item.name }}</h3>
-                            <p class="text-lg font-medium {% if not item.available %}text-gray-400 line-through{% else %}text-gray-800{% endif %} ml-4">
-                                {% if item.available %}
-                                    ${{ item.price|floatformat:0 }}
-                                {% else %}
-                                    No disponible
-                                {% endif %}
-                            </p>
+                    <div class="flex flex-col gap-3 {% if not item.available %}opacity-60{% endif %}">
+                        <!-- Imagen del plato (si existe) -->
+                        {% if item.image %}
+                        <div class="overflow-hidden rounded-lg shadow-md h-40 w-full">
+                            <img src="{{ item.image.url }}" alt="{{ item.name }}" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
                         </div>
-                        {% if item.description %}
-                        <p class="text-sm {% if not item.available %}text-gray-400 line-through{% else %}text-gray-600{% endif %} mt-1">{{ item.description }}</p>
                         {% endif %}
+                        
+                        <!-- Información del plato -->
+                        <div>
+                            <div class="flex justify-between items-baseline">
+                                <h3 class="text-lg font-semibold {% if not item.available %}text-gray-400 line-through{% else %}text-gray-900{% endif %}">{{ item.name }}</h3>
+                                <p class="text-lg font-medium {% if not item.available %}text-gray-400 line-through{% else %}text-gray-800{% endif %} ml-4">
+                                    {% if item.available %}
+                                        ${{ item.price|floatformat:0 }}
+                                    {% else %}
+                                        No disponible
+                                    {% endif %}
+                                </p>
+                            </div>
+                            {% if item.description %}
+                            <p class="text-sm {% if not item.available %}text-gray-400 line-through{% else %}text-gray-600{% endif %} mt-1">{{ item.description }}</p>
+                            {% endif %}
+                        </div>
                     </div>
                     {% endfor %}
                 </div>

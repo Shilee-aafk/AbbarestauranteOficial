@@ -137,6 +137,10 @@ LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/restaurant/'
 LOGOUT_REDIRECT_URL = '/restaurant/'
 
+# Media files configuration for user uploads (images, etc.)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 # PUSHER CONFIGURATION
 PUSHER_APP_ID = os.environ.get('PUSHER_APP_ID', '')
 PUSHER_KEY = os.environ.get('PUSHER_KEY', '')
