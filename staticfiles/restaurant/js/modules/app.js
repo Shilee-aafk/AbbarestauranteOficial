@@ -59,6 +59,8 @@ export function initApp(initialOrders = []) {
  * Configura los listeners globales de la aplicación
  */
 function setupGlobalListeners() {
+  console.log('setupGlobalListeners starting...');
+  
   // Botón de volver a vista principal
   const backToMainBtn = document.getElementById('back-to-main-view-btn');
   if (backToMainBtn) {
@@ -191,6 +193,10 @@ function setupGlobalListeners() {
   const cartModal = document.getElementById('cart-modal');
   const closeCartBtn = document.getElementById('close-cart');
 
+  console.log('cartToggle element:', cartToggle);
+  console.log('cartModal element:', cartModal);
+  console.log('closeCartBtn element:', closeCartBtn);
+
   if (cartToggle && cartModal) {
     cartToggle.addEventListener('click', () => {
       console.log('Toggle carrito');
@@ -200,12 +206,32 @@ function setupGlobalListeners() {
         cartManager.updateSubmitButton();
       }
     });
+  } else {
+    console.error('cartToggle or cartModal not found');
   }
 
   if (closeCartBtn && cartModal) {
     closeCartBtn.addEventListener('click', () => {
       console.log('Cerrar carrito');
       cartModal.classList.add('hidden');
+      // Si se cierra el modal sin enviar y estaba en modo edición, limpiar estado
+      // pero solo si no hay cambios pendientes (carrito vacío o igual al original)
+      if (cartManager.editingOrderId) {
+        // Recargar el carrito para verificar si hay cambios
+        // Si se cerró sin guardar, el servidor tendrá el original, así que limpiar es seguro
+        cartManager.editingOrderId = null;
+        cartManager.editingOrderStatus = null;
+        cartManager.updateSubmitButton();
+      }
+    });
+  }
+
+  // Botón para abrir el carrito desde la vista de edición
+  const orderViewCartBtn = document.getElementById('order-view-cart-btn');
+  if (orderViewCartBtn && cartModal) {
+    orderViewCartBtn.addEventListener('click', () => {
+      console.log('Abrir carrito desde vista de pedido');
+      cartModal.classList.remove('hidden');
     });
   }
 

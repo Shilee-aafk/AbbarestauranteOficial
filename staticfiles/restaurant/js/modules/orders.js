@@ -117,6 +117,27 @@ export class OrdersManager {
   }
 
   /**
+   * Inserta un elemento en la lista ordenado por ID (ascendente)
+   */
+  insertOrderedById(list, newElement, orderId) {
+    const items = list.querySelectorAll('li[id^="inprogress-order-"], li[id^="ready-order-"], li[id^="served-order-"]');
+    let inserted = false;
+
+    for (let item of items) {
+      const itemId = parseInt(item.id.split('-').pop());
+      if (orderId < itemId) {
+        list.insertBefore(newElement, item);
+        inserted = true;
+        break;
+      }
+    }
+
+    if (!inserted) {
+      list.appendChild(newElement);
+    }
+  }
+
+  /**
    * Agrega o actualiza un pedido en la sección de "En Preparación"
    */
   addOrUpdateInProgressOrder(order) {
@@ -171,9 +192,9 @@ export class OrdersManager {
       orderLi = document.createElement('li');
       orderLi.id = `inprogress-order-${order.id}`;
       orderLi.dataset.updatedAt = order.updated_at;
-      orderLi.className = 'bg-gray-50 p-3 rounded-lg border';
+      orderLi.className = 'bg-amber-50 p-3 rounded-lg border border-amber-200';
       orderLi.innerHTML = orderHTML;
-      inProgressList.appendChild(orderLi);
+      this.insertOrderedById(inProgressList, orderLi, order.id);
     }
 
     document.getElementById('no-in-progress-orders')?.remove();
@@ -239,7 +260,7 @@ export class OrdersManager {
       orderLi.dataset.updatedAt = order.updated_at;
       orderLi.className = 'bg-amber-50 p-3 rounded-lg border border-amber-200';
       orderLi.innerHTML = orderHTML;
-      readyList.appendChild(orderLi);
+      this.insertOrderedById(readyList, orderLi, order.id);
     }
     document.getElementById('no-ready-orders')?.remove();
   }
@@ -295,9 +316,9 @@ export class OrdersManager {
       orderLi = document.createElement('li');
       orderLi.id = `served-order-monitor-${order.id}`;
       orderLi.dataset.updatedAt = order.updated_at;
-      orderLi.className = 'flex justify-between items-center bg-blue-50 p-3 rounded-lg';
+      orderLi.className = 'flex justify-between items-center bg-amber-50 p-3 rounded-lg border border-amber-200';
       orderLi.innerHTML = orderHTML;
-      servedOrdersList.append(orderLi);
+      this.insertOrderedById(servedOrdersList, orderLi, order.id);
     }
 
     document.getElementById('no-served-orders')?.remove();
