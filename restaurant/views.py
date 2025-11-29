@@ -852,6 +852,49 @@ def api_menu_item_detail(request, pk):
         return JsonResponse({'success': True}, status=204)
 
 @login_required
+@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
+def api_menu_item_upload_image(request, pk):
+    """
+    Upload image for a menu item.
+    Only handles POST requests with file upload.
+    """
+    try:
+        item = MenuItem.objects.get(pk=pk)
+    except MenuItem.DoesNotExist:
+        return JsonResponse({'error': 'Menu item not found'}, status=404)
+    
+    if request.method == 'POST':
+        if 'image' not in request.FILES:
+            return JsonResponse({'error': 'No image file provided'}, status=400)
+        
+        try:
+            image_file = request.FILES['image']
+            print(f"[DEBUG] Uploading image for item {pk}: {image_file.name}")
+            
+            # Delete old image if exists
+            if item.image:
+                item.image.delete()
+            
+            # Save new image
+            item.image = image_file
+            item.save()
+            
+            print(f"[DEBUG] Image saved successfully: {item.image.name}")
+            
+            return JsonResponse({
+                'id': item.id,
+                'image_url': item.image.url if item.image else None,
+                'message': 'Image uploaded successfully'
+            }, status=200)
+        except Exception as e:
+            print(f"[ERROR] Image upload failed: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return JsonResponse({'error': f'Failed to upload image: {str(e)}'}, status=400)
+    
+    return JsonResponse({'error': 'Invalid method'}, status=405)
+
+@login_required
 @user_passes_test(lambda u: u.groups.filter(name__in=['Administrador', 'Recepcionista']).exists())
 def api_orders_report(request):
     """

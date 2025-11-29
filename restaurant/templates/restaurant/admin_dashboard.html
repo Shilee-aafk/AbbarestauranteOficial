@@ -932,18 +932,13 @@
                     e.preventDefault();
                     const id = document.getElementById('menu-item-id').value;
                     
-                    // Usar FormData para enviar imagen
+                    // Usar FormData para enviar datos básicos
                     const formData = new FormData();
                     formData.append('name', document.getElementById('menu-name').value);
                     formData.append('description', document.getElementById('menu-description').value);
                     formData.append('price', document.getElementById('menu-price').value);
                     formData.append('category', document.getElementById('menu-category').value);
                     formData.append('available', document.getElementById('menu-available').checked ? 'true' : 'false');
-                    
-                    const imageFile = document.getElementById('menu-image').files[0];
-                    if (imageFile) {
-                        formData.append('image', imageFile);
-                    }
 
                     const url = id ? `/restaurant/api/menu-items/${id}/` : "{% url 'restaurant:api_menu_items' %}";
                     const method = id ? 'PUT' : 'POST';
@@ -959,6 +954,27 @@
                         if (!response.ok) {
                             const errorData = await response.json().catch(() => ({ error: 'Error' }));
                             throw new Error(errorData.error || `Error ${response.status}`);
+                        }
+                        
+                        const itemData = await response.json();
+                        
+                        // Si hay imagen, subirla por separado al nuevo endpoint
+                        const imageFile = document.getElementById('menu-image').files[0];
+                        if (imageFile && itemData.id) {
+                            const imageFormData = new FormData();
+                            imageFormData.append('image', imageFile);
+                            
+                            const imageResponse = await fetch(`/restaurant/api/menu-items/${itemData.id}/upload-image/`, {
+                                method: 'POST',
+                                headers: { 'X-CSRFToken': csrfToken },
+                                body: imageFormData
+                            });
+                            
+                            if (!imageResponse.ok) {
+                                console.warn('Image upload had issues but item was created');
+                            } else {
+                                console.log('Image uploaded successfully');
+                            }
                         }
                         
                         document.getElementById('menu-form-modal').classList.add('hidden');
