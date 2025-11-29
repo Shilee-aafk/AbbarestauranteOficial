@@ -21,15 +21,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-# --- Configuración de Entorno (Desarrollo, Render, Koyeb) ---
+# --- Configuración de Entorno (Desarrollo local vs Render producción) ---
 
-# Detectar si estamos en diferentes plataformas
+# Detectar si estamos en producción en Render
 IS_RENDER = 'RENDER' in os.environ
-IS_KOYEB = 'KOYEB_PUBLIC_DOMAIN' in os.environ
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # En producción, DEBUG debe ser False.
-DEBUG = os.environ.get('DEBUG', 'True') == 'True' and not (IS_RENDER or IS_KOYEB)
+DEBUG = os.environ.get('DEBUG', 'True') == 'True' and not IS_RENDER
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # La SECRET_KEY se leerá desde las variables de entorno en producción
@@ -43,18 +42,11 @@ if not SECRET_KEY:
 if DEBUG:
     # En desarrollo, permitimos cualquier host para mayor flexibilidad.
     ALLOWED_HOSTS = ['*']
-elif IS_RENDER:
+else:
     # En producción en Render
     render_domain = os.environ.get('RENDER_EXTERNAL_HOSTNAME', '')
     ALLOWED_HOSTS = [render_domain] if render_domain else ['*']
     CSRF_TRUSTED_ORIGINS = [f'https://{render_domain}'] if render_domain else []
-elif IS_KOYEB:
-    # En producción en Koyeb
-    koyeb_domain = os.environ.get('KOYEB_PUBLIC_DOMAIN', '')
-    ALLOWED_HOSTS = [koyeb_domain] if koyeb_domain else []
-    CSRF_TRUSTED_ORIGINS = [f'https://{koyeb_domain}'] if koyeb_domain else []
-else:
-    ALLOWED_HOSTS = []
 
 # Application definition
 
@@ -102,20 +94,25 @@ TEMPLATES = [
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 # Configuración de la base de datos para desarrollo y producción
-if DEBUG and not (IS_RENDER or IS_KOYEB):
-    # Configuración para desarrollo local (Supabase PostgreSQL)
+
+if DEBUG:
+    # Configuración para desarrollo local (MySQL)
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'postgres',
-            'USER': 'postgres',
-            'PASSWORD': 'Camilo885',
-            'HOST': 'db.fudssspvlzkfxhrjnqeh.supabase.co',
-            'PORT': '5432',
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.environ.get('DB_NAME', 'abbarestaurante'),
+            'USER': os.environ.get('DB_USER', 'root'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+            'HOST': os.environ.get('DB_HOST', '127.0.0.1'),
+            'PORT': os.environ.get('DB_PORT', '3306'),
+            'OPTIONS': {
+                'charset': 'utf8mb4',
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            }
         }
     }
 else:
-    # Configuración para producción (Render/Koyeb - Supabase PostgreSQL)
+    # Configuración para producción (Render)
     DATABASE_URL = os.environ.get('DATABASE_URL')
     
     if not DATABASE_URL:
@@ -123,11 +120,11 @@ else:
 
     DATABASES = {'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)}
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
+
+
 STATIC_URL = '/static/'
 
-# La ruta donde `collectstatic` dejará los archivos estáticos.
+
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Configuración de WhiteNoise para servir archivos estáticos en producción

@@ -9,20 +9,14 @@ import sys
 def run_migrations_if_needed():
     """
     Ejecuta migraciones automáticamente si:
-    1. Estamos en producción (no DEBUG)
-    2. Las migraciones no se han ejecutado
+    1. Estamos en producción en Render
     """
     try:
         # Detectar si estamos en producción
         IS_RENDER = 'RENDER' in os.environ
-        IS_KOYEB = 'KOYEB_PUBLIC_DOMAIN' in os.environ
-        IS_PYTHONANYWHERE = 'PYTHONANYWHERE_DOMAIN' in os.environ
         
-        # Ejecutar SIEMPRE que estemos en un entorno cloud
-        # No importa si estamos en desarrollo local o producción
-        should_migrate = IS_RENDER or IS_KOYEB or IS_PYTHONANYWHERE
-        
-        if not should_migrate:
+        # Ejecutar solo en Render
+        if not IS_RENDER:
             return
         
         # No ejecutar si se especifica lo contrario

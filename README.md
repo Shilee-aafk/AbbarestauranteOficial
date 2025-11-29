@@ -141,7 +141,7 @@ python check_render_deployment.py
 El archivo `.env.example` contiene un template. En Render, debes configurar:
 
 - `SECRET_KEY`: Tu clave secreta de Django
-- `DATABASE_URL`: URL de conexión a PostgreSQL (Supabase recomendado)
+- `DATABASE_URL`: URL de conexión a PostgreSQL (en Render)
 - `DEBUG`: `False` (en producción)
 - `PUSHER_APP_ID`, `PUSHER_KEY`, `PUSHER_SECRET`, `PUSHER_CLUSTER`: Para WebSockets en tiempo real
 
