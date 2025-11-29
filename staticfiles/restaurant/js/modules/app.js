@@ -153,11 +153,13 @@ function setupGlobalListeners() {
   window.addEventListener('payment-confirmed', (e) => {
     const { orderId } = e.detail;
     ordersManager.updateOrderStatus(orderId, 'paid', 'Pagado');
+    ordersManager.removeServedOrder(orderId);
   });
 
   window.addEventListener('charge-to-room', (e) => {
     const { orderId } = e.detail;
     ordersManager.updateOrderStatus(orderId, 'charged_to_room', 'Cargado a Habitación');
+    ordersManager.removeServedOrder(orderId);
   });
 
   // Botón para limpiar el carrito
