@@ -21,6 +21,10 @@ service-identity==24.2.0
 # Image Processing
 Pillow==11.0.0
 
+# Cloud Storage for Images
+cloudinary==1.36.0
+django-cloudinary-storage==0.3.0
+
 # Real-time WebSockets
 pusher==3.3.0
 

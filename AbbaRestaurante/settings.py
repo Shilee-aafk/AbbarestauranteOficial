@@ -14,6 +14,7 @@ import dj_database_url
 from urllib.parse import urlparse, urlunparse, parse_qs, urlencode
 from pathlib import Path
 import pusher
+import cloudinary
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -57,6 +58,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'cloudinary_storage',
+    'cloudinary',
     'restaurant.apps.RestaurantConfig',
     
 ]
@@ -161,3 +164,20 @@ if all([PUSHER_APP_ID, PUSHER_KEY, PUSHER_SECRET, PUSHER_CLUSTER]):
       cluster=PUSHER_CLUSTER,
       ssl=PUSHER_SSL
     )
+
+# Cloudinary Configuration for Cloud Storage
+cloudinary.config(
+    cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME', 'dvjcrc3ei'),
+    api_key=os.environ.get('CLOUDINARY_API_KEY', '638756761769688'),
+    api_secret=os.environ.get('CLOUDINARY_API_SECRET', 'dnD4bo63Fi7PSvbo2MYqoF4q00U')
+)
+
+# Use Cloudinary for media file storage in production
+if not DEBUG:
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    MEDIA_URL = '/media/'
+    # No need to set MEDIA_ROOT when using Cloudinary
+else:
+    # Use local storage in development
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = BASE_DIR / 'media'
