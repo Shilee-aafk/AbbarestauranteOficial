@@ -399,7 +399,6 @@ def save_order(request):
                         'total': float(order.total_amount),
                         'tip_amount': float(order.tip_amount),
                         'created_at': order.created_at.isoformat(),
-                        'updated_at': order.updated_at.isoformat() if order.updated_at else None,
                     }
                 }
                 return JsonResponse(order_data, cls=DecimalEncoder)
