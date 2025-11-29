@@ -17,21 +17,41 @@ let uiManager;
  * Inicializa toda la aplicación
  */
 export function initApp(initialOrders = []) {
-  // Crear instancias de los managers
-  cartManager = new CartManager();
-  uiManager = new UIManager();
-  ordersManager = new OrdersManager(cartManager, uiManager);
-  menuManager = new MenuManager();
+  try {
+    // Crear instancias de los managers
+    console.log('Creating manager instances...');
+    cartManager = new CartManager();
+    uiManager = new UIManager();
+    ordersManager = new OrdersManager(cartManager, uiManager);
+    menuManager = new MenuManager();
 
-  // Inicializar módulos
-  uiManager.init();
-  menuManager.init();
-  ordersManager.initializeMonitor(initialOrders);
+    // Exportar a window para acceso global
+    window.cartManager = cartManager;
+    window.ordersManager = ordersManager;
+    window.menuManager = menuManager;
+    window.uiManager = uiManager;
 
-  // Configurar event listeners globales
-  setupGlobalListeners();
-  setupMenuItemListeners();
-  setupOrderFormListeners();
+    // Inicializar módulos
+    console.log('Initializing UI...');
+    uiManager.init();
+    
+    console.log('Initializing Menu...');
+    menuManager.init();
+    
+    console.log('Initializing Orders monitor...');
+    ordersManager.initializeMonitor(initialOrders);
+
+    // Configurar event listeners globales
+    console.log('Setting up global listeners...');
+    setupGlobalListeners();
+    setupMenuItemListeners();
+    
+    console.log('✅ App initialized successfully');
+    console.log('Managers:', { cartManager, ordersManager, menuManager, uiManager });
+  } catch (error) {
+    console.error('❌ Error initializing app:', error);
+    console.error('Stack:', error.stack);
+  }
 }
 
 /**
@@ -138,6 +158,124 @@ function setupGlobalListeners() {
     const { orderId } = e.detail;
     ordersManager.updateOrderStatus(orderId, 'charged_to_room', 'Cargado a Habitación');
   });
+
+  // Listeners para el carrito modal
+  const cartToggle = document.getElementById('cart-toggle');
+  const cartModal = document.getElementById('cart-modal');
+  const closeCartBtn = document.getElementById('close-cart');
+
+  if (cartToggle && cartModal) {
+    cartToggle.addEventListener('click', () => {
+      console.log('Toggle carrito');
+      cartModal.classList.toggle('hidden');
+    });
+  }
+
+  if (closeCartBtn && cartModal) {
+    closeCartBtn.addEventListener('click', () => {
+      console.log('Cerrar carrito');
+      cartModal.classList.add('hidden');
+    });
+  }
+
+  // Cerrar carrito al hacer click fuera
+  if (cartModal) {
+    cartModal.addEventListener('click', (e) => {
+      if (e.target === cartModal) {
+        cartModal.classList.add('hidden');
+      }
+    });
+  }
+
+  // Botón para enviar pedido desde el carrito modal
+  const cartSubmitBtn = document.getElementById('cart-submit-btn');
+  if (cartSubmitBtn) {
+    cartSubmitBtn.addEventListener('click', async () => {
+      console.log('Enviar pedido desde carrito');
+      if (cartManager.currentOrder.length === 0) {
+        uiManager.showToast('El carrito está vacío', 'error');
+        return;
+      }
+
+      // Obtener valores de los campos de entrada
+      const clientIdentifier = document.getElementById('client-identifier')?.value || '';
+      const roomNumber = document.getElementById('room-number')?.value || '';
+
+      if (!clientIdentifier) {
+        uiManager.showToast('Por favor, ingresa un identificador del cliente', 'error');
+        return;
+      }
+
+      const endpoint = '/restaurant/save_order/';
+
+      const orderData = {
+        items: cartManager.currentOrder.map(item => ({
+          id: item.id,
+          quantity: item.quantity,
+          note: item.note || ''
+        })),
+        client_identifier: clientIdentifier,
+        room_number: roomNumber,
+        tip_amount: 0
+      };
+
+      try {
+        console.log('Enviando pedido desde carrito:', orderData);
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken()
+          },
+          body: JSON.stringify(orderData)
+        });
+
+        console.log('Response status:', response.status, response.statusText);
+        
+        const responseText = await response.text();
+        console.log('Response text:', responseText.substring(0, 500));
+
+        if (response.ok) {
+          const data = JSON.parse(responseText);
+          console.log('✅ Pedido guardado:', data);
+          uiManager.showToast(
+            `Pedido #${data.order_id} creado exitosamente.`,
+            'success'
+          );
+          cartManager.clear();
+          
+          // Cerrar el carrito modal
+          if (cartModal) {
+            cartModal.classList.add('hidden');
+          }
+
+          // Limpiar campos de formulario
+          const clientInput = document.getElementById('client-identifier');
+          const roomInput = document.getElementById('room-number');
+          if (clientInput) clientInput.value = '';
+          if (roomInput) roomInput.value = '';
+
+          uiManager.showMainSectionView();
+        } else {
+          console.error('❌ Error response:', response.status, response.statusText);
+          try {
+            const error = JSON.parse(responseText);
+            console.error('Error details:', error);
+            uiManager.showToast(
+              error.detail || 'Error al crear el pedido.',
+              'error'
+            );
+          } catch (parseError) {
+            console.error('Could not parse error JSON. Raw response:', responseText.substring(0, 200));
+            uiManager.showToast('Error del servidor al procesar el pedido.', 'error');
+          }
+        }
+      } catch (error) {
+        console.error('❌ Catch error:', error);
+        uiManager.showToast('Error al procesar el pedido.', 'error');
+      }
+    });
+  }
 }
 
 /**
@@ -169,66 +307,6 @@ function setupMenuItemListeners() {
  * Configura los listeners del formulario de pedido
  */
 function setupOrderFormListeners() {
-  const submitOrderBtn = document.getElementById('submit-order-btn');
-  if (submitOrderBtn) {
-    submitOrderBtn.addEventListener('click', async () => {
-      if (cartManager.currentOrder.length === 0) {
-        uiManager.showToast(
-          'El carrito está vacío. Agrega productos antes de enviar.',
-          'error'
-        );
-        return;
-      }
-
-      const orderId = cartManager.editingOrderId;
-      const endpoint = '/restaurant/save_order/';
-      
-      const method = 'POST';
-
-      const orderData = {
-        items: cartManager.currentOrder.map(item => ({
-          id: item.id,
-          quantity: item.quantity,
-          note: item.note || ''
-        })),
-        client_identifier: cartManager.currentClientIdentifier,
-        room_number: cartManager.currentRoomNumber || '',
-        tip_amount: 0
-      };
-
-      try {
-        const response = await fetch(endpoint, {
-          method,
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCsrfToken()
-          },
-          body: JSON.stringify(orderData)
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          const action = orderId ? 'actualizado' : 'creado';
-          uiManager.showToast(
-            `Pedido #${data.id} ${action} exitosamente.`,
-            'success'
-          );
-          cartManager.clear();
-          uiManager.showMainSectionView();
-        } else {
-          const error = await response.json();
-          uiManager.showToast(
-            error.detail || `Error al ${orderId ? 'actualizar' : 'crear'} el pedido.`,
-            'error'
-          );
-        }
-      } catch (error) {
-        console.error('Error:', error);
-        uiManager.showToast('Error al procesar el pedido.', 'error');
-      }
-    });
-  }
-
   const markServedBtn = document.getElementById('mark-served-btn');
   if (markServedBtn) {
     markServedBtn.addEventListener('click', async () => {
