@@ -895,6 +895,40 @@ def api_menu_item_upload_image(request, pk):
     return JsonResponse({'error': 'Invalid method'}, status=405)
 
 @login_required
+@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
+def api_menu_item_delete_image(request, pk):
+    """
+    Delete image for a menu item.
+    Only handles POST requests.
+    """
+    try:
+        item = MenuItem.objects.get(pk=pk)
+    except MenuItem.DoesNotExist:
+        return JsonResponse({'error': 'Menu item not found'}, status=404)
+    
+    if request.method == 'POST':
+        try:
+            if item.image:
+                # Delete the file from storage
+                item.image.delete()
+                # Clear the image field
+                item.image = None
+                item.save()
+                print(f"[DEBUG] Image deleted for item {pk}")
+            
+            return JsonResponse({
+                'id': item.id,
+                'message': 'Image deleted successfully'
+            }, status=200)
+        except Exception as e:
+            print(f"[ERROR] Image deletion failed: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return JsonResponse({'error': f'Failed to delete image: {str(e)}'}, status=400)
+    
+    return JsonResponse({'error': 'Invalid method'}, status=405)
+
+@login_required
 @user_passes_test(lambda u: u.groups.filter(name__in=['Administrador', 'Recepcionista']).exists())
 def api_orders_report(request):
     """

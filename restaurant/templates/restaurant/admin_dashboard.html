@@ -950,10 +950,32 @@
                 });
 
                 // Eliminar imagen
-                document.getElementById('remove-image-btn').addEventListener('click', (e) => {
+                document.getElementById('remove-image-btn').addEventListener('click', async (e) => {
                     e.preventDefault();
+                    const itemId = document.getElementById('menu-item-id').value;
+                    
+                    // Limpiar localmente
                     document.getElementById('menu-image').value = '';
                     document.getElementById('image-preview').classList.add('hidden');
+                    document.getElementById('image-preview-img').src = '';
+                    
+                    // Si es un item existente, eliminar la imagen del servidor
+                    if (itemId) {
+                        try {
+                            const response = await fetch(`/restaurant/api/menu-items/${itemId}/delete-image/`, {
+                                method: 'POST',
+                                headers: { 'X-CSRFToken': csrfToken }
+                            });
+                            
+                            if (response.ok) {
+                                console.log('Imagen eliminada del servidor');
+                            } else {
+                                console.warn('Error al eliminar imagen del servidor');
+                            }
+                        } catch (error) {
+                            console.error('Error:', error);
+                        }
+                    }
                 });
 
                 document.getElementById('menu-form-element').addEventListener('submit', async (e) => {
