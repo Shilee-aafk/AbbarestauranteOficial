@@ -162,7 +162,7 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-gray-600 text-sm">Total Vendido Hoy</p>
-                                <p id="total-sales-today" class="text-3xl font-bold text-gray-900">$0</p>
+                                <p id="total-sales-today" class="text-3xl font-bold text-gray-900">${{ total_sales_today|floatformat:0 }}</p>
                             </div>
                             <div class="bg-amber-100 rounded-full p-3">
                                 <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -850,8 +850,8 @@
                     const diff = touchStart - touchEnd;
                     touchStart = null;
                     
-                    // Si desliza más de 50px hacia la izquierda, cerrar
-                    if (diff > 50) {
+                    // Si desliza más de 100px hacia la izquierda, cerrar
+                    if (diff > 100) {
                         toggleSidebar();
                     }
                 }, false);
@@ -870,9 +870,9 @@
                     const diff = e.changedTouches[0].clientX - edgeStart;
                     edgeStart = null;
                     
-                    // Si desliza más de 50px hacia la derecha desde el borde, abrir
+                    // Si desliza más de 100px hacia la derecha desde el borde, abrir
                     const isClosed = sidebar.classList.contains('-translate-x-full');
-                    if (isClosed && diff > 50) {
+                    if (isClosed && diff > 100) {
                         toggleSidebar();
                     }
                 }, false);
@@ -973,6 +973,28 @@
                 adminChannel.bind('actualizacion-estado', function(data) {
                     console.log('Admin vio una actualización de estado:', data);
                     updateRecentOrderInUI(data.order);
+                    // Si el pedido fue pagado, actualizar el total vendido
+                    if (data.order.status === 'paid') {
+                        const totalSalesElement = document.getElementById('total-sales-today');
+                        if (totalSalesElement) {
+                            const currentText = totalSalesElement.textContent.replace('$', '').trim();
+                            const currentTotal = parseFloat(currentText.replace(/\./g, '').replace(/,/g, '.')) || 0;
+                            const newTotal = currentTotal + (data.order.total || 0);
+                            totalSalesElement.textContent = `$${Math.round(newTotal).toLocaleString('es-CL')}`;
+                        }
+                    }
+                });
+
+                adminChannel.bind('pedido-pagado', function(data) {
+                    console.log('Admin: Pedido pagado:', data);
+                    const totalSalesElement = document.getElementById('total-sales-today');
+                    if (totalSalesElement) {
+                        const currentText = totalSalesElement.textContent.replace('$', '').trim();
+                        // Remover todos los puntos (separadores de miles) y reemplazar coma con punto para parseFloat
+                        const currentTotal = parseFloat(currentText.replace(/\./g, '').replace(/,/g, '.')) || 0;
+                        const newTotal = currentTotal + (data.order.total || 0);
+                        totalSalesElement.textContent = `$${Math.round(newTotal).toLocaleString('es-CL')}`;
+                    }
                 });
 
                 adminChannel.bind('item-disponibilidad', function(data) {

@@ -83,8 +83,8 @@ def order_status_changed(sender, instance, created, **kwargs):
                     })
 
                 elif instance.status == 'paid':
-                    # Notificar a recepción que se pagó
-                    pusher_client.trigger(['recepcion-channel'], 'pedido-pagado', {
+                    # Notificar a recepción y admin que se pagó
+                    pusher_client.trigger(['recepcion-channel', 'admin-channel'], 'pedido-pagado', {
                         'message': f"Pedido pagado: {order_data['client_identifier']}",
                         'order': order_data
                     })

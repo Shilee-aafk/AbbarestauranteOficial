@@ -103,7 +103,8 @@ def admin_dashboard(request):
         total_today=Count('id', filter=Q(created_at__date=timezone.now().date())),
         preparing=Count('id', filter=Q(status='preparing')),
         ready=Count('id', filter=Q(status='ready')),
-        completed=Count('id', filter=Q(status__in=['served', 'paid']))
+        completed=Count('id', filter=Q(status__in=['served', 'paid'])),
+        total_sales_today=Sum('total_amount', filter=Q(status='paid', created_at__date=timezone.now().date()))
     )
 
     # 2. Usar annotate para calcular el total de cada pedido en la DB (evita N+1)
@@ -144,6 +145,7 @@ def admin_dashboard(request):
         'preparing_count': stats.get('preparing', 0),
         'ready_count': stats.get('ready', 0),
         'completed_count': stats.get('completed', 0),
+        'total_sales_today': stats.get('total_sales_today', 0) or 0,
         'recent_orders': recent_orders,
         'user_role': user_role,
         'orders_json': orders_json,

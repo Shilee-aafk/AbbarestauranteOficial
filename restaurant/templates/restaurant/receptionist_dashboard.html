@@ -365,8 +365,8 @@
                 const diff = touchStart - touchEnd;
                 touchStart = null;
                 
-                // Si desliza más de 50px hacia la izquierda, cerrar
-                if (diff > 50) {
+                // Si desliza más de 100px hacia la izquierda, cerrar
+                if (diff > 100) {
                     toggleSidebar();
                 }
             }, false);
@@ -385,9 +385,9 @@
                 const diff = e.changedTouches[0].clientX - edgeStart;
                 edgeStart = null;
                 
-                // Si desliza más de 50px hacia la derecha desde el borde, abrir
+                // Si desliza más de 100px hacia la derecha desde el borde, abrir
                 const isClosed = sidebar.classList.contains('-translate-x-full');
-                if (isClosed && diff > 50) {
+                if (isClosed && diff > 100) {
                     toggleSidebar();
                 }
             }, false);
