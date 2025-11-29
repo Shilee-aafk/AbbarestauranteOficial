@@ -593,12 +593,16 @@
                 ? `<img src="${item.image_url}" alt="${item.name}" class="w-12 h-12 object-cover rounded-lg">`
                 : '<span class="text-gray-400 text-sm">Sin imagen</span>';
             
+            // Valores por defecto en caso de que falten datos (e.g., desde Pusher)
+            const price = item.price !== undefined ? item.price : 0;
+            const category = item.category || 'Sin categoría';
+            
             return `
                 <tr data-item-id="${item.id}" class="border-b border-gray-100">
                     <td class="p-3 text-center">${imageHTML}</td>
                     <td class="p-3">${item.name}</td>
-                    <td class="p-3">$${item.price.toFixed(0)}</td>
-                    <td class="p-3">${item.category}</td>
+                    <td class="p-3">$${parseFloat(price).toFixed(0)}</td>
+                    <td class="p-3">${category}</td>
                     <td class="p-3">
                         <button class="px-3 py-1 rounded-full text-sm font-medium transition-colors ${item.available ? 'bg-green-100 text-green-800 hover:bg-red-100 hover:text-red-800' : 'bg-red-100 text-red-800 hover:bg-green-100 hover:text-green-800'}" 
                                 onclick="toggleItemAvailabilityQuick(${item.id}, ${!item.available})" 

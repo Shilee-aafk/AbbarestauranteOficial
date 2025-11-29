@@ -108,7 +108,12 @@ def menu_item_changed(sender, instance, **kwargs):
 
     # Notifica a los garzones y al admin sobre el cambio de disponibilidad.
     pusher_client.trigger(['garzon-channel', 'admin-channel'], 'item-disponibilidad', {
+        'id': instance.id,
         'item_id': instance.id,
         'name': instance.name,
-        'available': instance.available
+        'description': instance.description,
+        'price': float(instance.price),
+        'category': instance.category,
+        'available': instance.available,
+        'image_url': instance.image.url if instance.image else None
     })
