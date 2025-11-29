@@ -45,6 +45,7 @@ export function initApp(initialOrders = []) {
     console.log('Setting up global listeners...');
     setupGlobalListeners();
     setupMenuItemListeners();
+    setupPusherListeners();
     
     console.log('✅ App initialized successfully');
     console.log('Managers:', { cartManager, ordersManager, menuManager, uiManager });
@@ -237,12 +238,28 @@ function setupGlobalListeners() {
 
         if (response.ok) {
           const data = JSON.parse(responseText);
-          console.log('✅ Pedido guardado:', data);
+          console.log('✅ Respuesta completa:', data);
+          console.log('Order data:', data.order);
+          
           uiManager.showToast(
             `Pedido #${data.order_id} creado exitosamente.`,
             'success'
           );
           cartManager.clear();
+          
+          // Actualizar el monitor de pedidos localmente de inmediato
+          // (sin esperar a que llegue el evento de Pusher)
+          if (data.order && ordersManager) {
+            console.log('✅ Actualizando monitor con nuevo pedido:', data.order);
+            try {
+              ordersManager.handleOrderUpdate(data.order);
+              console.log('✅ Monitor actualizado correctamente');
+            } catch (updateError) {
+              console.error('❌ Error al actualizar monitor:', updateError);
+            }
+          } else {
+            console.warn('⚠️ No hay data.order o ordersManager disponible');
+          }
           
           // Cerrar el carrito modal
           if (cartModal) {
@@ -318,6 +335,35 @@ function setupOrderFormListeners() {
       }
     });
   }
+}
+
+/**
+ * Configura los listeners para eventos de Pusher (actualizaciones en tiempo real)
+ */
+function setupPusherListeners() {
+  // Event: Nuevo pedido creado
+  window.addEventListener('newOrder', (e) => {
+    console.log('newOrder event recibido:', e.detail);
+    if (e.detail && e.detail.order) {
+      ordersManager.handleOrderUpdate(e.detail.order);
+    }
+  });
+
+  // Event: Pedido actualizado
+  window.addEventListener('orderUpdated', (e) => {
+    console.log('orderUpdated event recibido:', e.detail);
+    if (e.detail && e.detail.order) {
+      ordersManager.handleOrderUpdate(e.detail.order);
+    }
+  });
+
+  // Event: Pedido listo
+  window.addEventListener('orderReady', (e) => {
+    console.log('orderReady event recibido:', e.detail);
+    if (e.detail && e.detail.order) {
+      ordersManager.handleOrderUpdate(e.detail.order);
+    }
+  });
 }
 
 /**

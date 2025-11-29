@@ -353,7 +353,56 @@ def save_order(request):
                     )
             
             if order:
-                return JsonResponse({'success': True, 'order_id': order.id})
+                # Obtener items del pedido para retornarlos en la respuesta
+                items = order.orderitem_set.all()
+                items_data = [{
+                    'id': item.menu_item.id,
+                    'name': item.menu_item.name,
+                    'price': float(item.menu_item.price),
+                    'quantity': item.quantity,
+                    'note': item.note,
+                } for item in items]
+                
+                # Mapeo de estados para mostrar en UI
+                status_display_map = {
+                    'pending': 'Pendiente',
+                    'preparing': 'En Preparación',
+                    'ready': 'Listo',
+                    'served': 'Servido',
+                    'paid': 'Pagado',
+                    'cancelled': 'Cancelado',
+                    'charged_to_room': 'Cargado a Habitación'
+                }
+                
+                status_class_map = {
+                    'pending': 'bg-yellow-100 text-yellow-800',
+                    'preparing': 'bg-blue-100 text-blue-800',
+                    'ready': 'bg-green-100 text-green-800',
+                    'served': 'bg-purple-100 text-purple-800',
+                    'paid': 'bg-green-600 text-white',
+                    'cancelled': 'bg-red-100 text-red-800',
+                    'charged_to_room': 'bg-indigo-100 text-indigo-800'
+                }
+                
+                order_data = {
+                    'success': True,
+                    'order_id': order.id,
+                    'order': {
+                        'id': order.id,
+                        'identifier': order.room_number or order.client_identifier,
+                        'room_number': order.room_number,
+                        'client_identifier': order.client_identifier,
+                        'status': order.status,
+                        'status_display': status_display_map.get(order.status, order.status),
+                        'status_class': status_class_map.get(order.status, ''),
+                        'items': items_data,
+                        'total': float(order.total_amount),
+                        'tip_amount': float(order.tip_amount),
+                        'created_at': order.created_at.isoformat(),
+                        'updated_at': order.updated_at.isoformat() if order.updated_at else None,
+                    }
+                }
+                return JsonResponse(order_data, cls=DecimalEncoder)
             else:
                 return JsonResponse({'success': False, 'error': 'Order could not be created'}, status=400)
                 
