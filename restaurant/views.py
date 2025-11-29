@@ -736,23 +736,27 @@ def api_menu_items(request):
         menu_items = MenuItem.objects.all().order_by('category', 'name')
         data = [{
             'id': m.id, 'name': m.name, 'description': m.description,
-            'price': float(m.price), 'category': m.category, 'available': m.available
+            'price': float(m.price), 'category': m.category, 'available': m.available,
+            'image_url': m.image.url if m.image else None
         } for m in menu_items]
         return JsonResponse(data, safe=False)
 
     if request.method == 'POST':
         try:
-            data = json.loads(request.body)
             item = MenuItem.objects.create(
-                name=data['name'],
-                description=data.get('description', ''),
-                price=data['price'],
-                category=data['category'],
-                available=data.get('available', True)
+                name=request.POST['name'],
+                description=request.POST.get('description', ''),
+                price=request.POST['price'],
+                category=request.POST['category'],
+                available=request.POST.get('available', 'true').lower() == 'true'
             )
+            if 'image' in request.FILES:
+                item.image = request.FILES['image']
+                item.save()
             return JsonResponse({
                 'id': item.id, 'name': item.name, 'description': item.description,
-                'price': float(item.price), 'category': item.category, 'available': item.available
+                'price': float(item.price), 'category': item.category, 'available': item.available,
+                'image_url': item.image.url if item.image else None
             }, status=201)
         except (ValidationError, IntegrityError, ValueError, KeyError) as e:
             return JsonResponse({'error': f'Invalid data: {str(e)}'}, status=400)
@@ -775,12 +779,18 @@ def api_menu_item_detail(request, pk):
     if request.method == 'GET':
         return JsonResponse({
             'id': item.id, 'name': item.name, 'description': item.description,
-            'price': float(item.price), 'category': item.category, 'available': item.available
+            'price': float(item.price), 'category': item.category, 'available': item.available,
+            'image_url': item.image.url if item.image else None
         })
 
     if request.method in ['PUT', 'PATCH']:
         try:
-            data = json.loads(request.body)
+            # Handle both FormData and JSON
+            if request.content_type and 'multipart/form-data' in request.content_type:
+                # FormData with possible file upload
+                data = request.POST.dict()
+            else:
+                data = json.loads(request.body)
             print(f"[DEBUG] PATCH/PUT request for item {pk}: {data}")
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
@@ -791,7 +801,7 @@ def api_menu_item_detail(request, pk):
             item.description = data.get('description', item.description)
             item.price = data.get('price', item.price)
             item.category = data.get('category', item.category)
-            item.available = data.get('available', item.available)
+            item.available = data.get('available', str(item.available)).lower() == 'true' if isinstance(data.get('available'), str) else data.get('available', item.available)
         else:
             # PATCH: only update provided fields
             if 'name' in data:
@@ -803,13 +813,18 @@ def api_menu_item_detail(request, pk):
             if 'category' in data:
                 item.category = data['category']
             if 'available' in data:
-                item.available = data['available']
+                item.available = data['available'].lower() == 'true' if isinstance(data['available'], str) else data['available']
+        
+        # Handle image upload
+        if 'image' in request.FILES:
+            item.image = request.FILES['image']
         
         item.save()
         print(f"[DEBUG] Item {pk} saved. Available: {item.available}")
         return JsonResponse({
             'id': item.id, 'name': item.name, 'description': item.description,
-            'price': float(item.price), 'category': item.category, 'available': item.available
+            'price': float(item.price), 'category': item.category, 'available': item.available,
+            'image_url': item.image.url if item.image else None
         })
 
     if request.method == 'DELETE':
