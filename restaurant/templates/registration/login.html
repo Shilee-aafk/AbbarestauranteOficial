@@ -14,19 +14,30 @@
         right: 0.75rem; /* 12px */
         transform: translateY(-50%);
         cursor: pointer;
-        color: #6b7280; /* gray-500 */
+        color: #78350f; /* amber-900 */
+        background: none;
+        border: none;
+        padding: 0.25rem;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .toggle-password:hover {
+        color: #92400e; /* amber-800 */
     }
 </style>
 {% endblock %}
 
 {% block content %}
     <div class="flex min-h-screen items-center justify-center">
-        <div class="w-full max-w-md space-y-8 p-8">
+        <div class="w-full max-w-md space-y-8 p-8 bg-amber-50 rounded-lg border border-amber-200 shadow-lg">
             
             <!-- Logo y Título -->
             <div>
                 <img class="mx-auto h-24 w-auto" src="{% static 'restaurant/images/logo_d.png' %}" alt="Logo AbbaHotel">
-                <h2 class="mt-6 text-center text-2xl font-bold tracking-tight text-gray-900">
+                <h2 class="mt-6 text-center text-2xl font-bold tracking-tight text-amber-900">
                     Inicia sesión en tu cuenta
                 </h2>
             </div>
@@ -47,17 +58,17 @@
                     <div>
                         <label for="id_username" class="sr-only">Usuario</label>
                         <input id="id_username" name="username" type="text" autocomplete="username" required 
-                               class="relative block w-full appearance-none rounded-none rounded-t-md border border-gray-300 px-3 py-3 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-amber-500 focus:outline-none focus:ring-amber-500 sm:text-sm" 
+                               class="relative block w-full appearance-none rounded-none rounded-t-md border border-amber-200 px-3 py-3 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-amber-500 focus:outline-none focus:ring-amber-500 sm:text-sm" 
                                placeholder="Nombre de usuario">
                     </div>
                     <!-- Contenedor relativo para posicionar el ojo -->
                     <div class="relative">
                         <label for="id_password" class="sr-only">Contraseña</label>
                         <input id="id_password" name="password" type="password" autocomplete="current-password" required 
-                               class="relative block w-full appearance-none rounded-none rounded-b-md border border-gray-300 px-3 py-3 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-amber-500 focus:outline-none focus:ring-amber-500 sm:text-sm" 
+                               class="relative block w-full appearance-none rounded-none rounded-b-md border border-amber-200 px-3 py-3 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-amber-500 focus:outline-none focus:ring-amber-500 sm:text-sm pr-12" 
                                placeholder="Contraseña">
                         <!-- Botón del ojo -->
-                        <button type="button" id="toggle-password-btn" class="toggle-password">
+                        <button type="button" id="toggle-password-btn" class="toggle-password z-20 pointer-events-auto">
                             <svg id="eye-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                             </svg>
@@ -82,12 +93,7 @@
                 <!-- Botón de envío -->
                 <div>
                     <button type="submit" 
-                            class="group relative flex w-full justify-center rounded-md border border-transparent bg-amber-800 py-3 px-4 text-sm font-medium text-white hover:bg-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-3">
-                            <svg class="h-5 w-5 text-amber-500 group-hover:text-amber-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path fill-rule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clip-rule="evenodd" />
-                            </svg>
-                        </span>
+                            class="w-full rounded-md border border-transparent bg-amber-200 py-3 px-4 text-sm font-medium text-amber-900 hover:scale-105 transform transition-transform focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2">
                         Ingresar
                     </button>
                 </div>

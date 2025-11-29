@@ -4,22 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Sesión Cerrada</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-light">
-    <div class="container mt-5">
-        <div class="row justify-content-center">
-            <div class="col-md-6">
-                <div class="card shadow">
-                    <div class="card-body text-center">
-                        <h1 class="card-title mb-4">Sesión Cerrada</h1>
-                        <p class="lead mb-4">Has cerrado sesión exitosamente.</p>
-                        <a href="{% url 'login' %}" class="btn btn-success">Iniciar Sesión de Nuevo</a>
-                    </div>
-                </div>
+<body class="bg-amber-50">
+    <div class="flex min-h-screen items-center justify-center">
+        <div class="w-full max-w-md space-y-8 p-8 bg-amber-50 rounded-lg border border-amber-200 shadow-lg">
+            <div class="text-center">
+                <h1 class="text-2xl font-bold text-amber-900 mb-4">Sesión Cerrada</h1>
+                <p class="text-lg text-amber-800 mb-6">Has cerrado sesión exitosamente.</p>
+                <a href="{% url 'login' %}" class="inline-block bg-amber-200 text-amber-900 font-semibold py-3 px-6 rounded-lg hover:scale-105 transform transition-transform">
+                    Iniciar Sesión de Nuevo
+                </a>
             </div>
+            <p class="mt-6 text-center text-sm text-amber-700">
+                TeamShile &copy; {% now "Y" %}
+            </p>
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
