@@ -401,7 +401,7 @@ def save_order(request):
                         'created_at': order.created_at.isoformat(),
                     }
                 }
-                return JsonResponse(order_data, cls=DecimalEncoder)
+                return JsonResponse(order_data, safe=False)
             else:
                 return JsonResponse({'success': False, 'error': 'Order could not be created'}, status=400)
                 
