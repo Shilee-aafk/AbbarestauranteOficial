@@ -724,7 +724,6 @@ def api_order_status(request, pk):
             return JsonResponse({'success': False, 'error': f'Server error: {str(e)}'}, status=500)
     return JsonResponse({'error': 'Invalid method'}, status=405)
 
-@csrf_exempt
 @login_required
 @user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
 def api_menu_items(request):
@@ -746,6 +745,10 @@ def api_menu_items(request):
             available_str = request.POST.get('available', 'true')
             available = available_str.lower() in ('true', '1', 'yes', 'on')
             
+            # Debug log
+            print(f"[DEBUG] POST data: {request.POST.dict()}")
+            print(f"[DEBUG] FILES: {list(request.FILES.keys())}")
+            
             item = MenuItem.objects.create(
                 name=request.POST['name'],
                 description=request.POST.get('description', ''),
@@ -756,12 +759,17 @@ def api_menu_items(request):
             if 'image' in request.FILES:
                 item.image = request.FILES['image']
                 item.save()
+                print(f"[DEBUG] Image saved for item {item.id}: {item.image.name}")
+            
             return JsonResponse({
                 'id': item.id, 'name': item.name, 'description': item.description,
                 'price': float(item.price), 'category': item.category, 'available': item.available,
                 'image_url': item.image.url if item.image else None
             }, status=201)
-        except (ValidationError, IntegrityError, ValueError, KeyError) as e:
+        except Exception as e:
+            print(f"[ERROR] Exception in POST: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return JsonResponse({'error': f'Invalid data: {str(e)}'}, status=400)
 
 @csrf_exempt
