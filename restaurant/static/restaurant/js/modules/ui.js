@@ -90,19 +90,10 @@ export class UIManager {
 
   /**
    * Configura el toggle del sidebar para móvil
+   * NOTA: El sidebar se controla desde initUIComponents() en waiter_dashboard.html
    */
   setupSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    const sidebarToggle = document.getElementById('sidebar-toggle');
-    const sidebarOverlay = document.getElementById('sidebar-overlay');
-
-    const toggleSidebar = () => {
-      sidebar?.classList.toggle('-translate-x-full');
-      sidebarOverlay?.classList.toggle('hidden');
-    };
-
-    sidebarToggle?.addEventListener('click', toggleSidebar);
-    sidebarOverlay?.addEventListener('click', toggleSidebar);
+    // Sidebar logic is handled in initUIComponents() template - do nothing here
   }
 
   /**

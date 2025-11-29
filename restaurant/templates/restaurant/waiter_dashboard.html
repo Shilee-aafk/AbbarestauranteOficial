@@ -439,115 +439,104 @@
         window.csrftoken = '{{ csrf_token }}';
         window.initialOrders = {{ initial_orders_json|safe }};
         
-        // Import main app initialization function
-        import { initApp } from '{% static "restaurant/js/modules/app.js" %}';
-        
-        // Initialize application when DOM is ready
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('Initializing app with orders:', window.initialOrders);
-            initApp(window.initialOrders);
-            
-            // --- Sidebar Toggle Logic for Mobile ---
-            const sidebar = document.getElementById('sidebar');
-            const sidebarToggle = document.getElementById('sidebar-toggle');
-            const sidebarOverlay = document.getElementById('sidebar-overlay');
-            
-            const toggleSidebar = () => {
-                sidebar.classList.toggle('-translate-x-full');
-                const isClosed = sidebar.classList.contains('-translate-x-full');
-                sidebarOverlay.style.opacity = isClosed ? '0' : '0.5';
-                sidebarOverlay.style.pointerEvents = isClosed ? 'none' : 'auto';
-                sidebarToggle.classList.toggle('hidden');
-                sidebar.style.transition = 'transform 0.3s ease-in-out';
-                sidebarOverlay.style.transition = 'opacity 0.3s ease-in-out';
-                sidebar.style.transform = '';
-            };
-            
-            sidebarToggle?.addEventListener('click', toggleSidebar);
-            sidebarOverlay?.addEventListener('click', toggleSidebar);
-            
-            // Swipe para cerrar el sidebar cuando está abierto
-            let touchStart = null;
-            
-            sidebar?.addEventListener('touchstart', (e) => {
-                touchStart = e.changedTouches[0].clientX;
-            }, false);
-            
-            sidebar?.addEventListener('touchend', (e) => {
-                if (!touchStart) return;
-                const touchEnd = e.changedTouches[0].clientX;
-                const diff = touchStart - touchEnd;
-                touchStart = null;
+            // --- UI COMPONENTS (Sidebar) ---
+            function initUIComponents() {
+                const sidebar = document.getElementById('sidebar');
+                const sidebarToggle = document.getElementById('sidebar-toggle');
+                const sidebarOverlay = document.getElementById('sidebar-overlay');
                 
-                // Si desliza más de 100px hacia la izquierda, cerrar
-                if (diff > 100) {
-                    toggleSidebar();
-                }
-            }, false);
-            
-            // Swipe desde borde izquierdo para abrir
-            let edgeStart = null;
-            
-            document?.addEventListener('touchstart', (e) => {
-                if (e.changedTouches[0].clientX < 20) {
-                    edgeStart = e.changedTouches[0].clientX;
-                }
-            }, false);
-            
-            document?.addEventListener('touchend', (e) => {
-                if (!edgeStart) return;
-                const diff = e.changedTouches[0].clientX - edgeStart;
-                edgeStart = null;
+                const toggleSidebar = () => {
+                    sidebar.classList.toggle('-translate-x-full');
+                    const isClosed = sidebar.classList.contains('-translate-x-full');
+                    sidebarOverlay.style.opacity = isClosed ? '0' : '0.5';
+                    sidebarOverlay.style.pointerEvents = isClosed ? 'none' : 'auto';
+                    sidebarToggle.classList.toggle('hidden');
+                    sidebar.style.transition = 'transform 0.3s ease-in-out';
+                    sidebarOverlay.style.transition = 'opacity 0.3s ease-in-out';
+                    sidebar.style.transform = '';
+                };
                 
-                // Si desliza más de 100px hacia la derecha desde el borde, abrir
-                const isClosed = sidebar.classList.contains('-translate-x-full');
-                if (isClosed && diff > 100) {
-                    toggleSidebar();
-                }
-            }, false);
+                sidebarToggle?.addEventListener('click', toggleSidebar);
+                sidebarOverlay?.addEventListener('click', toggleSidebar);
+                
+                // Swipe para cerrar el sidebar cuando está abierto
+                let touchStart = null;
+                
+                sidebar?.addEventListener('touchstart', (e) => {
+                    touchStart = e.changedTouches[0].clientX;
+                }, false);
+                
+                sidebar?.addEventListener('touchend', (e) => {
+                    if (!touchStart) return;
+                    const touchEnd = e.changedTouches[0].clientX;
+                    const diff = touchStart - touchEnd;
+                    touchStart = null;
+                    
+                    if (diff > 100) {
+                        toggleSidebar();
+                    }
+                }, false);
+                
+                // Swipe desde borde izquierdo para abrir
+                let edgeStart = null;
+                
+                document?.addEventListener('touchstart', (e) => {
+                    if (e.changedTouches[0].clientX < 20) {
+                        edgeStart = e.changedTouches[0].clientX;
+                    }
+                }, false);
+                
+                document?.addEventListener('touchend', (e) => {
+                    if (!edgeStart) return;
+                    const diff = e.changedTouches[0].clientX - edgeStart;
+                    edgeStart = null;
+                    
+                    const isClosed = sidebar.classList.contains('-translate-x-full');
+                    if (isClosed && diff > 100) {
+                        toggleSidebar();
+                    }
+                }, false);
+            }
+            
+            // Initialize UI components (sidebar)
+            initUIComponents();
             
             // Close banner functionality
             document.addEventListener('click', (e) => {
                 const closeBtn = e.target.closest('#close-banner');
                 if (closeBtn) {
-                    console.log('Close banner clicked');
                     const banner = document.getElementById('welcome-banner');
                     if (banner) {
                         banner.classList.add('banner-hidden');
                         localStorage.setItem('welcomeBannerClosed', 'true');
-                        setTimeout(() => {
-                            banner.style.display = 'none';
-                        }, 500);
+                        setTimeout(() => banner.style.display = 'none', 500);
                     }
                 }
             });
             
-            // Check if welcome banner was previously closed on page load
             if (localStorage.getItem('welcomeBannerClosed') === 'true') {
                 const welcomeBanner = document.getElementById('welcome-banner');
-                if (welcomeBanner) {
-                    welcomeBanner.style.display = 'none';
-                }
+                if (welcomeBanner) welcomeBanner.style.display = 'none';
             }
+            
+            // Import and initialize app
+            import('{% static "restaurant/js/modules/app.js" %}').then(({ initApp }) => {
+                initApp(window.initialOrders || []);
+            }).catch(err => console.error('Error loading app:', err));
         });
         
-        // Setup Pusher event listener for real-time updates
+        // Pusher real-time updates
         if (typeof Pusher !== 'undefined' && '{{ pusher_key }}') {
-            const pusher = new Pusher('{{ pusher_key }}', {
-                cluster: '{{ pusher_cluster }}'
-            });
-            
+            const pusher = new Pusher('{{ pusher_key }}', { cluster: '{{ pusher_cluster }}' });
             const gazonChannel = pusher.subscribe('garzon-channel');
-            gazonChannel.bind('pedido-listo', function(data) {
-                console.log('Evento pedido-listo recibido:', data);
+            gazonChannel.bind('pedido-listo', (data) => {
                 window.dispatchEvent(new CustomEvent('orderReady', { detail: data }));
             });
-            gazonChannel.bind('actualizacion-estado', function(data) {
-                console.log('Evento actualizacion-estado recibido:', data);
+            gazonChannel.bind('actualizacion-estado', (data) => {
                 window.dispatchEvent(new CustomEvent('orderUpdated', { detail: data }));
             });
-            gazonChannel.bind('nuevo-pedido', function(data) {
-                console.log('Evento nuevo-pedido recibido:', data);
+            gazonChannel.bind('nuevo-pedido', (data) => {
                 window.dispatchEvent(new CustomEvent('newOrder', { detail: data }));
             });
         }
