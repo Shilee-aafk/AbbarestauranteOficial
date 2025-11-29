@@ -184,7 +184,7 @@ export class CartManager {
             <button class="text-red-500 hover:text-red-700 text-sm ml-2 modal-remove" data-line-id="${item.lineItemId}">Eliminar</button>
           </div>
         </div>
-        ${item.note ? `<p class="text-xs text-gray-700 bg-gray-50 p-2 rounded italic">Nota: ${item.note}</p>` : ''}
+        <textarea class="text-xs p-2 border border-gray-300 rounded bg-white resize-none modal-note" data-line-id="${item.lineItemId}" placeholder="Agregar nota especial..." rows="2" maxlength="200">${item.note || ''}</textarea>
       </div>
     `).join('');
 
@@ -240,6 +240,10 @@ export class CartManager {
 
     document.querySelectorAll('.modal-remove').forEach(btn => {
       btn.onclick = () => this.removeFromOrder(parseFloat(btn.dataset.lineId));
+    });
+
+    document.querySelectorAll('.modal-note').forEach(textarea => {
+      textarea.oninput = (e) => this.updateNote(parseFloat(textarea.dataset.lineId), e.target.value);
     });
   }
 

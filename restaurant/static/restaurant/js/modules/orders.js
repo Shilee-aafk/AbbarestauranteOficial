@@ -9,6 +9,53 @@ export class OrdersManager {
     this.cartManager = cartManager;
     this.uiManager = uiManager;
     this.playedSoundForOrders = new Set();
+    
+    // Set up event delegation for dynamic elements
+    this.setupEventDelegation();
+  }
+
+  /**
+   * Configura event delegation para elementos dinámicos
+   */
+  setupEventDelegation() {
+    document.addEventListener('click', (e) => {
+      const editBtn = e.target.closest('.edit-btn');
+      const cancelBtn = e.target.closest('.cancel-btn');
+      const markServedBtn = e.target.closest('.mark-served-monitor-btn');
+      const chargeBtn = e.target.closest('.charge-btn');
+
+      if (editBtn) {
+        const orderId = editBtn.dataset.orderId;
+        this.editOrderFromMonitor(orderId);
+      }
+
+      if (cancelBtn) {
+        const orderId = cancelBtn.dataset.orderId;
+        if (confirm('¿Estás seguro de que quieres cancelar este pedido? Esta acción no se puede deshacer.')) {
+          this.updateOrderStatus(orderId, 'cancelled');
+        }
+      }
+
+      if (markServedBtn) {
+        const orderId = markServedBtn.dataset.orderId;
+        this.openServeConfirmationModal(orderId);
+      }
+
+      if (chargeBtn) {
+        const orderId = chargeBtn.dataset.orderId;
+        // Dispatchear evento para que otro handler lo maneje
+        window.dispatchEvent(new CustomEvent('openPaymentModal', { detail: { orderId } }));
+      }
+    });
+
+    // Event delegation para cambios de status
+    document.addEventListener('change', (e) => {
+      if (e.target.classList.contains('status-changer')) {
+        const orderId = e.target.dataset.orderId;
+        const newStatus = e.target.value;
+        this.updateOrderStatus(orderId, newStatus);
+      }
+    });
   }
 
   /**
@@ -127,22 +174,6 @@ export class OrdersManager {
     }
 
     document.getElementById('no-in-progress-orders')?.remove();
-
-    orderLi.querySelector('.cancel-btn').addEventListener('click', (e) => {
-      const orderId = e.target.dataset.orderId;
-      if (confirm('¿Estás seguro de que quieres cancelar este pedido? Esta acción no se puede deshacer.')) {
-        this.updateOrderStatus(orderId, 'cancelled');
-      }
-    });
-
-    orderLi.querySelector('.status-changer').addEventListener('change', (e) => {
-      this.updateOrderStatus(e.target.dataset.orderId, e.target.value);
-    });
-
-    orderLi.querySelector('.edit-btn').addEventListener('click', (e) => {
-      const orderId = e.currentTarget.dataset.orderId;
-      this.editOrderFromMonitor(orderId);
-    });
   }
 
   /**
@@ -205,16 +236,6 @@ export class OrdersManager {
       readyList.prepend(orderLi);
     }
     document.getElementById('no-ready-orders')?.remove();
-
-    orderLi.querySelector('.mark-served-monitor-btn').addEventListener('click', (e) => {
-      const orderId = e.currentTarget.dataset.orderId;
-      this.openServeConfirmationModal(orderId);
-    });
-
-    orderLi.querySelector('.edit-btn').addEventListener('click', (e) => {
-      const orderId = e.currentTarget.dataset.orderId;
-      this.editOrderFromMonitor(orderId);
-    });
   }
 
   /**
