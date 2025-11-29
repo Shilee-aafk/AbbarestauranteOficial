@@ -994,6 +994,7 @@
                     const method = id ? 'PUT' : 'POST';
 
                     try {
+                        console.log(`[${method}] Enviando datos a ${url}`);
                         const options = {
                             method,
                             headers: { 'X-CSRFToken': csrfToken },
@@ -1001,12 +1002,16 @@
                         };
                         
                         const response = await fetch(url, options);
+                        console.log(`Response status: ${response.status}`);
+                        
                         if (!response.ok) {
                             const errorData = await response.json().catch(() => ({ error: 'Error' }));
+                            console.error('Error response:', errorData);
                             throw new Error(errorData.error || `Error ${response.status}`);
                         }
                         
                         const itemData = await response.json();
+                        console.log('Item actualizado:', itemData);
                         
                         // Si hay imagen, subirla por separado al nuevo endpoint
                         const imageFile = document.getElementById('menu-image').files[0];
@@ -1034,7 +1039,9 @@
                         updateMenuItemInUI(itemData, id ? 'updated' : 'created');
                         
                         document.getElementById('menu-form-modal').classList.add('hidden');
+                        alert('Plato guardado exitosamente');
                     } catch (error) {
+                        console.error('Error completo:', error);
                         alert(`Error guardando el plato: ${error.message}`);
                     }
                 });
