@@ -19,7 +19,7 @@ pyOpenSSL==25.3.0
 service-identity==24.2.0
 
 # Image Processing
-Pillow==10.1.0
+Pillow==11.0.0
 
 # Real-time WebSockets
 pusher==3.3.0
