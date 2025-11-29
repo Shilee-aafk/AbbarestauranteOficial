@@ -35,7 +35,4 @@ urlpatterns = [
 
     path('export/orders-excel/', views.export_orders_excel, name='export_orders_excel'),
     path('api/dashboard-charts/', views.api_dashboard_charts, name='api_dashboard_charts'),
-    
-    # Media serving (for production where DEBUG=False)
-    path('media/<path:file_path>', views.serve_media_file, name='serve_media_file'),
 ]

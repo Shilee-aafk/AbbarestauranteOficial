@@ -31,6 +31,9 @@ urlpatterns = [
     path('accounts/login/', views.login_view, name='login'),
     path('accounts/logout/', views.logout_view, name='logout'),
     path('accounts/', include('django.contrib.auth.urls')),
+    
+    # Media serving at root level (for production where DEBUG=False)
+    path('media/<path:file_path>', views.serve_media_file, name='serve_media_file'),
 ]
 
 # Serve media files in development
