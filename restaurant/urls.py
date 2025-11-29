@@ -16,7 +16,6 @@ urlpatterns = [
     path('menu/', restaurant_views.public_menu_view, name='public_menu'),
     path('logout/', views.logout_view, name='logout'),
     path('save_order/', views.save_order, name='save_order'),
-    path('add_reservation/', views.add_reservation, name='add_reservation'),
     path('update_order_status/<int:order_id>/', views.update_order_status, name='update_order_status'),
     path('api/users/', views.api_users, name='api_users'),
     path('api/users/<int:pk>/', views.api_users, name='api_user_detail'),

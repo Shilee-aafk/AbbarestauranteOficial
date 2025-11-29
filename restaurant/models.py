@@ -11,18 +11,6 @@ class MenuItem(models.Model):
     def __str__(self):
         return self.name
 
-class Reservation(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    client_name = models.CharField(max_length=100) # This was correct in my previous suggestion
-    phone = models.CharField(max_length=20, blank=True, null=True)
-    date = models.DateField()
-    time = models.TimeField()
-    guests = models.IntegerField()
-    notes = models.TextField(blank=True, null=True)
-
-    def __str__(self):
-        return f"Reservation for {self.client_name} on {self.date}" # This was correct in my previous suggestion
-
 class Order(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Pending'),

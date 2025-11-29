@@ -15,7 +15,7 @@ from openpyxl.styles import Font, Alignment, PatternFill
 from openpyxl.utils import get_column_letter
 from .forms import CustomUserCreationForm
 from django.contrib.auth.forms import AuthenticationForm
-from .models import Reservation, Order, OrderItem, MenuItem, Group, RegistrationPin
+from .models import Order, OrderItem, MenuItem, Group, RegistrationPin
 import json
 import decimal
 
@@ -99,7 +99,6 @@ def admin_dashboard(request):
 
     # Nota: 'orders' aquí es Order.objects.all(), no recent_orders.
     # El resto de los objetos se cargan para el renderizado inicial o como fallback.
-    reservations = Reservation.objects.all()
     orders = Order.objects.all()
     menu_items = MenuItem.objects.all()
     groups = Group.objects.all()  # Obtener todos los grupos/roles
@@ -123,7 +122,6 @@ def admin_dashboard(request):
         'available': m.available
     } for m in menu_items], cls=DecimalEncoder)
     return render(request, 'restaurant/admin_dashboard.html', {
-        'reservations': reservations,
         'orders': orders,
         'menu_items': menu_items,
         'groups': groups,  # Pasar los grupos a la plantilla
@@ -157,11 +155,9 @@ def receptionist_dashboard(request):
         created_at__date=today
     ).aggregate(total=Sum('total_amount'))['total'] or 0 # Usar el nuevo campo total_amount
 
-    reservations = Reservation.objects.all()
     user_role = request.user.groups.first().name if request.user.groups.exists() else None
 
     return render(request, 'restaurant/receptionist_dashboard.html', {
-        'reservations': reservations,
         'user_role': user_role,
         'served_orders': served_orders,
         'room_charge_orders': room_charge_orders,
@@ -451,27 +447,6 @@ def api_waiter_order_detail(request, pk):
 
 @csrf_exempt
 @user_passes_test(lambda u: u.groups.filter(name='Recepcionista').exists())
-def add_reservation(request):
-    if request.method == 'POST':
-        name = request.POST.get('name')
-        email = request.POST.get('email')
-        phone = request.POST.get('phone')
-        date = request.POST.get('date')
-        time = request.POST.get('time')
-        guests = request.POST.get('guests')
-        notes = request.POST.get('notes')
-        Reservation.objects.create(
-            user=request.user,
-            client_name=name, 
-            phone=phone, 
-            date=date, 
-            time=time, 
-            guests=guests, 
-            notes=notes
-        )
-        return redirect('receptionist_dashboard')
-    return redirect('receptionist_dashboard')
-
 @login_required
 @user_passes_test(lambda u: u.groups.filter(name='Cocinero').exists())
 def update_order_status(request, order_id):
