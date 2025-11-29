@@ -240,30 +240,33 @@
                         <!-- Filters -->
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
                             <div class="relative">
-                                <input type="text" placeholder="Buscar por N° pedido, cliente, habitación..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <input type="text" id="searchInput" placeholder="Buscar por N° pedido, cliente, habitación..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                                 <svg class="absolute left-3 top-2.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                                 </svg>
                             </div>
-                            <select class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                <option>Estado</option>
-                                <option>Recibido</option>
-                                <option>En preparación</option>
-                                <option>Listo</option>
-                                <option>Servido</option>
-                                <option>Cancelado</option>
+                            <select id="statusFilter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="">Todos los estados</option>
+                                <option value="pending">Recibido</option>
+                                <option value="preparing">En preparación</option>
+                                <option value="ready">Listo</option>
+                                <option value="served">Servido</option>
+                                <option value="paid">Pagado</option>
+                                <option value="charged_to_room">Cargado a Habitación</option>
+                                <option value="cancelled">Cancelado</option>
                             </select>
-                            <input type="date" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            <input type="date" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            <select class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                <option>Ordenar por</option>
-                                <option>Más reciente</option>
-                                <option>Por mesa</option>
-                                <option>Mayor monto</option>
+                            <input type="date" id="dateFromFilter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <input type="date" id="dateToFilter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <select id="sortFilter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="recent">Más reciente</option>
+                                <option value="oldest">Más antiguo</option>
+                                <option value="highest">Mayor monto</option>
+                                <option value="lowest">Menor monto</option>
                             </select>
                         </div>
-                        <div class="flex justify-end mb-6">
-                            <button class="bg-amber-900 text-white px-6 py-2 rounded-lg font-medium hover:bg-amber-900">Buscar</button>
+                        <div class="flex justify-end mb-6 gap-2">
+                            <button id="clearFiltersBtn" class="bg-gray-400 text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-500">Limpiar filtros</button>
+                            <button id="searchBtn" class="bg-amber-900 text-white px-6 py-2 rounded-lg font-medium hover:bg-amber-800">Buscar</button>
                         </div>
 
                         <!-- Table or Empty State -->
@@ -282,9 +285,9 @@
                                 </thead>
                                 <tbody>
                                     {% for order in recent_orders %}
-                                    <tr class="border-b border-gray-100" id="recent-order-{{ order.id }}">
+                                    <tr class="border-b border-gray-100" id="recent-order-{{ order.id }}" data-status="{{ order.status }}" data-date="{{ order.created_at|date:'Y-m-d' }}">
                                         <td class="py-4 font-medium text-gray-900">{{ order.id }}</td>
-                                        <td class="py-4">{{ order.room_number|default:order.client_identifier }} / {{ order.user.username }}</td>
+                                        <td class="py-4">{{ order.room_number|default:order.client_identifier }}</td>
                                         <td class="py-4">
                                             {% if order.status == 'pending' %}
                                             <span class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">Recibido</span>
@@ -1356,6 +1359,118 @@
             }
 
 
+            // --- ORDER FILTERS ---
+            function initOrderFilters() {
+                const searchInput = document.getElementById('searchInput');
+                const statusFilter = document.getElementById('statusFilter');
+                const dateFromFilter = document.getElementById('dateFromFilter');
+                const dateToFilter = document.getElementById('dateToFilter');
+                const sortFilter = document.getElementById('sortFilter');
+                const searchBtn = document.getElementById('searchBtn');
+                const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+                
+                if (!searchBtn) return; // Si no estamos en la sección de pedidos, salir
+                
+                function filterOrders() {
+                    const searchTerm = searchInput.value.toLowerCase();
+                    const statusValue = statusFilter.value;
+                    const dateFrom = dateFromFilter.value;
+                    const dateTo = dateToFilter.value;
+                    const rows = document.querySelectorAll('#recent-order-');
+                    
+                    // Obtener todas las filas de la tabla
+                    const allRows = Array.from(document.querySelectorAll('table tbody tr'));
+                    
+                    allRows.forEach(row => {
+                        const orderNum = row.querySelector('td:nth-child(1)')?.textContent.trim();
+                        const clientHab = row.querySelector('td:nth-child(2)')?.textContent.trim();
+                        const status = row.querySelector('td:nth-child(3)')?.getAttribute('data-status') || '';
+                        const time = row.querySelector('td:nth-child(4)')?.textContent.trim();
+                        const dateStr = row.getAttribute('data-date') || '';
+                        
+                        let show = true;
+                        
+                        // Filtro de búsqueda
+                        if (searchTerm) {
+                            const searchMatch = orderNum?.includes(searchTerm) || 
+                                              clientHab?.toLowerCase().includes(searchTerm);
+                            if (!searchMatch) show = false;
+                        }
+                        
+                        // Filtro de estado
+                        if (statusValue && !status.includes(statusValue)) {
+                            show = false;
+                        }
+                        
+                        // Filtro de fechas
+                        if (dateFrom || dateTo) {
+                            const rowDate = new Date(dateStr);
+                            if (dateFrom && rowDate < new Date(dateFrom)) show = false;
+                            if (dateTo) {
+                                const toDate = new Date(dateTo);
+                                toDate.setHours(23, 59, 59);
+                                if (rowDate > toDate) show = false;
+                            }
+                        }
+                        
+                        row.style.display = show ? 'table-row' : 'none';
+                    });
+                }
+                
+                function sortOrders() {
+                    const sortValue = sortFilter.value;
+                    const tbody = document.querySelector('table tbody');
+                    const rows = Array.from(tbody.querySelectorAll('tr'));
+                    
+                    rows.sort((a, b) => {
+                        switch(sortValue) {
+                            case 'recent':
+                                return parseInt(b.querySelector('td:nth-child(1)').textContent) - 
+                                       parseInt(a.querySelector('td:nth-child(1)').textContent);
+                            case 'oldest':
+                                return parseInt(a.querySelector('td:nth-child(1)').textContent) - 
+                                       parseInt(b.querySelector('td:nth-child(1)').textContent);
+                            case 'highest':
+                                const totalB = parseFloat(b.querySelector('td:nth-child(5)').textContent.replace('$', ''));
+                                const totalA = parseFloat(a.querySelector('td:nth-child(5)').textContent.replace('$', ''));
+                                return totalB - totalA;
+                            case 'lowest':
+                                const totalB2 = parseFloat(b.querySelector('td:nth-child(5)').textContent.replace('$', ''));
+                                const totalA2 = parseFloat(a.querySelector('td:nth-child(5)').textContent.replace('$', ''));
+                                return totalA2 - totalB2;
+                            default:
+                                return 0;
+                        }
+                    });
+                    
+                    rows.forEach(row => tbody.appendChild(row));
+                }
+                
+                // Event listeners
+                if (searchBtn) searchBtn.addEventListener('click', () => {
+                    filterOrders();
+                    sortOrders();
+                });
+                
+                if (clearFiltersBtn) clearFiltersBtn.addEventListener('click', () => {
+                    searchInput.value = '';
+                    statusFilter.value = '';
+                    dateFromFilter.value = '';
+                    dateToFilter.value = '';
+                    sortFilter.value = 'recent';
+                    filterOrders();
+                    sortOrders();
+                });
+                
+                // Enter key en búsqueda
+                if (searchInput) searchInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        filterOrders();
+                        sortOrders();
+                    }
+                });
+            }
+
             // --- INITIALIZATION ---
             function initialize() {
                 initUIComponents();
@@ -1364,6 +1479,7 @@
                 initMenuManagement();
                 initPinManagement();
                 initUserManagement();
+                initOrderFilters();
 
                 // Cargar la sección guardada o desde la URL
                 const savedSection = localStorage.getItem('activeAdminSection');
