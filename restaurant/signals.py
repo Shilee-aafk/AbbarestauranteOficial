@@ -107,6 +107,15 @@ def menu_item_changed(sender, instance, **kwargs):
         return
 
     # Notifica a los garzones y al admin sobre el cambio de disponibilidad.
+    # Construir URL completa de la imagen
+    image_url = None
+    if instance.image:
+        image_url = instance.image.url
+        # Si es una URL relativa (empieza con /), hacerla absoluta
+        if image_url.startswith('/'):
+            from django.conf import settings
+            image_url = f"{settings.SITE_URL.rstrip('/')}{image_url}" if hasattr(settings, 'SITE_URL') else image_url
+    
     pusher_client.trigger(['garzon-channel', 'admin-channel'], 'item-disponibilidad', {
         'id': instance.id,
         'item_id': instance.id,
@@ -115,5 +124,5 @@ def menu_item_changed(sender, instance, **kwargs):
         'price': float(instance.price),
         'category': instance.category,
         'available': instance.available,
-        'image_url': instance.image.url if instance.image else None
+        'image_url': image_url
     })

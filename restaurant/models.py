@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User, Group
+import cloudinary.api
 
 class MenuItem(models.Model):
     name = models.CharField(max_length=100)
@@ -11,6 +12,24 @@ class MenuItem(models.Model):
 
     def __str__(self):
         return self.name
+    
+    @property
+    def image_url(self):
+        """
+        Get the image URL, handling both Cloudinary and local storage.
+        """
+        if not self.image:
+            return None
+        
+        image_str = str(self.image)
+        
+        # If it's a Cloudinary reference, convert to URL
+        if image_str.startswith('cloudinary:'):
+            public_id = image_str.replace('cloudinary:', '')
+            return f'https://res.cloudinary.com/dvjcrc3ei/image/upload/{public_id}'
+        
+        # Otherwise return the image URL normally
+        return self.image.url if self.image else None
 
 class Order(models.Model):
     STATUS_CHOICES = [

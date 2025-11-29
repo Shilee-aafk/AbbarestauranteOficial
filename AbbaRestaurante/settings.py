@@ -43,11 +43,13 @@ if not SECRET_KEY:
 if DEBUG:
     # En desarrollo, permitimos cualquier host para mayor flexibilidad.
     ALLOWED_HOSTS = ['*']
+    SITE_URL = 'http://localhost:8000'
 else:
     # En producción en Render
     render_domain = os.environ.get('RENDER_EXTERNAL_HOSTNAME', '')
     ALLOWED_HOSTS = [render_domain] if render_domain else ['*']
     CSRF_TRUSTED_ORIGINS = [f'https://{render_domain}'] if render_domain else []
+    SITE_URL = f'https://{render_domain}' if render_domain else 'https://abbarestaurante.onrender.com'
 
 # Application definition
 
@@ -58,7 +60,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'cloudinary_storage',
     'cloudinary',
     'restaurant.apps.RestaurantConfig',
     
@@ -141,6 +142,7 @@ LOGIN_REDIRECT_URL = '/restaurant/'
 LOGOUT_REDIRECT_URL = '/restaurant/'
 
 # Media files configuration for user uploads (images, etc.)
+# Usar almacenamiento local, Cloudinary se usa directamente en el código
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
@@ -179,11 +181,5 @@ CLOUDINARY_STORAGE = {
     'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET', 'dnD4bo63Fi7PSvbo2MYqoF4q00U'),
 }
 
-# Use Cloudinary for media file storage in production
-if not DEBUG:
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-    # Cloudinary automatically handles MEDIA_URL through the storage backend
-else:
-    # Use local storage in development
-    MEDIA_URL = '/media/'
-    MEDIA_ROOT = BASE_DIR / 'media'
+# Use Cloudinary for media file storage in production AND development (for consistency)
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'

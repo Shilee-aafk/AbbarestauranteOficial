@@ -134,7 +134,7 @@ def admin_dashboard(request):
         'price': float(m.price),
         'category': m.category,
         'available': m.available,
-        'image_url': m.image.url if m.image else None
+        'image_url': m.image_url
     } for m in menu_items], cls=DecimalEncoder)
     return render(request, 'restaurant/admin_dashboard.html', {
         'orders': orders,
@@ -247,7 +247,7 @@ def waiter_dashboard(request):
             'id': item.id, 
             'name': item.name, 
             'price': float(item.price),
-            'image_url': item.image.url if item.image else None,
+            'image_url': item.image_url,
             'description': item.description
         } for item in menu_items], cls=DecimalEncoder)
 
@@ -736,7 +736,7 @@ def api_menu_items(request):
         data = [{
             'id': m.id, 'name': m.name, 'description': m.description,
             'price': float(m.price), 'category': m.category, 'available': m.available,
-            'image_url': m.image.url if m.image else None
+            'image_url': m.image_url
         } for m in menu_items]
         return JsonResponse(data, safe=False)
 
@@ -764,7 +764,7 @@ def api_menu_items(request):
             return JsonResponse({
                 'id': item.id, 'name': item.name, 'description': item.description,
                 'price': float(item.price), 'category': item.category, 'available': item.available,
-                'image_url': item.image.url if item.image else None
+                'image_url': item.image_url
             }, status=201)
         except Exception as e:
             print(f"[ERROR] Exception in POST: {str(e)}")
@@ -791,7 +791,7 @@ def api_menu_item_detail(request, pk):
         return JsonResponse({
             'id': item.id, 'name': item.name, 'description': item.description,
             'price': float(item.price), 'category': item.category, 'available': item.available,
-            'image_url': item.image.url if item.image else None
+            'image_url': item.image_url
         })
 
     if request.method in ['PUT', 'PATCH']:
@@ -844,7 +844,7 @@ def api_menu_item_detail(request, pk):
         return JsonResponse({
             'id': item.id, 'name': item.name, 'description': item.description,
             'price': float(item.price), 'category': item.category, 'available': item.available,
-            'image_url': item.image.url if item.image else None
+            'image_url': item.image_url
         })
 
     if request.method == 'DELETE':
@@ -855,9 +855,12 @@ def api_menu_item_detail(request, pk):
 @user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
 def api_menu_item_upload_image(request, pk):
     """
-    Upload image for a menu item.
+    Upload image for a menu item directly to Cloudinary.
     Only handles POST requests with file upload.
+    Returns the Cloudinary URL directly sin guardar en la BD.
     """
+    import cloudinary.uploader
+    
     try:
         item = MenuItem.objects.get(pk=pk)
     except MenuItem.DoesNotExist:
@@ -871,19 +874,26 @@ def api_menu_item_upload_image(request, pk):
             image_file = request.FILES['image']
             print(f"[DEBUG] Uploading image for item {pk}: {image_file.name}")
             
-            # Delete old image if exists
-            if item.image:
-                item.image.delete()
+            # Upload directly to Cloudinary using the file content
+            result = cloudinary.uploader.upload(
+                image_file.read(),
+                folder=f'restaurant/menu_items',
+                public_id=f'item_{pk}_{image_file.name.split(".")[0]}',
+                overwrite=True,
+                resource_type='auto'
+            )
             
-            # Save new image
-            item.image = image_file
+            cloudinary_url = result.get('secure_url')
+            print(f"[DEBUG] Image uploaded to Cloudinary: {cloudinary_url}")
+            
+            # Store the Cloudinary URL public_id in the database (not the full URL)
+            # This avoids Django treating it as a relative path
+            item.image = f'cloudinary:{result.get("public_id")}'
             item.save()
-            
-            print(f"[DEBUG] Image saved successfully: {item.image.name}")
             
             return JsonResponse({
                 'id': item.id,
-                'image_url': item.image.url if item.image else None,
+                'image_url': cloudinary_url,
                 'message': 'Image uploaded successfully'
             }, status=200)
         except Exception as e:

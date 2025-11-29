@@ -7,6 +7,32 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="{% static 'restaurant/css/components.css' %}">
     <style>
+        /* Custom Toast Notification Styles */
+        .toast {
+            position: fixed;
+            top: 5%;
+            left: 50%;
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            z-index: 1000;
+            opacity: 0;
+            transform: translate(-50%, -100px);
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.875rem;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translate(-50%, 0);
+        }
+        .toast.success { color: #22c55e; }
+        .toast.error { color: #ef4444; }
+        .toast.info { color: #3b82f6; }
         #welcome-banner { transition: opacity 0.5s ease, transform 0.5s ease; }
         .banner-hidden {
             opacity: 0;
@@ -548,30 +574,29 @@
         const csrfToken = '{{ csrf_token }}';
         
         // --- TOAST NOTIFICATION FUNCTION ---
-        function showToast(message, type = 'info', duration = 3000) {
-            const toastContainer = document.getElementById('toast-container') || (() => {
-                const container = document.createElement('div');
-                container.id = 'toast-container';
-                container.className = 'fixed top-4 right-4 z-[9999] space-y-2';
-                document.body.appendChild(container);
-                return container;
-            })();
-
+        function showToast(message, type = 'info') {
             const toast = document.createElement('div');
-            const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
-            const textColor = 'text-white';
-            
-            toast.className = `${bgColor} ${textColor} px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-pulse`;
-            toast.innerHTML = `
-                <span>${message}</span>
-                <button onclick="this.parentElement.remove()" class="ml-2 text-white hover:opacity-70">✕</button>
-            `;
-            
-            toastContainer.appendChild(toast);
-            
-            if (duration > 0) {
-                setTimeout(() => toast.remove(), duration);
-            }
+            toast.className = `toast ${type}`;
+
+            const icons = {
+                success: `<svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`,
+                error: `<svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`,
+                info: `<svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`,
+            };
+
+            toast.innerHTML = icons[type] || icons['info'];
+            const messageSpan = document.createElement('span');
+            messageSpan.textContent = message;
+            toast.appendChild(messageSpan);
+
+            document.body.appendChild(toast);
+
+            setTimeout(() => toast.classList.add('show'), 100);
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 500);
+            }, 3000);
         }
         
         // --- HELPER FUNCTIONS (Global Scope) ---
@@ -1009,13 +1034,14 @@
                     e.preventDefault();
                     const id = document.getElementById('menu-item-id').value;
                     
-                    // Usar FormData para enviar datos básicos
-                    const formData = new FormData();
-                    formData.append('name', document.getElementById('menu-name').value);
-                    formData.append('description', document.getElementById('menu-description').value);
-                    formData.append('price', document.getElementById('menu-price').value);
-                    formData.append('category', document.getElementById('menu-category').value);
-                    formData.append('available', document.getElementById('menu-available').checked ? 'true' : 'false');
+                    // Enviar datos como JSON (sin FormData)
+                    const itemData = {
+                        name: document.getElementById('menu-name').value,
+                        description: document.getElementById('menu-description').value,
+                        price: document.getElementById('menu-price').value,
+                        category: document.getElementById('menu-category').value,
+                        available: document.getElementById('menu-available').checked
+                    };
 
                     const url = id ? `/restaurant/api/menu-items/${id}/` : "{% url 'restaurant:api_menu_items' %}";
                     const method = id ? 'PUT' : 'POST';
@@ -1024,8 +1050,11 @@
                         console.log(`[${method}] Enviando datos a ${url}`);
                         const options = {
                             method,
-                            headers: { 'X-CSRFToken': csrfToken },
-                            body: formData
+                            headers: { 
+                                'X-CSRFToken': csrfToken,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(itemData)
                         };
                         
                         const response = await fetch(url, options);
@@ -1037,16 +1066,16 @@
                             throw new Error(errorData.error || `Error ${response.status}`);
                         }
                         
-                        const itemData = await response.json();
-                        console.log('Item actualizado:', itemData);
+                        const respData = await response.json();
+                        console.log('Item actualizado:', respData);
                         
                         // Si hay imagen, subirla por separado al nuevo endpoint
                         const imageFile = document.getElementById('menu-image').files[0];
-                        if (imageFile && itemData.id) {
+                        if (imageFile && respData.id) {
                             const imageFormData = new FormData();
                             imageFormData.append('image', imageFile);
                             
-                            const imageResponse = await fetch(`/restaurant/api/menu-items/${itemData.id}/upload-image/`, {
+                            const imageResponse = await fetch(`/restaurant/api/menu-items/${respData.id}/upload-image/`, {
                                 method: 'POST',
                                 headers: { 'X-CSRFToken': csrfToken },
                                 body: imageFormData
@@ -1054,8 +1083,8 @@
                             
                             if (imageResponse.ok) {
                                 const imageData = await imageResponse.json();
-                                // Actualizar itemData con la URL de la imagen
-                                itemData.image_url = imageData.image_url;
+                                // Actualizar respData con la URL de la imagen
+                                respData.image_url = imageData.image_url;
                                 console.log('Image uploaded successfully');
                             } else {
                                 console.warn('Image upload had issues but item was created');
@@ -1063,7 +1092,7 @@
                         }
                         
                         // Actualizar la tabla localmente de inmediato
-                        updateMenuItemInUI(itemData, id ? 'updated' : 'created');
+                        updateMenuItemInUI(respData, id ? 'updated' : 'created');
                         
                         document.getElementById('menu-form-modal').classList.add('hidden');
                         showToast('Plato guardado exitosamente', 'success');
