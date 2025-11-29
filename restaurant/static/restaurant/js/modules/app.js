@@ -214,6 +214,15 @@ function setupGlobalListeners() {
     closeCartBtn.addEventListener('click', () => {
       console.log('Cerrar carrito');
       cartModal.classList.add('hidden');
+      // Si se cierra el modal sin enviar y estaba en modo edición, limpiar estado
+      // pero solo si no hay cambios pendientes (carrito vacío o igual al original)
+      if (cartManager.editingOrderId) {
+        // Recargar el carrito para verificar si hay cambios
+        // Si se cerró sin guardar, el servidor tendrá el original, así que limpiar es seguro
+        cartManager.editingOrderId = null;
+        cartManager.editingOrderStatus = null;
+        cartManager.updateSubmitButton();
+      }
     });
   }
 
