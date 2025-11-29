@@ -622,6 +622,7 @@
             })
             .then(response => response.json())
             .then(item => {
+                console.log('Item cargado:', item);
                 document.getElementById('menu-item-id').value = item.id;
                 document.getElementById('menu-name').value = item.name;
                 document.getElementById('menu-description').value = item.description || '';
@@ -632,11 +633,13 @@
                 
                 // Mostrar la imagen actual si existe
                 if (item.image_url) {
+                    console.log('Mostrando imagen:', item.image_url);
                     const imagePreview = document.getElementById('image-preview');
                     const imagePreviewImg = document.getElementById('image-preview-img');
                     imagePreviewImg.src = item.image_url;
                     imagePreview.classList.remove('hidden');
                 } else {
+                    console.log('Sin imagen_url');
                     document.getElementById('image-preview').classList.add('hidden');
                 }
                 
@@ -645,7 +648,10 @@
                 
                 document.getElementById('menu-form-modal').classList.remove('hidden');
             })
-            .catch(err => alert(`Error al cargar el plato: ${err.message}`));
+            .catch(err => {
+                console.error('Error:', err);
+                alert(`Error al cargar el plato: ${err.message}`);
+            });
         }
 
         function deleteMenuItem(itemId) {
