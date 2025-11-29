@@ -1371,86 +1371,82 @@
                 
                 if (!searchBtn) return; // Si no estamos en la sección de pedidos, salir
                 
-                function filterOrders() {
-                    const searchTerm = searchInput.value.toLowerCase();
-                    const statusValue = statusFilter.value;
+                async function fetchFilteredOrders() {
+                    const search = searchInput.value;
+                    const status = statusFilter.value;
                     const dateFrom = dateFromFilter.value;
                     const dateTo = dateToFilter.value;
-                    const rows = document.querySelectorAll('#recent-order-');
                     
-                    // Obtener todas las filas de la tabla
-                    const allRows = Array.from(document.querySelectorAll('table tbody tr'));
+                    const query = new URLSearchParams({ search, status, date_from: dateFrom, date_to: dateTo }).toString();
                     
-                    allRows.forEach(row => {
-                        const orderNum = row.querySelector('td:nth-child(1)')?.textContent.trim();
-                        const clientHab = row.querySelector('td:nth-child(2)')?.textContent.trim();
-                        const status = row.querySelector('td:nth-child(3)')?.getAttribute('data-status') || '';
-                        const time = row.querySelector('td:nth-child(4)')?.textContent.trim();
-                        const dateStr = row.getAttribute('data-date') || '';
+                    try {
+                        const response = await fetch(`/restaurant/api/orders-report/?${query}`);
+                        if (!response.ok) throw new Error('Network response was not ok');
+                        const orders = await response.json();
                         
-                        let show = true;
+                        const tbody = document.querySelector('table tbody');
+                        tbody.innerHTML = '';
                         
-                        // Filtro de búsqueda
-                        if (searchTerm) {
-                            const searchMatch = orderNum?.includes(searchTerm) || 
-                                              clientHab?.toLowerCase().includes(searchTerm);
-                            if (!searchMatch) show = false;
+                        if (orders.length === 0) {
+                            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-12 text-gray-500">No se encontraron pedidos con los filtros seleccionados.</td></tr>';
+                            return;
                         }
                         
-                        // Filtro de estado
-                        if (statusValue && !status.includes(statusValue)) {
-                            show = false;
-                        }
-                        
-                        // Filtro de fechas
-                        if (dateFrom || dateTo) {
-                            const rowDate = new Date(dateStr);
-                            if (dateFrom && rowDate < new Date(dateFrom)) show = false;
-                            if (dateTo) {
-                                const toDate = new Date(dateTo);
-                                toDate.setHours(23, 59, 59);
-                                if (rowDate > toDate) show = false;
+                        // Ordenar según el filtro de ordenamiento
+                        const sortValue = sortFilter.value;
+                        orders.sort((a, b) => {
+                            switch(sortValue) {
+                                case 'recent':
+                                    return b.id - a.id;
+                                case 'oldest':
+                                    return a.id - b.id;
+                                case 'highest':
+                                    return b.total - a.total;
+                                case 'lowest':
+                                    return a.total - b.total;
+                                default:
+                                    return 0;
                             }
-                        }
+                        });
                         
-                        row.style.display = show ? 'table-row' : 'none';
-                    });
-                }
-                
-                function sortOrders() {
-                    const sortValue = sortFilter.value;
-                    const tbody = document.querySelector('table tbody');
-                    const rows = Array.from(tbody.querySelectorAll('tr'));
-                    
-                    rows.sort((a, b) => {
-                        switch(sortValue) {
-                            case 'recent':
-                                return parseInt(b.querySelector('td:nth-child(1)').textContent) - 
-                                       parseInt(a.querySelector('td:nth-child(1)').textContent);
-                            case 'oldest':
-                                return parseInt(a.querySelector('td:nth-child(1)').textContent) - 
-                                       parseInt(b.querySelector('td:nth-child(1)').textContent);
-                            case 'highest':
-                                const totalB = parseFloat(b.querySelector('td:nth-child(5)').textContent.replace('$', ''));
-                                const totalA = parseFloat(a.querySelector('td:nth-child(5)').textContent.replace('$', ''));
-                                return totalB - totalA;
-                            case 'lowest':
-                                const totalB2 = parseFloat(b.querySelector('td:nth-child(5)').textContent.replace('$', ''));
-                                const totalA2 = parseFloat(a.querySelector('td:nth-child(5)').textContent.replace('$', ''));
-                                return totalA2 - totalB2;
-                            default:
-                                return 0;
-                        }
-                    });
-                    
-                    rows.forEach(row => tbody.appendChild(row));
+                        orders.forEach(order => {
+                            const statusBadge = {
+                                'pending': '<span class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">Recibido</span>',
+                                'preparing': '<span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">En preparación</span>',
+                                'ready': '<span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">Listo</span>',
+                                'served': '<span class="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">Servido</span>',
+                                'paid': '<span class="px-2 py-1 text-xs font-medium bg-indigo-100 text-indigo-800 rounded-full">Pagado</span>',
+                                'charged_to_room': '<span class="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 rounded-full">Cargado a Habitación</span>',
+                                'cancelled': '<span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">Cancelado</span>'
+                            }[order.status] || '<span class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">Desconocido</span>';
+                            
+                            const row = `
+                                <tr class="border-b border-gray-100" id="recent-order-${order.id}" data-status="${order.status}" data-date="${new Date(order.created_at).toISOString().split('T')[0]}">
+                                    <td class="py-4 font-medium text-gray-900">${order.id}</td>
+                                    <td class="py-4">${order.identifier || order.room_number || 'N/A'}</td>
+                                    <td class="py-4">${statusBadge}</td>
+                                    <td class="py-4">${new Date(order.created_at).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}</td>
+                                    <td class="py-4">$${order.total.toFixed(0)}</td>
+                                    <td class="py-4">
+                                        <div class="flex items-center space-x-2">
+                                            <button class="text-gray-500 hover:text-blue-600 p-1 rounded-full transition-colors" onclick="viewOrderDetails(${order.id})" title="Ver detalles">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `;
+                            tbody.innerHTML += row;
+                        });
+                    } catch (error) {
+                        console.error('Error fetching orders:', error);
+                        const tbody = document.querySelector('table tbody');
+                        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-12 text-red-500">Error al cargar los pedidos.</td></tr>';
+                    }
                 }
                 
                 // Event listeners
-                if (searchBtn) searchBtn.addEventListener('click', () => {
-                    filterOrders();
-                    sortOrders();
-                });
+                if (searchBtn) searchBtn.addEventListener('click', fetchFilteredOrders);
                 
                 if (clearFiltersBtn) clearFiltersBtn.addEventListener('click', () => {
                     searchInput.value = '';
@@ -1458,15 +1454,13 @@
                     dateFromFilter.value = '';
                     dateToFilter.value = '';
                     sortFilter.value = 'recent';
-                    filterOrders();
-                    sortOrders();
+                    fetchFilteredOrders();
                 });
                 
                 // Enter key en búsqueda
                 if (searchInput) searchInput.addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') {
-                        filterOrders();
-                        sortOrders();
+                        fetchFilteredOrders();
                     }
                 });
             }
