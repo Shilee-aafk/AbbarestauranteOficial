@@ -616,18 +616,36 @@
         }
 
         function editMenuItem(itemId) {
-            const row = document.querySelector(`#menu-table tr[data-item-id="${itemId}"]`);
-            if (row) {
-                const cells = row.querySelectorAll('td');
-                document.getElementById('menu-item-id').value = itemId;
-                document.getElementById('menu-name').value = cells[0].textContent;
-                document.getElementById('menu-description').value = '';  // Esto debería venir del servidor
-                document.getElementById('menu-price').value = cells[1].textContent.replace('$', '');
-                document.getElementById('menu-category').value = cells[2].textContent;
-                document.getElementById('menu-available').checked = cells[3].textContent.includes('Disponible');
+            // Obtener los datos completos del servidor, no solo de la tabla
+            fetch(`/restaurant/api/menu-items/${itemId}/`, {
+                headers: { 'X-CSRFToken': csrfToken }
+            })
+            .then(response => response.json())
+            .then(item => {
+                document.getElementById('menu-item-id').value = item.id;
+                document.getElementById('menu-name').value = item.name;
+                document.getElementById('menu-description').value = item.description || '';
+                document.getElementById('menu-price').value = item.price;
+                document.getElementById('menu-category').value = item.category;
+                document.getElementById('menu-available').checked = item.available;
                 document.getElementById('menu-form-title').textContent = 'Editar Plato';
+                
+                // Mostrar la imagen actual si existe
+                if (item.image_url) {
+                    const imagePreview = document.getElementById('image-preview');
+                    const imagePreviewImg = document.getElementById('image-preview-img');
+                    imagePreviewImg.src = item.image_url;
+                    imagePreview.classList.remove('hidden');
+                } else {
+                    document.getElementById('image-preview').classList.add('hidden');
+                }
+                
+                // Limpiar el input de archivo
+                document.getElementById('menu-image').value = '';
+                
                 document.getElementById('menu-form-modal').classList.remove('hidden');
-            }
+            })
+            .catch(err => alert(`Error al cargar el plato: ${err.message}`));
         }
 
         function deleteMenuItem(itemId) {
@@ -970,15 +988,20 @@
                                 body: imageFormData
                             });
                             
-                            if (!imageResponse.ok) {
-                                console.warn('Image upload had issues but item was created');
-                            } else {
+                            if (imageResponse.ok) {
+                                const imageData = await imageResponse.json();
+                                // Actualizar itemData con la URL de la imagen
+                                itemData.image_url = imageData.image_url;
                                 console.log('Image uploaded successfully');
+                            } else {
+                                console.warn('Image upload had issues but item was created');
                             }
                         }
                         
+                        // Actualizar la tabla localmente de inmediato
+                        updateMenuItemInUI(itemData, id ? 'updated' : 'created');
+                        
                         document.getElementById('menu-form-modal').classList.add('hidden');
-                        // La actualización de la UI se manejará vía WebSocket
                     } catch (error) {
                         alert(`Error guardando el plato: ${error.message}`);
                     }
