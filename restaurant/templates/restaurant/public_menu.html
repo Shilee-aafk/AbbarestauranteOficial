@@ -50,9 +50,9 @@
                     {% for item in items %}
                     <div class="flex flex-col gap-3 {% if not item.available %}opacity-60{% endif %}">
                         <!-- Imagen del plato (si existe) -->
-                        {% if item.image %}
-                        <div class="overflow-hidden rounded-lg shadow-md h-40 w-full">
-                            <img src="{{ item.image.url }}" alt="{{ item.name }}" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
+                        {% if item.image.name %}
+                        <div class="overflow-hidden rounded-lg shadow-md h-40 w-full bg-gray-100">
+                            <img src="{{ item.image.url }}" alt="{{ item.name }}" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300" loading="lazy">
                         </div>
                         {% endif %}
                         

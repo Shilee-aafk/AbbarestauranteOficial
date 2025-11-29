@@ -2,10 +2,26 @@ from django.contrib import admin
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
 from django.utils.html import format_html
+from django import forms
 from .models import MenuItem, Order, OrderItem
+
+# Formulario personalizado para MenuItem
+class MenuItemForm(forms.ModelForm):
+    class Meta:
+        model = MenuItem
+        fields = ['name', 'description', 'price', 'category', 'available', 'image']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'vTextField'}),
+            'description': forms.Textarea(attrs={'class': 'vLargeTextField'}),
+            'price': forms.NumberInput(attrs={'class': 'vDecimalField', 'step': '0.01'}),
+            'category': forms.TextInput(attrs={'class': 'vTextField'}),
+            'available': forms.CheckboxInput(attrs={'class': 'vCheckboxField'}),
+            'image': forms.FileInput(attrs={'class': 'vFileField', 'accept': 'image/*'}),
+        }
 
 # Clase personalizada para MenuItem
 class MenuItemAdmin(admin.ModelAdmin):
+    form = MenuItemForm
     list_display = ('name', 'category', 'price', 'available', 'image_thumbnail')
     list_filter = ('category', 'available')
     search_fields = ('name', 'description')
@@ -17,7 +33,7 @@ class MenuItemAdmin(admin.ModelAdmin):
         }),
         ('Imagen del Plato', {
             'fields': ('image', 'image_preview'),
-            'description': 'Sube una imagen del plato. Las imágenes se mostrarán en el menú público.'
+            'description': 'Sube una imagen del plato (JPG, PNG, WebP). Las imágenes se mostrarán en el menú público.'
         }),
     )
     readonly_fields = ('image_preview',)
