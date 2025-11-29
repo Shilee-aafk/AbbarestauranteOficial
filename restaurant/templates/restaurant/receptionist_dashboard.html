@@ -59,12 +59,23 @@
                 transform: translateY(-10px);
             }
         }
+        #sidebar {
+            border-top-right-radius: 0.75rem;
+            border-bottom-right-radius: 0.75rem;
+            border-top-width: 1px;
+            border-top-color: rgb(251, 191, 36);
+            border-right-width: 1px;
+            border-right-color: rgb(251, 191, 36);
+            border-bottom-width: 1px;
+            border-bottom-color: rgb(251, 191, 36);
+            overflow: hidden;
+        }
     </style>
 {% endblock %}
 
 {% block content %}
     <!-- Sidebar -->
-    <div id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-amber-50 shadow-md transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-30">
+    <div id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-amber-50 shadow-sm transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-30">
         <div class="flex items-center h-16 bg-amber-50 border-b border-amber-200 px-6">
             <img src="{% static 'restaurant/images/logo_d.png' %}" alt="Logo de Mi Restaurante" class="h-10 w-auto">
             <span class="text-xl font-semibold text-amber-900 ml-2">Restaurante</span>
@@ -92,7 +103,7 @@
             {% endif %}
         </nav>
         <!-- User Section at Bottom -->
-        <div class="absolute bottom-0 left-0 right-0 border-t border-amber-200 bg-amber-50 p-4">
+        <div class="absolute bottom-0 left-0 right-0 border-t-2 border-amber-300 bg-amber-50 p-4" style="border-bottom-right-radius: 0.75rem;">
             <div class="flex items-center justify-between">
                 <span class="text-sm font-medium text-amber-900">{{ user.username }}</span>
                 <a href="{% url 'logout' %}" class="text-xs text-red-600 hover:text-red-800 font-normal">Cerrar</a>
@@ -101,7 +112,7 @@
     </div>
 
     <!-- Overlay for mobile when sidebar is open -->
-    <div id="sidebar-overlay" class="fixed inset-0 bg-black opacity-50 hidden z-20 lg:hidden"></div>
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black z-20 lg:hidden" style="opacity: 0; pointer-events: none; transition: opacity 0.3s ease-in-out;"></div>
 
     <!-- Main Content -->
     <div class="lg:ml-64 bg-gray-50 min-h-screen">
@@ -113,7 +124,7 @@
         </div>
 
         <!-- Fixed Hamburger Button (only visible on mobile) -->
-        <button id="sidebar-toggle" class="lg:hidden fixed top-4 left-4 z-40 text-gray-500 hover:text-gray-700 bg-white p-2 rounded-lg shadow-md">
+        <button id="sidebar-toggle" class="lg:hidden fixed top-4 left-4 z-40 text-amber-700 hover:text-amber-900 bg-amber-50 p-2 rounded-lg shadow-sm border border-amber-300">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
         </button>
 
@@ -326,18 +337,60 @@
             const sidebar = document.getElementById('sidebar');
             const sidebarToggle = document.getElementById('sidebar-toggle');
             const sidebarOverlay = document.getElementById('sidebar-overlay');
-
-            function toggleSidebar() {
+            
+            const toggleSidebar = () => {
                 sidebar.classList.toggle('-translate-x-full');
-                sidebarOverlay.classList.toggle('hidden');
-            }
-
-            if (sidebarToggle) {
-                sidebarToggle.addEventListener('click', toggleSidebar);
-            }
-            if (sidebarOverlay) {
-                sidebarOverlay.addEventListener('click', toggleSidebar);
-            }
+                const isClosed = sidebar.classList.contains('-translate-x-full');
+                sidebarOverlay.style.opacity = isClosed ? '0' : '0.5';
+                sidebarOverlay.style.pointerEvents = isClosed ? 'none' : 'auto';
+                sidebarToggle.classList.toggle('hidden');
+                sidebar.style.transition = 'transform 0.3s ease-in-out';
+                sidebarOverlay.style.transition = 'opacity 0.3s ease-in-out';
+                sidebar.style.transform = '';
+            };
+            
+            sidebarToggle?.addEventListener('click', toggleSidebar);
+            sidebarOverlay?.addEventListener('click', toggleSidebar);
+            
+            // Swipe para cerrar el sidebar cuando está abierto
+            let touchStart = null;
+            
+            sidebar?.addEventListener('touchstart', (e) => {
+                touchStart = e.changedTouches[0].clientX;
+            }, false);
+            
+            sidebar?.addEventListener('touchend', (e) => {
+                if (!touchStart) return;
+                const touchEnd = e.changedTouches[0].clientX;
+                const diff = touchStart - touchEnd;
+                touchStart = null;
+                
+                // Si desliza más de 50px hacia la izquierda, cerrar
+                if (diff > 50) {
+                    toggleSidebar();
+                }
+            }, false);
+            
+            // Swipe desde borde izquierdo para abrir
+            let edgeStart = null;
+            
+            document?.addEventListener('touchstart', (e) => {
+                if (e.changedTouches[0].clientX < 20) {
+                    edgeStart = e.changedTouches[0].clientX;
+                }
+            }, false);
+            
+            document?.addEventListener('touchend', (e) => {
+                if (!edgeStart) return;
+                const diff = e.changedTouches[0].clientX - edgeStart;
+                edgeStart = null;
+                
+                // Si desliza más de 50px hacia la derecha desde el borde, abrir
+                const isClosed = sidebar.classList.contains('-translate-x-full');
+                if (isClosed && diff > 50) {
+                    toggleSidebar();
+                }
+            }, false);
 
             // --- Navigation Logic ---
             const navLinks = document.querySelectorAll('.nav-link');

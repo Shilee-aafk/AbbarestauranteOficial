@@ -52,12 +52,23 @@
         .banner-hidden {
             opacity: 0;
         }
+        #sidebar {
+            border-top-right-radius: 0.75rem;
+            border-bottom-right-radius: 0.75rem;
+            border-top-width: 1px;
+            border-top-color: rgb(251, 191, 36);
+            border-right-width: 1px;
+            border-right-color: rgb(251, 191, 36);
+            border-bottom-width: 1px;
+            border-bottom-color: rgb(251, 191, 36);
+            overflow: hidden;
+        }
     </style>
 {% endblock %}
 
 {% block content %}
     <!-- Sidebar -->
-    <div id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-amber-50 shadow-md transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-30">
+    <div id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-amber-50 shadow-sm transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-30">
         <div class="flex items-center h-16 bg-amber-50 border-b border-amber-200 px-6">
             <img src="{% static 'restaurant/images/logo_d.png' %}" alt="Abba Hotel Logo" class="w-12 h-12 mr-2 object-contain">
             <span class="text-xl font-semibold text-amber-900">Abba Hotel</span>
@@ -84,7 +95,7 @@
             </a>
         </nav>
         <!-- User Section at Bottom -->
-        <div class="absolute bottom-0 left-0 right-0 border-t border-amber-200 bg-amber-50 p-4">
+        <div class="absolute bottom-0 left-0 right-0 border-t-2 border-amber-300 bg-amber-50 p-4" style="border-bottom-right-radius: 0.75rem;">
             <div class="flex items-center justify-between">
                 <span class="text-sm font-medium text-amber-900">{{ user.username }}</span>
                 <a href="{% url 'logout' %}" class="text-xs text-red-600 hover:text-red-800 font-normal">Cerrar</a>
@@ -93,14 +104,14 @@
     </div>
 
     <!-- Overlay for mobile when sidebar is open -->
-    <div id="sidebar-overlay" class="fixed inset-0 bg-black opacity-50 hidden z-20 lg:hidden"></div>
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black z-20 lg:hidden" style="opacity: 0; pointer-events: none; transition: opacity 0.3s ease-in-out;"></div>
 
     <!-- Main Content -->
     <div class="lg:ml-64 bg-gray-50 min-h-screen">
         <!-- Header -->
         <div class="bg-white shadow-sm border-b border-gray-200 px-8 py-4 flex justify-between items-center">
             <div class="flex items-center">
-                <button id="sidebar-toggle" class="lg:hidden fixed top-4 left-4 z-40 text-gray-500 hover:text-gray-700 mr-4 bg-white p-2 rounded-lg shadow-md">
+                <button id="sidebar-toggle" class="lg:hidden fixed top-4 left-4 z-40 text-amber-700 hover:text-amber-900 mr-4 bg-amber-50 p-2 rounded-lg shadow-sm border border-amber-300">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                 </button>
                 <h1 class="text-2xl font-bold text-gray-900 hidden sm:block">Panel de Administración</h1>
@@ -134,7 +145,7 @@
 
                 <!-- Stats Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-                    <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="bg-amber-50 rounded-lg border border-amber-300 shadow-sm p-6">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-gray-600 text-sm">Pedidos de Hoy</p>
@@ -147,7 +158,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="bg-amber-50 rounded-lg border border-amber-300 shadow-sm p-6">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-gray-600 text-sm">Total Vendido Hoy</p>
@@ -161,7 +172,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="bg-amber-50 rounded-lg border border-amber-300 shadow-sm p-6">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-gray-600 text-sm">En Preparación</p>
@@ -174,7 +185,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="bg-amber-50 rounded-lg border border-amber-300 shadow-sm p-6">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-gray-600 text-sm">Listos para Servir</p>
@@ -187,7 +198,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="bg-amber-50 rounded-lg border border-amber-300 shadow-sm p-6">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-gray-600 text-sm">Pedidos Completados</p>
@@ -204,27 +215,27 @@
 
                 <!-- Charts Section -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                    <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="bg-amber-50 rounded-lg border border-amber-300 shadow-sm p-6">
                         <h3 class="text-lg font-semibold text-gray-900 mb-4">Ventas Pagadas (Últimos 7 Días)</h3>
                         <canvas id="salesChart"></canvas>
                     </div>
-                    <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="bg-amber-50 rounded-lg border border-amber-300 shadow-sm p-6">
                         <h3 class="text-lg font-semibold text-gray-900 mb-4">Top 5 Platos Más Vendidos</h3>
                         <div class="max-w-xs mx-auto">
                             <canvas id="topDishesChart"></canvas>
                         </div>
                     </div>
-                    <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="bg-amber-50 rounded-lg border border-amber-300 shadow-sm p-6">
                         <h3 class="text-lg font-semibold text-gray-900 mb-4">Ventas de Hoy por Hora</h3>
                         <canvas id="salesByHourChart"></canvas>
                     </div>
-                    <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="bg-amber-50 rounded-lg border border-amber-300 shadow-sm p-6">
                         <h3 class="text-lg font-semibold text-gray-900 mb-4">Rendimiento de Garzones (Hoy)</h3>
                         <div class="max-w-xs mx-auto">
                             <canvas id="waiterPerformanceChart"></canvas>
                         </div>
                     </div>
-                    <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="bg-amber-50 rounded-lg border border-amber-300 shadow-sm p-6">
                         <h3 class="text-lg font-semibold text-gray-900 mb-4">Ventas de Hoy por Categoría</h3>
                         <canvas id="salesByCategoryChart"></canvas>
                     </div>
@@ -232,8 +243,8 @@
 
 
                 <!-- Recent Orders Section -->
-                <div class="bg-white rounded-lg shadow-md">
-                    <div class="p-6 border-b border-gray-200">
+                <div class="bg-amber-50 rounded-lg border border-amber-300 shadow-sm">
+                    <div class="p-6 border-b border-amber-300">
                         <h2 class="text-xl font-semibold text-gray-900">Pedidos Recientes</h2>
                     </div>
                     <div class="p-6">
@@ -332,11 +343,11 @@
                     <p class="text-gray-600 mt-2">Filtra y visualiza todos los pedidos realizados en el sistema.</p>
                 </div>
 
-                <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="bg-amber-50 rounded-lg border border-amber-300 shadow-sm p-6 overflow-hidden">
                     <!-- Filters -->
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                        <input type="text" id="report-search-input" placeholder="Buscar por N° pedido, cliente, hab..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <select id="report-status-filter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <input type="text" id="report-search-input" placeholder="Buscar por N° pedido, cliente, hab..." class="w-full px-4 py-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
+                        <select id="report-status-filter" class="w-full px-4 py-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
                             <option value="">Todos los Estados</option>
                             <option value="pending">Pendiente</option>
                             <option value="preparing">En preparación</option>
@@ -346,8 +357,8 @@
                             <option value="charged_to_room">Cargado a Habitación</option>
                             <option value="cancelled">Cancelado</option>
                         </select>
-                        <input type="date" id="report-date-from-filter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <input type="date" id="report-date-to-filter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <input type="date" id="report-date-from-filter" class="w-full px-4 py-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
+                        <input type="date" id="report-date-to-filter" class="w-full px-4 py-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
                     </div>
                     <div class="flex justify-end mb-6">
                         <button id="report-filter-btn" class="bg-amber-900 text-white px-6 py-2 rounded-lg font-medium hover:bg-amber-900">Buscar</button>
@@ -358,7 +369,7 @@
                     <div class="overflow-x-auto">
                         <table class="w-full table-auto">
                             <thead>
-                                <tr class="text-left border-b border-gray-200 bg-gray-50">
+                                <tr class="text-left border-b border-amber-300 bg-amber-50">
                                     <th class="p-3 font-semibold text-gray-600 text-sm">N° PEDIDO</th>
                                     <th class="p-3 font-semibold text-gray-600 text-sm">CLIENTE/HAB.</th>
                                     <th class="p-3 font-semibold text-gray-600 text-sm">ESTADO</th>
@@ -387,7 +398,7 @@
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <!-- Generate PIN Card -->
                     <div class="lg:col-span-1">
-                        <div class="bg-white rounded-lg shadow-md p-6">
+                        <div class="bg-amber-50 rounded-lg border border-amber-300 shadow-sm p-6">
                             <h3 class="text-lg font-semibold text-gray-900 mb-4">Generar PIN de Registro</h3>
                             <div id="generate-pin-form">
                                 <label for="pin-group-select" class="block text-sm font-medium text-gray-700 mb-2">Rol del Usuario:</label>
@@ -407,14 +418,14 @@
 
                     <!-- PINs List Card -->
                     <div class="lg:col-span-2">
-                        <div class="bg-white rounded-lg shadow-md">
-                            <div class="p-6 border-b border-gray-200">
+                        <div class="bg-amber-50 rounded-lg border border-amber-300 shadow-sm overflow-hidden">
+                            <div class="p-6 border-b border-amber-300">
                                 <h3 class="text-xl font-semibold text-gray-900">PINs Existentes</h3>
                             </div>
                             <div class="overflow-x-auto">
                                 <table class="w-full table-auto">
                                     <thead>
-                                        <tr class="text-left border-b border-gray-200 bg-gray-50">
+                                        <tr class="text-left border-b border-amber-300 bg-amber-50">
                                             <th class="p-3 font-semibold text-gray-600 text-sm">PIN</th>
                                             <th class="p-3 font-semibold text-gray-600 text-sm">Rol</th>
                                             <th class="p-3 font-semibold text-gray-600 text-sm">Estado</th>
@@ -429,14 +440,14 @@
                 </div>
 
                 <!-- Existing Users List -->
-                <div class="mt-8 bg-white rounded-lg shadow-md">
-                    <div class="p-6 border-b border-gray-200">
+                <div class="mt-8 bg-amber-50 rounded-lg border border-amber-300 shadow-sm overflow-hidden">
+                    <div class="p-6 border-b border-amber-300">
                         <h3 class="text-xl font-semibold text-gray-900">Usuarios Existentes</h3>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full table-auto">
                             <thead>
-                                <tr class="text-left border-b border-gray-200 bg-gray-50">
+                                <tr class="text-left border-b border-amber-300 bg-amber-50">
                                     <th class="p-3 font-semibold text-gray-600 text-sm">Usuario</th>
                                     <th class="p-3 font-semibold text-gray-600 text-sm">Email</th>
                                     <th class="p-3 font-semibold text-gray-600 text-sm">Rol</th>
@@ -462,11 +473,11 @@
                     <button id="add-menu-btn" class="bg-amber-900 text-white px-6 py-2 rounded-lg font-medium hover:bg-amber-900">Añadir Plato</button>
                 </div>
 
-                <div class="bg-white rounded-lg shadow-md">
+                <div class="bg-amber-50 rounded-lg border border-amber-300 shadow-sm overflow-hidden">
                     <div class="overflow-x-auto">
                         <table id="menu-table" class="w-full table-auto">
                             <thead>
-                                <tr class="text-left border-b border-gray-200 bg-gray-50">
+                                <tr class="text-left border-b border-amber-300 bg-amber-50">
                                     <th class="p-3 font-semibold text-gray-600 text-sm">Imagen</th>
                                     <th class="p-3 font-semibold text-gray-600 text-sm">Nombre</th>
                                     <th class="p-3 font-semibold text-gray-600 text-sm">Precio</th>
@@ -488,7 +499,7 @@
 
     <!-- Menu Form Modal -->
     <div id="menu-form-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="modal-container bg-white rounded-lg shadow-xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
+        <div class="modal-container bg-amber-50 rounded-lg border border-amber-300 shadow-sm w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
             <h3 id="menu-form-title" class="text-xl font-semibold mb-4">Agregar Plato</h3>
             <form id="menu-form-element" enctype="multipart/form-data">
                 <input type="hidden" id="menu-item-id">
@@ -526,13 +537,13 @@
 
     <!-- User Edit Modal -->
     <div id="user-edit-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="modal-container bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+        <div class="modal-container bg-amber-50 rounded-lg border border-amber-300 shadow-sm w-full max-w-md p-6">
             <h3 id="user-edit-title" class="text-xl font-semibold mb-4">Editar Rol de Usuario</h3>
             <form id="user-edit-form">
                 <input type="hidden" id="user-edit-id">
                 <div>
                     <label for="user-role-select" class="block text-sm font-medium text-gray-700 mb-2">Nuevo Rol:</label>
-                    <select id="user-role-select" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <select id="user-role-select" class="w-full px-3 py-2 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
                         {% for group in groups %}
                         <option value="{{ group.id }}">{{ group.name }}</option>
                         {% endfor %}
@@ -811,10 +822,61 @@
                 const sidebar = document.getElementById('sidebar');
                 const sidebarToggle = document.getElementById('sidebar-toggle');
                 const sidebarOverlay = document.getElementById('sidebar-overlay');
+                
                 const toggleSidebar = () => {
                     sidebar.classList.toggle('-translate-x-full');
-                    sidebarOverlay.classList.toggle('hidden');
+                    const isClosed = sidebar.classList.contains('-translate-x-full');
+                    sidebarOverlay.style.opacity = isClosed ? '0' : '0.5';
+                    sidebarOverlay.style.pointerEvents = isClosed ? 'none' : 'auto';
+                    sidebarToggle.classList.toggle('hidden');
+                    sidebar.style.transition = 'transform 0.3s ease-in-out';
+                    sidebarOverlay.style.transition = 'opacity 0.3s ease-in-out';
+                    sidebar.style.transform = '';
                 };
+                
+                sidebarToggle?.addEventListener('click', toggleSidebar);
+                sidebarOverlay?.addEventListener('click', toggleSidebar);
+                
+                // Swipe para cerrar el sidebar cuando está abierto
+                let touchStart = null;
+                
+                sidebar?.addEventListener('touchstart', (e) => {
+                    touchStart = e.changedTouches[0].clientX;
+                }, false);
+                
+                sidebar?.addEventListener('touchend', (e) => {
+                    if (!touchStart) return;
+                    const touchEnd = e.changedTouches[0].clientX;
+                    const diff = touchStart - touchEnd;
+                    touchStart = null;
+                    
+                    // Si desliza más de 50px hacia la izquierda, cerrar
+                    if (diff > 50) {
+                        toggleSidebar();
+                    }
+                }, false);
+                
+                // Swipe desde borde izquierdo para abrir
+                let edgeStart = null;
+                
+                document?.addEventListener('touchstart', (e) => {
+                    if (e.changedTouches[0].clientX < 20) {
+                        edgeStart = e.changedTouches[0].clientX;
+                    }
+                }, false);
+                
+                document?.addEventListener('touchend', (e) => {
+                    if (!edgeStart) return;
+                    const diff = e.changedTouches[0].clientX - edgeStart;
+                    edgeStart = null;
+                    
+                    // Si desliza más de 50px hacia la derecha desde el borde, abrir
+                    const isClosed = sidebar.classList.contains('-translate-x-full');
+                    if (isClosed && diff > 50) {
+                        toggleSidebar();
+                    }
+                }, false);
+                
                 sidebarToggle?.addEventListener('click', toggleSidebar);
                 sidebarOverlay?.addEventListener('click', toggleSidebar);
 
