@@ -1241,3 +1241,30 @@ def api_users(request, pk=None):
 
     # Método no permitido para la URL solicitada
     return JsonResponse({'error': f'Método {request.method} no permitido.'}, status=405)
+
+def serve_media_file(request, file_path):
+    """
+    Serve media files (images, documents, etc.) from the media directory.
+    This is needed for production environments where DEBUG=False.
+    """
+    import os
+    from django.http import FileResponse
+    
+    # Secure the file path to prevent directory traversal attacks
+    media_root = settings.MEDIA_ROOT
+    requested_file = os.path.join(media_root, file_path)
+    
+    # Normalize paths and ensure file is within MEDIA_ROOT
+    requested_file = os.path.normpath(requested_file)
+    media_root = os.path.normpath(media_root)
+    
+    if not requested_file.startswith(media_root):
+        return JsonResponse({'error': 'Access denied'}, status=403)
+    
+    if not os.path.exists(requested_file) or not os.path.isfile(requested_file):
+        return JsonResponse({'error': 'File not found'}, status=404)
+    
+    try:
+        return FileResponse(open(requested_file, 'rb'), content_type='image/jpeg')
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
