@@ -407,6 +407,9 @@ export class OrdersManager {
       }
       const data = await response.json();
 
+      // Show the order view first so elements are visible
+      this.uiManager.showOrderView();
+
       document.getElementById('order-identifier-display').textContent = data.identifier;
       this.cartManager.loadOrder(orderId, data);
 
@@ -414,7 +417,6 @@ export class OrdersManager {
       document.getElementById('mark-served-btn').classList.remove('hidden');
 
       this.uiManager.resetCategoryFilters();
-      this.uiManager.showOrderView();
     } catch (error) {
       console.error('Error editing order:', error);
       this.uiManager.showToast('Error al cargar el pedido.', 'error');
