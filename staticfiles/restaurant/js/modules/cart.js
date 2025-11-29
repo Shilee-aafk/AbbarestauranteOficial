@@ -8,6 +8,7 @@ export class CartManager {
     this.currentClientIdentifier = '';
     this.currentRoomNumber = '';
     this.editingOrderId = null;
+    this.editingOrderStatus = null;
   }
 
   /**
@@ -71,8 +72,31 @@ export class CartManager {
     const item = this.currentOrder.find(i => i.lineItemId === lineItemId);
     if (item) {
       item.note = note;
-      // NO llamar a updateCartDisplay() para evitar perder el focus del textarea
-      // Solo guardar el valor sin re-renderizar
+      // Actualizar ambas vistas sin perder el focus
+      this.syncNotesAcrossViews(lineItemId, note);
+    }
+  }
+
+  /**
+   * Sincroniza la nota entre cart-note y modal-note sin perder el focus
+   */
+  syncNotesAcrossViews(lineItemId, note) {
+    // Si se cambió en cart-note, actualizar modal-note
+    const cartNote = document.querySelector(`.cart-note[data-line-id="${lineItemId}"]`);
+    const modalNote = document.querySelector(`.modal-note[data-line-id="${lineItemId}"]`);
+    
+    if (cartNote && modalNote) {
+      if (document.activeElement === cartNote) {
+        // Si estamos escribiendo en cart-note, actualizar modal-note
+        modalNote.value = note;
+      } else if (document.activeElement === modalNote) {
+        // Si estamos escribiendo en modal-note, actualizar cart-note
+        cartNote.value = note;
+      } else {
+        // Si no hay focus en ninguno, actualizar ambos (por si acaso)
+        cartNote.value = note;
+        modalNote.value = note;
+      }
     }
   }
 
@@ -116,11 +140,11 @@ export class CartManager {
     this.currentOrder.forEach(item => {
       const itemTotal = item.price * item.quantity;
       const li = document.createElement('li');
-      li.className = 'flex flex-col bg-gray-100 p-2 rounded';
+      li.className = 'flex flex-col bg-amber-100 p-2 rounded';
       li.innerHTML = `
         <div class="flex justify-between items-start">
           <div>
-            <span class="font-medium">${item.name}</span>
+            <span class="font-medium text-amber-950">${item.name}</span>
             <span class="block text-sm text-gray-600">$${itemTotal.toFixed(0)}</span>
           </div>
           <div class="flex items-center">
@@ -154,6 +178,12 @@ export class CartManager {
 
     // Attachear event listeners
     this.attachOrderListeners();
+
+    // Actualizar el total en el HTML
+    const orderTotalSpan = document.getElementById('order-total');
+    if (orderTotalSpan) {
+      orderTotalSpan.textContent = this.getTotal().toFixed(0);
+    }
   }
 
   /**
@@ -185,7 +215,7 @@ export class CartManager {
             <button class="text-red-500 hover:text-red-700 text-sm ml-2 modal-remove" data-line-id="${item.lineItemId}">Eliminar</button>
           </div>
         </div>
-        <textarea class="text-xs p-2 border border-gray-300 rounded bg-white resize-none modal-note" data-line-id="${item.lineItemId}" placeholder="Agregar nota especial..." rows="2" maxlength="200">${item.note || ''}</textarea>
+        <textarea class="text-xs p-2 border border-gray-300 rounded bg-amber-50 resize-none modal-note" data-line-id="${item.lineItemId}" placeholder="Agregar nota especial..." rows="2" maxlength="200">${item.note || ''}</textarea>
       </div>
     `).join('');
 
@@ -256,6 +286,7 @@ export class CartManager {
     this.currentClientIdentifier = '';
     this.currentRoomNumber = '';
     this.editingOrderId = null;
+    this.editingOrderStatus = null;
     this.render();
   }
 
@@ -264,12 +295,47 @@ export class CartManager {
    */
   loadOrder(orderId, data) {
     this.editingOrderId = orderId;
+    this.editingOrderStatus = data.status;
     this.currentClientIdentifier = data.identifier;
     this.currentRoomNumber = data.room_number;
     this.currentOrder = data.items.map(item => ({
       ...item,
       lineItemId: Date.now() + Math.random()
     }));
+    
+    // Update form fields with order data
+    const clientIdentifierInput = document.getElementById('client-identifier');
+    const roomNumberInput = document.getElementById('room-number');
+    
+    if (clientIdentifierInput) {
+      clientIdentifierInput.value = data.client_identifier || '';
+    }
+    if (roomNumberInput) {
+      roomNumberInput.value = data.room_number || '';
+    }
+    
+    this.updateSubmitButton();
     this.render();
+  }
+
+  /**
+   * Actualiza el texto y comportamiento del botón de submit basado en el status del pedido
+   */
+  updateSubmitButton() {
+    const submitBtn = document.getElementById('cart-submit-btn');
+    if (!submitBtn) return;
+
+    if (this.editingOrderId && this.editingOrderStatus === 'ready') {
+      submitBtn.textContent = 'Actualizar Pedido';
+      submitBtn.classList.add('update-order-btn');
+      submitBtn.classList.remove('create-order-btn');
+    } else {
+      submitBtn.innerHTML = `
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+        Realizar Pedido
+      `;
+      submitBtn.classList.add('create-order-btn');
+      submitBtn.classList.remove('update-order-btn');
+    }
   }
 }

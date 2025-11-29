@@ -27,6 +27,20 @@ class DecimalEncoder(json.JSONEncoder):
             return float(obj)
         return super().default(obj)
 
+def get_order_identifier(order):
+    """
+    Returns the order identifier combining room number and client name if available.
+    If only room_number exists, shows that.
+    If only client_identifier exists, shows that.
+    If both exist, shows: "Habitación X - Cliente Y"
+    """
+    if order.room_number and order.client_identifier:
+        return f"Habitación {order.room_number} - {order.client_identifier}"
+    elif order.room_number:
+        return f"Habitación {order.room_number}"
+    else:
+        return order.client_identifier
+
 def home(request):
     if request.user.is_authenticated:
         if request.user.is_superuser or request.user.groups.filter(name='Administrador').exists():
@@ -107,7 +121,7 @@ def admin_dashboard(request):
     # JSON data for JavaScript
     orders_json = json.dumps([{
         'id': o.id,
-        'identifier': o.room_number or o.client_identifier,
+        'identifier': get_order_identifier(o),
         'status': o.status,
         'user': o.user.username,
         'created_at': o.created_at.isoformat(),
@@ -195,7 +209,7 @@ def cook_dashboard(request):
             orders_data.append({
                 'id': order.id,
                 'status': order.status,
-                'identifier': order.room_number or order.client_identifier,
+                'identifier': get_order_identifier(order),
                 'user_username': order.user.username,
                 'created_at': order.created_at.isoformat(),
                 'items': items_list
@@ -246,6 +260,7 @@ def waiter_dashboard(request):
                     items_list.append({
                         'name': item.menu_item.name,
                         'quantity': item.quantity,
+                        'is_prepared': item.is_prepared,
                     })
             
             initial_orders_data.append({
@@ -253,7 +268,7 @@ def waiter_dashboard(request):
                 'status': order.status,
                 'status_display': order.get_status_display(),
                 'status_class': order.status_class,
-                'identifier': order.room_number or order.client_identifier,
+                'identifier': get_order_identifier(order),
                 'total': float(order.total_amount),
                 'items': items_list
             })
@@ -389,7 +404,7 @@ def save_order(request):
                     'order_id': order.id,
                     'order': {
                         'id': order.id,
-                        'identifier': order.room_number or order.client_identifier,
+                        'identifier': get_order_identifier(order),
                         'room_number': order.room_number,
                         'client_identifier': order.client_identifier,
                         'status': order.status,
@@ -443,6 +458,7 @@ def api_waiter_order_detail(request, pk):
             'price': float(item.menu_item.price),
             'quantity': item.quantity,
             'note': item.note,
+            'is_prepared': item.is_prepared,
         } for item in items]
 
         subtotal = sum(item['price'] * item['quantity'] for item in items_data)
@@ -452,8 +468,9 @@ def api_waiter_order_detail(request, pk):
             'items': items_data,
             'subtotal': subtotal, # Se agrega el subtotal para que el modal de pago funcione
             'total': subtotal + float(order.tip_amount), # El total ahora incluye la propina
-            'identifier': order.room_number or order.client_identifier,
+            'identifier': get_order_identifier(order),
             'room_number': order.room_number, # Asegurarse de que este campo siempre esté presente
+            'client_identifier': order.client_identifier,
         }
         return JsonResponse(data)
 
@@ -461,39 +478,62 @@ def api_waiter_order_detail(request, pk):
         data = json.loads(request.body)
         items_data = data.get('items', [])
 
-        with transaction.atomic(): # Add transaction for atomicity
-            # Obtener items viejos antes de actualizar
-            old_items = set(order.orderitem_set.values_list('menu_item_id', flat=True))
-            new_item_ids = set(item_data['id'] for item_data in items_data)
+        with transaction.atomic():
+            # Get existing items BEFORE any updates
+            existing_items = list(order.orderitem_set.all())
+            was_ready = order.status == 'ready'
             
-            # Identificar items que están siendo agregados (no estaban antes)
-            added_items = new_item_ids - old_items
+            subtotal = decimal.Decimal('0.00')
             
-            # Si el pedido estaba "ready" y se agregan items nuevos, cambiar a "preparing"
-            if order.status == 'ready' and added_items:
-                # Marcar items viejos como preparados
-                order.orderitem_set.filter(menu_item_id__in=old_items).update(is_prepared=True)
-                # Cambiar estado a preparing
+            # For each item in the request, try to match with an existing item of the same type
+            # If found, update it; otherwise, create a new one
+            matched_existing_items = set()
+            
+            for item_data in items_data:
+                menu_item_id = item_data['id']
+                quantity = item_data['quantity']
+                note = item_data.get('note', '')
+                menu_item = MenuItem.objects.get(id=menu_item_id)
+                
+                # Try to find an unmatched existing item of the same type
+                found_match = False
+                for existing_item in existing_items:
+                    if (existing_item.id not in matched_existing_items and 
+                        existing_item.menu_item_id == menu_item_id):
+                        # Update this item
+                        existing_item.quantity = quantity
+                        existing_item.note = note
+                        # If order was "ready", mark this item as prepared
+                        if was_ready:
+                            existing_item.is_prepared = True
+                        existing_item.save()
+                        matched_existing_items.add(existing_item.id)
+                        found_match = True
+                        break
+                
+                if not found_match:
+                    # Create new item (is_prepared=False for new items)
+                    OrderItem.objects.create(
+                        order=order,
+                        menu_item=menu_item,
+                        quantity=quantity,
+                        note=note,
+                        is_prepared=False
+                    )
+                
+                subtotal += menu_item.price * quantity
+            
+            # Delete items that were not matched (i.e., removed from the order)
+            for existing_item in existing_items:
+                if existing_item.id not in matched_existing_items:
+                    existing_item.delete()
+            
+            # If order was ready, change status to preparing
+            if was_ready:
                 order.status = 'preparing'
             
-            # Delete old items and create new ones
-            order.orderitem_set.all().delete()
-
-            subtotal = decimal.Decimal('0.00')
-            for item_data in items_data:
-                menu_item = MenuItem.objects.get(id=item_data['id'])
-                # Los items nuevos NO están preparados (is_prepared=False por defecto)
-                OrderItem.objects.create(
-                    order=order, 
-                    menu_item=menu_item, 
-                    quantity=item_data['quantity'], 
-                    note=item_data.get('note', ''),
-                    is_prepared=False
-                )
-                subtotal += menu_item.price * item_data['quantity']
-            
-            order.total_amount = subtotal + order.tip_amount # Recalcular total_amount con el nuevo subtotal
-            order.save(update_fields=['total_amount', 'status'])  # Actualizar status si fue modificado
+            order.total_amount = subtotal + order.tip_amount
+            order.save(update_fields=['total_amount', 'status'])
             return JsonResponse({'success': True, 'order_id': order.id})
 
 @csrf_exempt
@@ -531,13 +571,14 @@ def api_orders(request):
             for o in orders:
                 data.append({
                     'id': o.id,
-                    'identifier': o.room_number or o.client_identifier,
+                    'identifier': get_order_identifier(o),
                     'status': o.status,
                     'created_at': o.created_at.isoformat(),
                     'items': [{
                         'name': item.menu_item.name,
                         'quantity': item.quantity,
-                        'note': item.note or ''
+                        'note': item.note or '',
+                        'is_prepared': item.is_prepared,
                     } for item in o.orderitem_set.all()]
                 })
             return JsonResponse(data, safe=False)
@@ -557,7 +598,7 @@ def api_orders(request):
             
             return JsonResponse({
                 'id': order.id,
-                'identifier': order.room_number or order.client_identifier,
+                'identifier': get_order_identifier(order),
                 'status': order.status
             }, status=201)
         except Exception as e:
@@ -574,7 +615,7 @@ def api_kitchen_orders(request):
         orders = Order.objects.filter(status__in=['pending', 'preparing'])
         data = [{
             'id': o.id,
-            'identifier': o.room_number or o.client_identifier,
+            'identifier': get_order_identifier(o),
             'status': o.get_status_display(),
         } for o in orders]
         return JsonResponse(data, safe=False)
@@ -609,7 +650,7 @@ def api_order_detail(request, pk):
 
         data = {
             'id': order.id,
-            'identifier': order.room_number or order.client_identifier,
+            'identifier': get_order_identifier(order),
             'status': order.status,
             'status_display': order.get_status_display(),
             'created_at': order.created_at.isoformat(),
@@ -816,7 +857,7 @@ def api_orders_report(request):
         for order in orders:
             data.append({
                 'id': order.id,
-                'identifier': order.room_number or order.client_identifier,
+                'identifier': get_order_identifier(order),
                 'status': order.status,
                 'status_display': order.get_status_display(),
                 'status_class': order.status_class,
@@ -1036,7 +1077,7 @@ def export_orders_excel(request):
         local_time = timezone.localtime(order.created_at).strftime('%Y-%m-%d %H:%M')
         
         ws.cell(row=row_num, column=1, value=order.id)
-        ws.cell(row=row_num, column=2, value=order.room_number or order.client_identifier)
+        ws.cell(row=row_num, column=2, value=get_order_identifier(order))
         ws.cell(row=row_num, column=3, value=order.get_status_display())
         ws.cell(row=row_num, column=4, value=local_time)
         total_cell = ws.cell(row=row_num, column=5, value=final_total)

@@ -16,6 +16,16 @@ export class UIManager {
     this.setupNavigation();
     this.setupSidebar();
     this.setupModals();
+    
+    // Asegurar que el botón del carrito esté visible inicialmente y NUNCA tenga hidden
+    const cartToggle = document.getElementById('cart-toggle');
+    if (cartToggle) {
+      cartToggle.classList.remove('hidden');
+      cartToggle.style.display = 'block';
+      cartToggle.style.visibility = 'visible';
+      cartToggle.style.opacity = '1';
+    }
+    
     this.restoreLastSection();
   }
 
@@ -62,11 +72,17 @@ export class UIManager {
       targetSection.classList.remove('hidden');
     }
 
+    // Ocultar carrito en la pestaña de cobros, mostrar en otras
     const cartToggle = document.getElementById('cart-toggle');
-    if (section === 'dashboard' || section === 'bar') {
-      cartToggle?.classList.remove('hidden');
-    } else {
-      cartToggle?.classList.add('hidden');
+    if (cartToggle) {
+      if (section === 'cobros') {
+        cartToggle.classList.add('hidden');
+      } else {
+        cartToggle.classList.remove('hidden');
+        cartToggle.style.display = 'block';
+        cartToggle.style.visibility = 'visible';
+        cartToggle.style.opacity = '1';
+      }
     }
 
     this.currentSection = section;
@@ -297,6 +313,23 @@ export class UIManager {
   showOrderView() {
     document.querySelectorAll('.content-section').forEach(s => s.classList.add('hidden'));
     document.getElementById('order-view')?.classList.remove('hidden');
+    
+    // Asegurar que el botón del carrito SIEMPRE sea visible
+    const cartToggle = document.getElementById('cart-toggle');
+    if (cartToggle) {
+      cartToggle.classList.remove('hidden');
+      cartToggle.style.display = 'block';
+      cartToggle.style.visibility = 'visible';
+      cartToggle.style.opacity = '1';
+      cartToggle.style.pointerEvents = 'auto';
+    }
+    
+    // Open cart modal on mobile when editing
+    const cartModal = document.getElementById('cart-modal');
+    const isMobile = window.innerWidth < 768; // md breakpoint in Tailwind
+    if (isMobile && cartModal) {
+      cartModal.classList.remove('hidden');
+    }
   }
 
   /**

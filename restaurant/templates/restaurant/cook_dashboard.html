@@ -8,37 +8,33 @@
     <style>
         .order-card {
             transition: background-color 0.3s ease-in-out;
-            border-left-width: 8px;
-        }
-        
-        /* Colores de órdenes por antigüedad */
-        .order-card-new { 
-            border-color: #FBBF24;
-            background-color: #FFFBEB;
-        }
-        .order-card-medium { 
-            border-color: #D97706;
-            background-color: #FEF3C7;
-        }
-        .order-card-old { 
-            border-color: #92400E;
-            background-color: #FED7AA;
-        }
-        .order-card-urgent {
-            border-color: #EF4444;
-            background-color: #FECACA;
-        }
-        .order-card-critical {
-            border-color: #DC2626;
-            background-color: #FCA5A5;
-            animation: pulse-critical 1.5s ease-in-out infinite;
-        }
-        
-        @keyframes pulse-critical {
-            0%, 100% { background-color: #FCA5A5; }
-            50% { background-color: #F87171; }
         }
 
+        /* Timer que parpadea según antigüedad */
+        .timer {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .timer.critical {
+            color: #dc2626;
+            animation: pulse-timer 0.6s ease-in-out infinite;
+        }
+
+        .timer.urgent {
+            color: #ef4444;
+            animation: pulse-timer 0.8s ease-in-out infinite;
+        }
+
+        .timer.old {
+            color: #92400e;
+        }
+
+        @keyframes pulse-timer {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        
         /* Ocultar la barra de scroll pero permitir el desplazamiento */
         .no-scrollbar::-webkit-scrollbar {
             display: none;
@@ -143,23 +139,22 @@
 
             const card = document.createElement('div');
             card.id = `order-${order.id}`;
-            card.className = 'order-card bg-white rounded-lg shadow-lg p-5 mb-4';
+            card.className = 'order-card bg-amber-50 rounded-lg shadow-lg p-5 mb-4 border border-amber-200';
             card.dataset.createdAt = order.created_at;
             card.dataset.orderId = order.id;
             card.dataset.orderStatus = order.status;
 
             card.innerHTML = `
                 <div class="flex justify-between items-center mb-3">
-                    <h3 class="text-xl font-bold text-gray-800">Pedido #${order.id}</h3>
-                    <span class="timer font-mono text-lg font-semibold text-gray-700">00:00</span>
+                    <h3 class="text-xl font-bold text-amber-900">Pedido #${order.id}</h3>
+                    <span class="timer font-mono text-lg font-semibold text-amber-700">00:00</span>
                 </div>
-                <p class="text-md text-gray-600 mb-3">Para: <span class="font-semibold">${order.identifier}</span></p>
+                <p class="text-md text-amber-800 mb-3">Para: <span class="font-semibold">${order.identifier}</span></p>
                 <ul class="space-y-2 mb-4">${itemsHtml}</ul>
                 <div class="flex justify-end space-x-3 mt-4">
-                    ${order.status === 'pending' ? `<button class="start-btn bg-amber-700 text-white px-5 py-2 rounded-lg font-semibold hover:bg-amber-800" data-order-id="${order.id}">Empezar Preparación</button>` : ''}
-                    ${order.status === 'preparing' ? `<button class="ready-btn bg-green-900 text-white px-5 py-2 rounded-lg font-semibold hover:bg-green-800" data-order-id="${order.id}">Marcar como Listo</button>` : ''}
-                </div>
-            `;
+                    ${order.status === 'pending' ? `<button class="start-btn bg-amber-200 text-amber-900 px-5 py-2 rounded-lg font-semibold hover:bg-amber-300" data-order-id="${order.id}">Empezar Preparación</button>` : ''}
+                    ${order.status === 'preparing' ? `<button class="ready-btn bg-amber-700 text-white px-5 py-2 rounded-lg font-semibold hover:bg-amber-800" data-order-id="${order.id}">Marcar como Listo</button>` : ''}
+                </div>`;
             
             orderCards.set(order.id, card);
             return card;
@@ -171,7 +166,25 @@
             const card = renderOrderCard(order);
             const container = order.status === 'pending' ? pendingContainer : preparingContainer;
             if (container) {
-                container.prepend(card);
+                insertOrderedById(container, card, order.id);
+            }
+        }
+
+        function insertOrderedById(container, newCard, orderId) {
+            const cards = container.querySelectorAll('[data-order-id]');
+            let inserted = false;
+
+            for (let card of cards) {
+                const cardId = parseInt(card.dataset.orderId, 10);
+                if (orderId < cardId) {
+                    container.insertBefore(newCard, card);
+                    inserted = true;
+                    break;
+                }
+            }
+
+            if (!inserted) {
+                container.appendChild(newCard);
             }
         }
 
@@ -179,7 +192,7 @@
             const card = orderCards.get(orderId);
             if (card) {
                 card.setAttribute('data-order-status', 'preparing');
-                preparingContainer.prepend(card);
+                insertOrderedById(preparingContainer, card, orderId);
             }
         }
 
@@ -224,14 +237,6 @@
         });
 
         // --- Temporizadores y Actualizaciones de UI ---
-        const colorThresholds = [
-            { minutes: 15, class: 'order-card-critical' },
-            { minutes: 10, class: 'order-card-urgent' },
-            { minutes: 7, class: 'order-card-old' },
-            { minutes: 5, class: 'order-card-medium' },
-            { minutes: 0, class: 'order-card-new' }
-        ];
-
         function updateTimers() {
             const now = new Date();
             
@@ -244,13 +249,15 @@
                 const timerEl = card.querySelector('.timer');
                 if (timerEl) {
                     timerEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-                }
-
-                // Actualizar color según antigüedad
-                for (const threshold of colorThresholds) {
-                    if (minutes >= threshold.minutes) {
-                        card.className = 'order-card bg-white rounded-lg shadow-lg p-5 mb-4 ' + threshold.class;
-                        break;
+                    
+                    // Aplicar clases de estilo al timer según antigüedad
+                    timerEl.classList.remove('critical', 'urgent', 'old');
+                    if (minutes >= 15) {
+                        timerEl.classList.add('critical');
+                    } else if (minutes >= 10) {
+                        timerEl.classList.add('urgent');
+                    } else if (minutes >= 7) {
+                        timerEl.classList.add('old');
                     }
                 }
             });

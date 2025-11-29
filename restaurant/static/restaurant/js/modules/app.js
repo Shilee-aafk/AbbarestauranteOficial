@@ -59,11 +59,18 @@ export function initApp(initialOrders = []) {
  * Configura los listeners globales de la aplicación
  */
 function setupGlobalListeners() {
+  console.log('setupGlobalListeners starting...');
+  
   // Botón de volver a vista principal
   const backToMainBtn = document.getElementById('back-to-main-view-btn');
   if (backToMainBtn) {
     backToMainBtn.addEventListener('click', () => {
       cartManager.clear();
+      // Clear form fields
+      const clientIdentifierInput = document.getElementById('client-identifier');
+      const roomNumberInput = document.getElementById('room-number');
+      if (clientIdentifierInput) clientIdentifierInput.value = '';
+      if (roomNumberInput) roomNumberInput.value = '';
       uiManager.showMainSectionView();
     });
   }
@@ -90,6 +97,7 @@ function setupGlobalListeners() {
 
       cartManager.currentOrder = [];
       cartManager.editingOrderId = null;
+      cartManager.editingOrderStatus = null;
       cartManager.render();
       uiManager.showOrderView();
     });
@@ -117,6 +125,7 @@ function setupGlobalListeners() {
 
       cartManager.currentOrder = [];
       cartManager.editingOrderId = null;
+      cartManager.editingOrderStatus = null;
       cartManager.render();
 
       document.getElementById('bar-client-identifier').value = '';
@@ -184,17 +193,36 @@ function setupGlobalListeners() {
   const cartModal = document.getElementById('cart-modal');
   const closeCartBtn = document.getElementById('close-cart');
 
+  console.log('cartToggle element:', cartToggle);
+  console.log('cartModal element:', cartModal);
+  console.log('closeCartBtn element:', closeCartBtn);
+
   if (cartToggle && cartModal) {
     cartToggle.addEventListener('click', () => {
       console.log('Toggle carrito');
       cartModal.classList.toggle('hidden');
+      // Actualizar el botón cuando se abre el modal
+      if (!cartModal.classList.contains('hidden')) {
+        cartManager.updateSubmitButton();
+      }
     });
+  } else {
+    console.error('cartToggle or cartModal not found');
   }
 
   if (closeCartBtn && cartModal) {
     closeCartBtn.addEventListener('click', () => {
       console.log('Cerrar carrito');
       cartModal.classList.add('hidden');
+    });
+  }
+
+  // Botón para abrir el carrito desde la vista de edición
+  const orderViewCartBtn = document.getElementById('order-view-cart-btn');
+  if (orderViewCartBtn && cartModal) {
+    orderViewCartBtn.addEventListener('click', () => {
+      console.log('Abrir carrito desde vista de pedido');
+      cartModal.classList.remove('hidden');
     });
   }
 
@@ -226,8 +254,6 @@ function setupGlobalListeners() {
         return;
       }
 
-      const endpoint = '/restaurant/save_order/';
-
       const orderData = {
         items: cartManager.currentOrder.map(item => ({
           id: item.id,
@@ -239,10 +265,19 @@ function setupGlobalListeners() {
         tip_amount: 0
       };
 
+      // Determinar si es creación o actualización
+      let endpoint = '/restaurant/save_order/';
+      let method = 'POST';
+
+      if (cartManager.editingOrderId && cartManager.editingOrderStatus === 'ready') {
+        endpoint = `/restaurant/api/waiter/orders/${cartManager.editingOrderId}/`;
+        method = 'PUT';
+      }
+
       try {
         console.log('Enviando pedido desde carrito:', orderData);
         const response = await fetch(endpoint, {
-          method: 'POST',
+          method: method,
           headers: {
             'Content-Type': 'application/json',
             'X-CSRFToken': getCsrfToken()
@@ -260,10 +295,13 @@ function setupGlobalListeners() {
           console.log('✅ Respuesta completa:', data);
           console.log('Order data:', data.order);
           
-          uiManager.showToast(
-            `Pedido #${data.order_id} creado exitosamente.`,
-            'success'
-          );
+          // Determinar si es creación o actualización
+          const isUpdate = cartManager.editingOrderId && cartManager.editingOrderStatus === 'ready';
+          const message = isUpdate 
+            ? `Pedido #${data.order_id} actualizado exitosamente.`
+            : `Pedido #${data.order_id} creado exitosamente.`;
+          
+          uiManager.showToast(message, 'success');
           cartManager.clear();
           
           // Actualizar el monitor de pedidos localmente de inmediato

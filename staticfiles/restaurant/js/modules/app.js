@@ -64,6 +64,11 @@ function setupGlobalListeners() {
   if (backToMainBtn) {
     backToMainBtn.addEventListener('click', () => {
       cartManager.clear();
+      // Clear form fields
+      const clientIdentifierInput = document.getElementById('client-identifier');
+      const roomNumberInput = document.getElementById('room-number');
+      if (clientIdentifierInput) clientIdentifierInput.value = '';
+      if (roomNumberInput) roomNumberInput.value = '';
       uiManager.showMainSectionView();
     });
   }
@@ -90,6 +95,7 @@ function setupGlobalListeners() {
 
       cartManager.currentOrder = [];
       cartManager.editingOrderId = null;
+      cartManager.editingOrderStatus = null;
       cartManager.render();
       uiManager.showOrderView();
     });
@@ -117,6 +123,7 @@ function setupGlobalListeners() {
 
       cartManager.currentOrder = [];
       cartManager.editingOrderId = null;
+      cartManager.editingOrderStatus = null;
       cartManager.render();
 
       document.getElementById('bar-client-identifier').value = '';
@@ -188,6 +195,10 @@ function setupGlobalListeners() {
     cartToggle.addEventListener('click', () => {
       console.log('Toggle carrito');
       cartModal.classList.toggle('hidden');
+      // Actualizar el botón cuando se abre el modal
+      if (!cartModal.classList.contains('hidden')) {
+        cartManager.updateSubmitButton();
+      }
     });
   }
 
@@ -226,8 +237,6 @@ function setupGlobalListeners() {
         return;
       }
 
-      const endpoint = '/restaurant/save_order/';
-
       const orderData = {
         items: cartManager.currentOrder.map(item => ({
           id: item.id,
@@ -239,10 +248,19 @@ function setupGlobalListeners() {
         tip_amount: 0
       };
 
+      // Determinar si es creación o actualización
+      let endpoint = '/restaurant/save_order/';
+      let method = 'POST';
+
+      if (cartManager.editingOrderId && cartManager.editingOrderStatus === 'ready') {
+        endpoint = `/restaurant/api/waiter/orders/${cartManager.editingOrderId}/`;
+        method = 'PUT';
+      }
+
       try {
         console.log('Enviando pedido desde carrito:', orderData);
         const response = await fetch(endpoint, {
-          method: 'POST',
+          method: method,
           headers: {
             'Content-Type': 'application/json',
             'X-CSRFToken': getCsrfToken()
@@ -260,10 +278,13 @@ function setupGlobalListeners() {
           console.log('✅ Respuesta completa:', data);
           console.log('Order data:', data.order);
           
-          uiManager.showToast(
-            `Pedido #${data.order_id} creado exitosamente.`,
-            'success'
-          );
+          // Determinar si es creación o actualización
+          const isUpdate = cartManager.editingOrderId && cartManager.editingOrderStatus === 'ready';
+          const message = isUpdate 
+            ? `Pedido #${data.order_id} actualizado exitosamente.`
+            : `Pedido #${data.order_id} creado exitosamente.`;
+          
+          uiManager.showToast(message, 'success');
           cartManager.clear();
           
           // Actualizar el monitor de pedidos localmente de inmediato

@@ -63,10 +63,10 @@ export class UIManager {
     }
 
     const cartToggle = document.getElementById('cart-toggle');
-    if (section === 'dashboard' || section === 'bar') {
-      cartToggle?.classList.remove('hidden');
-    } else {
+    if (section === 'cobros') {
       cartToggle?.classList.add('hidden');
+    } else {
+      cartToggle?.classList.remove('hidden');
     }
 
     this.currentSection = section;
@@ -297,6 +297,13 @@ export class UIManager {
   showOrderView() {
     document.querySelectorAll('.content-section').forEach(s => s.classList.add('hidden'));
     document.getElementById('order-view')?.classList.remove('hidden');
+    
+    // Open cart modal on mobile when editing
+    const cartModal = document.getElementById('cart-modal');
+    const isMobile = window.innerWidth < 768; // md breakpoint in Tailwind
+    if (isMobile && cartModal) {
+      cartModal.classList.remove('hidden');
+    }
   }
 
   /**
@@ -318,6 +325,13 @@ export class UIManager {
         targetSection.classList.remove('hidden');
       }
       this.hideOrderView();
+      
+      // Ocultar el botón del carrito en la vista de edición
+      const orderViewCartBtn = document.getElementById('order-view-cart-btn');
+      if (orderViewCartBtn) {
+        orderViewCartBtn.classList.add('hidden');
+      }
+      
       this.resetCategoryFilters();
     } catch (error) {
       console.error('Error in showMainSectionView:', error);
@@ -325,6 +339,12 @@ export class UIManager {
       const dashboardSection = document.getElementById('dashboard');
       if (dashboardSection) dashboardSection.classList.remove('hidden');
       this.hideOrderView();
+      
+      // Ocultar el botón del carrito en la vista de edición
+      const orderViewCartBtn = document.getElementById('order-view-cart-btn');
+      if (orderViewCartBtn) {
+        orderViewCartBtn.classList.add('hidden');
+      }
     }
   }
 

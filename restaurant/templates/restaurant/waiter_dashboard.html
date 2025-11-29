@@ -89,7 +89,7 @@
         <nav class="mt-8">
             <a href="#" class="nav-link active flex items-center px-6 py-3 text-amber-800 bg-amber-100 border-r-4 border-amber-500" data-section="dashboard">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z"></path></svg>
-                Mesas y Pedidos
+                Restaurante
             </a>
             <a href="#" class="nav-link flex items-center px-6 py-3 text-amber-800 hover:bg-amber-100" data-section="bar">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path><path d="M19 19L12 12"></path></svg>
@@ -125,21 +125,21 @@
         <!-- Header -->
         <div class="bg-white shadow-sm border-b border-gray-200 px-8 py-4">
             <div class="flex justify-center items-start sm:items-center gap-4 pt-8 sm:pt-0">
-                <h1 class="text-2xl font-bold text-gray-900">Panel del Garzón</h1>
+                <h1 class="text-2xl font-bold text-amber-900">Panel del Garzón</h1>
             </div>
         </div>
-
-        <!-- Fixed Shopping Cart Icon (top right) -->
-        <button id="cart-toggle" class="hidden lg:block fixed top-4 right-4 z-40 p-2 text-gray-600 hover:text-gray-900 bg-white rounded-lg shadow-md transition-colors">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
-            </svg>
-            <span id="cart-count" class="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">0</span>
-        </button>
 
         <!-- Fixed Hamburger Button (only visible on mobile) -->
         <button id="sidebar-toggle" class="lg:hidden fixed top-4 left-4 z-40 text-gray-500 hover:text-gray-700 bg-white p-2 rounded-lg shadow-md">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+        </button>
+
+        <!-- Fixed Shopping Cart Icon (top right) -->
+        <button id="cart-toggle" class="fixed top-4 right-4 z-50 p-2 bg-amber-900 text-white rounded-lg shadow-lg hover:bg-amber-800 transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+            </svg>
+            <span id="cart-count" class="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">0</span>
         </button>
 
         <div class="p-8">
@@ -160,7 +160,7 @@
             <div id="dashboard" class="content-section">
                 <!-- New Order Form (Initially Visible) -->
                 <div class="bg-white rounded-lg shadow-md p-6">
-                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Crear Nuevo Pedido</h2>
+                    <h2 class="text-xl font-semibold text-amber-900 mb-4">Crear Nuevo Pedido</h2>
                     <div class="max-w-md mx-auto">
                         <div class="mb-4">
                             <label for="client-identifier" class="block text-sm font-medium text-gray-700">Identificador del Cliente (Ej: Barra 1, Juan Pérez)</label>
@@ -181,7 +181,7 @@
             <!-- Bar Section -->
             <div id="bar" class="content-section hidden">
                  <div class="bg-white rounded-lg shadow-md p-6">
-                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Nuevo Pedido de Barra</h2>
+                    <h2 class="text-xl font-semibold text-amber-900 mb-4">Nuevo Pedido de Barra</h2>
                     <div class="max-w-md mx-auto">
                         <div class="mb-4">
                             <label for="bar-client-identifier" class="block text-sm font-medium text-gray-700">Identificador del Cliente (Ej: Cliente de la esquina)</label>
@@ -203,7 +203,7 @@
             <div id="order-view" class="hidden bg-white rounded-lg shadow-md">
                 <div class="p-6">
                     <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-xl font-semibold text-gray-900">Tomar Pedido para <span id="order-identifier-display" class="text-amber-800"></span></h2>
+                        <h2 class="text-xl font-semibold text-amber-900">Tomar Pedido para <span id="order-identifier-display" class="text-amber-800"></span></h2>
                         <button id="back-to-main-view-btn" class="text-gray-500 hover:text-gray-700">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -246,8 +246,8 @@
 
                         <!-- Right side: Current Order -->
                         <div id="current-order">
-                            <h3 class="text-lg font-semibold mb-2">Pedido Actual</h3>
-                            <div class="bg-gray-50 p-4 rounded-lg" style="max-height: 50vh; overflow-y: auto;">
+                            <h3 class="text-lg font-semibold mb-2 text-amber-900">Pedido Actual</h3>
+                            <div class="bg-amber-50 p-4 rounded-lg" style="max-height: 50vh; overflow-y: auto;">
                                 <ul id="order-items-list" class="space-y-2 mb-4">
                                     <!-- Items will be added here by JS -->
                                 </ul>
@@ -256,9 +256,6 @@
                                 Total: $<span id="order-total">0</span>
                             </div>
                             <div class="flex flex-col sm:flex-row sm:justify-center sm:space-x-2 space-y-2 sm:space-y-0">
-                                <button id="mark-served-btn" class="hidden flex items-center justify-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 ease-in-out">
-                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-                                    Marcar como Servido</button>
                                 <button id="clear-order-btn" class="flex items-center justify-center bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 w-full sm:w-auto shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 ease-in-out">
                                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
                                     Limpiar</button>
@@ -274,14 +271,14 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <!-- Ready Orders -->
                 <div class="bg-white rounded-lg shadow-md p-6">
-                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Pedidos Listos para Servir</h2>
+                    <h2 class="text-xl font-semibold text-amber-900 mb-4">Pedidos Listos para Servir</h2>
                     <ul id="ready-orders-list-monitor" class="space-y-3 max-h-[70vh] overflow-y-auto">
                         <li id="no-ready-orders" class="text-gray-500">No hay pedidos listos.</li>
                     </ul>
                 </div>
                 <!-- Pending/Preparing Orders -->
                 <div class="bg-white rounded-lg shadow-md p-6">
-                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Pedidos en Curso</h2>
+                    <h2 class="text-xl font-semibold text-amber-900 mb-4">Pedidos en Curso</h2>
                     <ul id="in-progress-orders-list-monitor" class="space-y-3 max-h-[70vh] overflow-y-auto">
                         <li id="no-in-progress-orders" class="text-gray-500">No hay pedidos en curso.</li>
                     </ul>
@@ -292,7 +289,7 @@
         <!-- Payments Section -->
         <div id="payments" class="content-section hidden">
             <div class="bg-white rounded-lg shadow-md p-6">
-                <h2 class="text-xl font-semibold text-gray-900 mb-4">Pedidos Servidos (para Cobrar)</h2>
+                <h2 class="text-xl font-semibold text-amber-900 mb-4">Pedidos Servidos (para Cobrar)</h2>
                 <ul id="served-orders-list-monitor" class="space-y-3 max-h-[70vh] overflow-y-auto"><li id="no-served-orders" class="text-gray-500">No hay pedidos servidos pendientes de cobro.</li></ul>
             </div>
         </div>
@@ -340,7 +337,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="flex justify-between text-lg font-bold text-gray-900">
+                            <div class="flex justify-between text-lg font-bold text-amber-900">
                                 <span>Total:</span>
                                 <span>$<span id="modal-order-total">0</span></span>
                             </div>
@@ -379,7 +376,7 @@
     <div id="serve-confirmation-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div class="modal-container bg-white rounded-lg shadow-xl w-full max-w-sm p-6">
             <div class="text-center">
-                <h3 class="text-lg font-medium leading-6 text-gray-900" id="serve-modal-title">Confirmar Entrega</h3>
+                <h3 class="text-lg font-medium leading-6 text-amber-900" id="serve-modal-title">Confirmar Entrega</h3>
                 <div class="mt-2">
                     <p class="text-sm text-gray-500">Verifica que todos los productos son correctos antes de marcar como servido.</p>
                 </div>
@@ -400,7 +397,7 @@
     <div id="cart-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
         <div class="bg-white rounded-lg shadow-lg w-full max-w-md mx-4">
             <div class="p-6 border-b border-gray-200 flex justify-between items-center">
-                <h2 class="text-xl font-semibold text-gray-900">Carrito de Compras</h2>
+                <h2 class="text-xl font-semibold text-amber-900">Carrito de Compras</h2>
                 <button id="close-cart" class="text-gray-500 hover:text-gray-700">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>

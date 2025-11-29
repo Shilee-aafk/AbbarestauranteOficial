@@ -124,7 +124,10 @@ export class OrdersManager {
     let orderLi = document.getElementById(`inprogress-order-${order.id}`);
 
     const itemsHTML = (order.items && Array.isArray(order.items))
-      ? order.items.map(item => `<li>${item.quantity}x ${item.name}</li>`).join('')
+      ? order.items.map(item => {
+          const strikeClass = item.is_prepared ? 'line-through text-gray-500' : '';
+          return `<li class="${strikeClass}">${item.quantity}x ${item.name}</li>`;
+        }).join('')
       : '<li>Items no disponibles</li>';
 
     const statusOptions = `
@@ -149,11 +152,11 @@ export class OrdersManager {
           <select class="status-changer text-xs border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" data-order-id="${order.id}">
             ${statusOptions}
           </select>
-          <button class="edit-btn flex items-center justify-center bg-gray-500 text-white px-3 py-1 rounded-md text-xs font-medium hover:bg-gray-600" data-order-id="${order.id}">
+          <button class="edit-btn flex items-center justify-center bg-amber-200 text-amber-900 px-3 py-1 rounded-md text-xs font-medium hover:bg-amber-300" data-order-id="${order.id}">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z"></path></svg>
           </button>
-          <button class="cancel-btn flex items-center justify-center bg-red-500 text-white px-3 py-1 rounded-md text-xs font-medium hover:bg-red-600" data-order-id="${order.id}">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          <button class="cancel-btn flex items-center justify-center bg-amber-800 text-white px-3 py-1 rounded-md text-xs font-medium hover:bg-amber-900" data-order-id="${order.id}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
           </button>
         </div>
       </div>
@@ -170,7 +173,7 @@ export class OrdersManager {
       orderLi.dataset.updatedAt = order.updated_at;
       orderLi.className = 'bg-gray-50 p-3 rounded-lg border';
       orderLi.innerHTML = orderHTML;
-      inProgressList.prepend(orderLi);
+      inProgressList.appendChild(orderLi);
     }
 
     document.getElementById('no-in-progress-orders')?.remove();
@@ -198,7 +201,10 @@ export class OrdersManager {
     let orderLi = document.getElementById(`ready-order-${order.id}`);
 
     const itemsHTML = (order.items && Array.isArray(order.items))
-      ? order.items.map(item => `<li>${item.quantity}x ${item.name}</li>`).join('')
+      ? order.items.map(item => {
+          const strikeClass = item.is_prepared ? 'line-through text-gray-500' : '';
+          return `<li class="${strikeClass}">${item.quantity}x ${item.name}</li>`;
+        }).join('')
       : '<li>Items no disponibles</li>';
 
     const orderHTML = `
@@ -212,10 +218,10 @@ export class OrdersManager {
         <ul class="list-disc list-inside pl-1">${itemsHTML}</ul>
       </div>
       <div class="mt-3 flex items-center space-x-2">
-        <button class="edit-btn flex-shrink-0 flex items-center justify-center bg-gray-500 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-600" data-order-id="${order.id}">
+        <button class="edit-btn flex-shrink-0 flex items-center justify-center bg-amber-200 text-amber-900 px-3 py-2 rounded-lg text-sm font-medium hover:bg-amber-300" data-order-id="${order.id}">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z"></path></svg>
         </button>
-        <button class="mark-served-monitor-btn w-full flex items-center justify-center bg-green-900 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-green-900" data-order-id="${order.id}">
+        <button class="mark-served-monitor-btn w-full flex items-center justify-center bg-amber-100 text-amber-900 px-4 py-2 rounded-lg text-sm font-bold hover:bg-amber-200" data-order-id="${order.id}">
           <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
           Marcar Servido
         </button>
@@ -231,9 +237,9 @@ export class OrdersManager {
       orderLi = document.createElement('li');
       orderLi.id = `ready-order-${order.id}`;
       orderLi.dataset.updatedAt = order.updated_at;
-      orderLi.className = 'bg-green-50 p-3 rounded-lg border border-green-200';
+      orderLi.className = 'bg-amber-50 p-3 rounded-lg border border-amber-200';
       orderLi.innerHTML = orderHTML;
-      readyList.prepend(orderLi);
+      readyList.appendChild(orderLi);
     }
     document.getElementById('no-ready-orders')?.remove();
   }
@@ -291,7 +297,7 @@ export class OrdersManager {
       orderLi.dataset.updatedAt = order.updated_at;
       orderLi.className = 'flex justify-between items-center bg-blue-50 p-3 rounded-lg';
       orderLi.innerHTML = orderHTML;
-      servedOrdersList.prepend(orderLi);
+      servedOrdersList.append(orderLi);
     }
 
     document.getElementById('no-served-orders')?.remove();
@@ -367,11 +373,14 @@ export class OrdersManager {
 
       document.getElementById('serve-modal-title').textContent = `Confirmar Entrega - ${data.identifier || ''}`;
       const itemsList = document.getElementById('serve-modal-order-items');
-      itemsList.innerHTML = data.items.map(item => `
-        <li class="flex justify-between">
-          <span>${item.quantity}x ${item.name}</span>
-        </li>
-      `).join('');
+      itemsList.innerHTML = data.items.map(item => {
+        const strikeClass = item.is_prepared ? 'line-through text-gray-500' : '';
+        return `
+          <li class="flex justify-between ${strikeClass}">
+            <span>${item.quantity}x ${item.name}</span>
+          </li>
+        `;
+      }).join('');
 
       const confirmBtn = document.getElementById('serve-modal-confirm-btn');
       const newConfirmBtn = confirmBtn.cloneNode(true);
@@ -410,11 +419,27 @@ export class OrdersManager {
       // Show the order view first so elements are visible
       this.uiManager.showOrderView();
 
-      document.getElementById('order-identifier-display').textContent = data.identifier;
+      // Wait a tick to ensure DOM is updated
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      const identifierElement = document.getElementById('order-identifier-display');
+      if (identifierElement) {
+        identifierElement.textContent = data.identifier;
+      } else {
+        console.error('Element order-identifier-display not found');
+      }
+
       this.cartManager.loadOrder(orderId, data);
 
-      document.getElementById('submit-order-btn').textContent = 'Actualizar Pedido';
-      document.getElementById('mark-served-btn').classList.remove('hidden');
+      const submitBtn = document.getElementById('submit-order-btn');
+      if (submitBtn) {
+        submitBtn.textContent = 'Actualizar Pedido';
+      }
+
+      const servedBtn = document.getElementById('mark-served-btn');
+      if (servedBtn) {
+        servedBtn.classList.remove('hidden');
+      }
 
       this.uiManager.resetCategoryFilters();
     } catch (error) {

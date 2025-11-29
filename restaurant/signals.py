@@ -31,7 +31,8 @@ def order_status_changed(sender, instance, created, **kwargs):
         items.append({
             'name': item.menu_item.name,
             'quantity': item.quantity,
-            'note': item.note or ''
+            'note': item.note or '',
+            'is_prepared': item.is_prepared,
         })
 
     order_data = {
