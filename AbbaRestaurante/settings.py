@@ -172,11 +172,17 @@ cloudinary.config(
     api_secret=os.environ.get('CLOUDINARY_API_SECRET', 'dnD4bo63Fi7PSvbo2MYqoF4q00U')
 )
 
+# Cloudinary Storage Settings
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME', 'dvjcrc3ei'),
+    'API_KEY': os.environ.get('CLOUDINARY_API_KEY', '638756761769688'),
+    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET', 'dnD4bo63Fi7PSvbo2MYqoF4q00U'),
+}
+
 # Use Cloudinary for media file storage in production
 if not DEBUG:
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-    MEDIA_URL = '/media/'
-    # No need to set MEDIA_ROOT when using Cloudinary
+    # Cloudinary automatically handles MEDIA_URL through the storage backend
 else:
     # Use local storage in development
     MEDIA_URL = '/media/'
