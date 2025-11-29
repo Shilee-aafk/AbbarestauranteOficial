@@ -938,7 +938,7 @@
                     formData.append('description', document.getElementById('menu-description').value);
                     formData.append('price', document.getElementById('menu-price').value);
                     formData.append('category', document.getElementById('menu-category').value);
-                    formData.append('available', document.getElementById('menu-available').checked);
+                    formData.append('available', document.getElementById('menu-available').checked ? 'true' : 'false');
                     
                     const imageFile = document.getElementById('menu-image').files[0];
                     if (imageFile) {

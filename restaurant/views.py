@@ -743,12 +743,15 @@ def api_menu_items(request):
 
     if request.method == 'POST':
         try:
+            available_str = request.POST.get('available', 'true')
+            available = available_str.lower() in ('true', '1', 'yes', 'on')
+            
             item = MenuItem.objects.create(
                 name=request.POST['name'],
                 description=request.POST.get('description', ''),
                 price=request.POST['price'],
                 category=request.POST['category'],
-                available=request.POST.get('available', 'true').lower() == 'true'
+                available=available
             )
             if 'image' in request.FILES:
                 item.image = request.FILES['image']
@@ -794,6 +797,14 @@ def api_menu_item_detail(request, pk):
             print(f"[DEBUG] PATCH/PUT request for item {pk}: {data}")
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
+        
+        def parse_available(val):
+            """Helper function to parse available boolean from various formats"""
+            if isinstance(val, bool):
+                return val
+            if isinstance(val, str):
+                return val.lower() in ('true', '1', 'yes', 'on')
+            return bool(val)
             
         if request.method == 'PUT':
             # PUT: replace all fields
@@ -801,7 +812,8 @@ def api_menu_item_detail(request, pk):
             item.description = data.get('description', item.description)
             item.price = data.get('price', item.price)
             item.category = data.get('category', item.category)
-            item.available = data.get('available', str(item.available)).lower() == 'true' if isinstance(data.get('available'), str) else data.get('available', item.available)
+            if 'available' in data:
+                item.available = parse_available(data['available'])
         else:
             # PATCH: only update provided fields
             if 'name' in data:
@@ -813,7 +825,7 @@ def api_menu_item_detail(request, pk):
             if 'category' in data:
                 item.category = data['category']
             if 'available' in data:
-                item.available = data['available'].lower() == 'true' if isinstance(data['available'], str) else data['available']
+                item.available = parse_available(data['available'])
         
         # Handle image upload
         if 'image' in request.FILES:
