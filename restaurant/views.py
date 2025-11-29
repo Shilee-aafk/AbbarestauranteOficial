@@ -218,6 +218,7 @@ def cook_dashboard(request):
 def waiter_dashboard(request):
     import json
     from django.utils import timezone
+    from django.conf import settings
 
     try:
         # --- Datos para la toma de pedidos ---
@@ -267,6 +268,8 @@ def waiter_dashboard(request):
             'menu_items_json': menu_items_json,
             'initial_orders_json': initial_orders_json,
             'user_role': user_role,
+            'pusher_key': settings.PUSHER_KEY,
+            'pusher_cluster': settings.PUSHER_CLUSTER,
         })
     except Exception as e:
         import traceback

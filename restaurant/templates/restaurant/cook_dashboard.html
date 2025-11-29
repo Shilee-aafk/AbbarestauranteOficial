@@ -7,30 +7,33 @@
 {% block extra_head %}
     <style>
         .order-card {
-            transition: all 0.3s ease-in-out;
+            transition: background-color 0.3s ease-in-out;
             border-left-width: 8px;
         }
+        
+        /* Colores de órdenes por antigüedad */
         .order-card-new { 
-            border-color: #FBBF24; /* amber-400 */
-            background-color: #FFFBEB; /* amber-50 */
+            border-color: #FBBF24;
+            background-color: #FFFBEB;
         }
         .order-card-medium { 
-            border-color: #D97706; /* amber-600 */
-            background-color: #FEF3C7; /* amber-100 */
+            border-color: #D97706;
+            background-color: #FEF3C7;
         }
         .order-card-old { 
-            border-color: #92400E; /* amber-800 */
-            background-color: #FED7AA; /* amber-200 */
+            border-color: #92400E;
+            background-color: #FED7AA;
         }
         .order-card-urgent {
-            border-color: #EF4444; /* red-500 */
-            background-color: #FECACA; /* red-200 */
+            border-color: #EF4444;
+            background-color: #FECACA;
         }
         .order-card-critical {
-            border-color: #DC2626; /* red-600 */
-            background-color: #FCA5A5; /* red-300 */
+            border-color: #DC2626;
+            background-color: #FCA5A5;
             animation: pulse-critical 1.5s ease-in-out infinite;
         }
+        
         @keyframes pulse-critical {
             0%, 100% { background-color: #FCA5A5; }
             50% { background-color: #F87171; }
@@ -51,21 +54,25 @@
             left: 50%;
             display: flex;
             align-items: center;
-            padding: 1rem 1.5rem;
+            padding: 0.5rem 1rem;
             border-radius: 0.5rem;
-            color: white;
             z-index: 1000;
             opacity: 0;
             transform: translate(-50%, -100px);
             transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.875rem;
         }
         .toast.show {
             opacity: 1;
             transform: translate(-50%, 0);
         }
-        .toast.success { background-color: transparent; color: #22c55e; } /* Green text only */
-        .toast.error { background-color: transparent; color: #ef4444; } /* Red text only */
-        .toast.info { background-color: transparent; color: #3b82f6; } /* Blue text only */
+        .toast.success { color: #22c55e; }
+        .toast.error { color: #ef4444; }
+        .toast.info { color: #3b82f6; }
     </style>
 {% endblock %}
 
@@ -111,16 +118,26 @@
     document.addEventListener('DOMContentLoaded', function() {
         const csrfToken = '{{ csrf_token }}';
         let initialOrders = {{ orders_json|safe }};
+        
+        // Cache de elementos del DOM para evitar múltiples queries
+        const pendingContainer = document.getElementById('pending-orders');
+        const preparingContainer = document.getElementById('preparing-orders');
+        
+        // Mapas para rastrear órdenes
+        const orderCards = new Map();
+        let timerInterval = null;
+        let syncInterval = null;
+        let lastSyncTimestamp = 0;
 
         // --- Funciones de Renderizado ---
         function renderOrderCard(order) {
             const itemsHtml = order.items.map(item => `
-                <li class="flex justify-between items-center">
-                    <span class="font-semibold ${item.is_prepared ? 'text-gray-400 line-through' : ''}">${item.quantity}x ${item.name}</span>
-                    <div class="flex items-center space-x-2">
-                        ${item.is_prepared ? `<span class="text-xs bg-green-200 text-green-800 px-2 py-1 rounded">Preparado</span>` : ''}
-                        ${item.note ? `<span class="text-xs text-red-600 italic">Nota: ${item.note}</span>` : ''}
+                <li class="flex flex-col">
+                    <div class="flex justify-between items-center">
+                        <span class="font-semibold ${item.is_prepared ? 'text-gray-400 line-through' : ''}">${item.quantity}x ${item.name}</span>
+                        ${item.is_prepared ? '<span class="text-xs bg-green-200 text-green-800 px-2 py-1 rounded">Preparado</span>' : ''}
                     </div>
+                    ${item.note ? `<p class="text-xs text-red-600 italic mt-1 pl-2 border-l-2 border-red-600">Nota: ${item.note}</p>` : ''}
                 </li>
             `).join('');
 
@@ -139,63 +156,42 @@
                 <p class="text-md text-gray-600 mb-3">Para: <span class="font-semibold">${order.identifier}</span></p>
                 <ul class="space-y-2 mb-4">${itemsHtml}</ul>
                 <div class="flex justify-end space-x-3 mt-4">
-                    ${order.status === 'pending' ? `
-                        <button class="start-btn bg-amber-700 text-white px-5 py-2 rounded-lg font-semibold hover:amber-800" data-order-id="${order.id}">
-                            Empezar Preparación
-                        </button>
-                    ` : ''}
-                    ${order.status === 'preparing' ? `
-                        <button class="ready-btn bg-green-900 text-white px-5 py-2 rounded-lg font-semibold hover:bg-green-900" data-order-id="${order.id}">
-                            Marcar como Listo
-                        </button>
-                    ` : ''}
+                    ${order.status === 'pending' ? `<button class="start-btn bg-amber-700 text-white px-5 py-2 rounded-lg font-semibold hover:bg-amber-800" data-order-id="${order.id}">Empezar Preparación</button>` : ''}
+                    ${order.status === 'preparing' ? `<button class="ready-btn bg-green-900 text-white px-5 py-2 rounded-lg font-semibold hover:bg-green-800" data-order-id="${order.id}">Marcar como Listo</button>` : ''}
                 </div>
             `;
+            
+            orderCards.set(order.id, card);
             return card;
         }
 
         function addOrderToDOM(order) {
+            if (orderCards.has(order.id)) return; // Evitar duplicados
+            
             const card = renderOrderCard(order);
-            if (order.status === 'pending') {
-                document.getElementById('pending-orders').prepend(card);
-            } else if (order.status === 'preparing') {
-                document.getElementById('preparing-orders').prepend(card);
+            const container = order.status === 'pending' ? pendingContainer : preparingContainer;
+            if (container) {
+                container.prepend(card);
             }
         }
 
         function moveOrderToPreparing(orderId) {
-            const card = document.getElementById(`order-${orderId}`);
+            const card = orderCards.get(orderId);
             if (card) {
-                card.remove();
-                // Buscar la orden en el DOM por data-order-id
-                const orderElements = document.querySelectorAll('[data-order-id]');
-                let orderData = null;
-                
-                orderElements.forEach(el => {
-                    if (parseInt(el.getAttribute('data-order-id')) === orderId) {
-                        orderData = {
-                            id: orderId,
-                            status: 'preparing',
-                            identifier: el.querySelector('p span')?.textContent || 'Unknown',
-                            items: [], // No necesitamos los items aquí
-                            created_at: el.getAttribute('data-order-created-at')
-                        };
-                    }
-                });
-                
-                if (orderData) {
-                    addOrderToDOM(orderData);
-                }
+                card.setAttribute('data-order-status', 'preparing');
+                preparingContainer.prepend(card);
             }
         }
 
         function removeOrderFromDOM(orderId) {
-            const card = document.getElementById(`order-${orderId}`);
+            const card = orderCards.get(orderId);
             if (card) {
-                card.style.transition = 'opacity 0.5s, transform 0.5s';
                 card.style.opacity = '0';
                 card.style.transform = 'scale(0.9)';
-                setTimeout(() => card.remove(), 500);
+                setTimeout(() => {
+                    card.remove();
+                    orderCards.delete(orderId);
+                }, 500);
             }
         }
 
@@ -211,8 +207,6 @@
                     body: JSON.stringify({ status: newStatus }),
                 });
                 if (!response.ok) throw new Error('Error al actualizar el estado');
-                
-                // La actualización de la UI se manejará por el WebSocket
             } catch (error) {
                 console.error('Error:', error);
                 showToast('Error al actualizar el pedido.', 'error');
@@ -223,149 +217,126 @@
             if (e.target.matches('.start-btn')) {
                 const orderId = parseInt(e.target.dataset.orderId, 10);
                 updateOrderStatus(orderId, 'preparing');
-            }
-            if (e.target.matches('.ready-btn')) {
+            } else if (e.target.matches('.ready-btn')) {
                 const orderId = parseInt(e.target.dataset.orderId, 10);
                 updateOrderStatus(orderId, 'ready');
             }
         });
 
         // --- Temporizadores y Actualizaciones de UI ---
+        const colorThresholds = [
+            { minutes: 15, class: 'order-card-critical' },
+            { minutes: 10, class: 'order-card-urgent' },
+            { minutes: 7, class: 'order-card-old' },
+            { minutes: 5, class: 'order-card-medium' },
+            { minutes: 0, class: 'order-card-new' }
+        ];
+
         function updateTimers() {
-            document.querySelectorAll('.order-card').forEach(card => {
+            const now = new Date();
+            
+            orderCards.forEach((card) => {
                 const createdAt = new Date(card.dataset.createdAt);
-                const now = new Date();
                 const diffSeconds = Math.floor((now - createdAt) / 1000);
-                
                 const minutes = Math.floor(diffSeconds / 60);
                 const seconds = diffSeconds % 60;
                 
-                card.querySelector('.timer').textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                const timerEl = card.querySelector('.timer');
+                if (timerEl) {
+                    timerEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                }
 
-                // Remover todas las clases de color previas
-                card.classList.remove('order-card-new', 'order-card-medium', 'order-card-old', 'order-card-urgent', 'order-card-critical');
-
-                // Actualizar color del borde y fondo según la antigüedad
-                if (minutes >= 15) {
-                    card.classList.add('order-card-critical'); // Rojo pulsante
-                } else if (minutes >= 10) {
-                    card.classList.add('order-card-urgent'); // Rojo fuerte
-                } else if (minutes >= 7) {
-                    card.classList.add('order-card-old'); // Ámbar oscuro
-                } else if (minutes >= 5) {
-                    card.classList.add('order-card-medium'); // Ámbar medio
-                } else {
-                    card.classList.add('order-card-new'); // Ámbar claro
+                // Actualizar color según antigüedad
+                for (const threshold of colorThresholds) {
+                    if (minutes >= threshold.minutes) {
+                        card.className = 'order-card bg-white rounded-lg shadow-lg p-5 mb-4 ' + threshold.class;
+                        break;
+                    }
                 }
             });
         }
 
         // --- Lógica de Pusher para Tiempo Real ---
         function setupPusher() {
-            console.log('[PUSHER] PUSHER_KEY:', PUSHER_KEY);
-            console.log('[PUSHER] PUSHER_CLUSTER:', PUSHER_CLUSTER);
             if (!PUSHER_KEY) {
-                console.error("Pusher key no está configurada.");
+                console.warn("Pusher key no está configurada. Usando polling.");
                 return;
             }
 
-            Pusher.logToConsole = true;
             const pusher = new Pusher(PUSHER_KEY, { cluster: PUSHER_CLUSTER });
             const channel = pusher.subscribe('cocina-channel');
-            console.log('[PUSHER] Suscrito a cocina-channel');
 
             channel.bind('nuevo-pedido', function(data) {
-                console.log('Nuevo pedido recibido via Pusher:', data.order);
                 showToast(`Nuevo pedido para ${data.order.identifier}`, 'info');
                 addOrderToDOM(data.order);
             });
 
             channel.bind('actualizacion-estado', function(data) {
-                console.log('Actualización de estado recibida:', data.order);
                 const order = data.order;
                 if (order.status === 'preparing') {
                     moveOrderToPreparing(order.id);
-                } else if (order.status === 'ready' || order.status === 'cancelled') {
+                } else if (['ready', 'cancelled'].includes(order.status)) {
                     removeOrderFromDOM(order.id);
                 }
             });
         }
 
-        // --- Polling automático como backup (cada 2 segundos) ---
-        let lastSyncTimestamp = 0;
+        // --- Polling automático como backup ---
         async function syncOrdersWithServer() {
             try {
                 const now = Date.now();
-                if (now - lastSyncTimestamp < 1500) {
-                    return; // Evitar sincronizaciones muy frecuentes
-                }
+                if (now - lastSyncTimestamp < 1500) return;
                 lastSyncTimestamp = now;
 
-                console.log('[SYNC] Sincronizando órdenes...');
                 const response = await fetch("{% url 'restaurant:api_orders' %}");
-                if (!response.ok) {
-                    console.error('[SYNC] Error en respuesta:', response.status, response.statusText);
-                    const text = await response.text();
-                    console.error('[SYNC] Respuesta:', text.substring(0, 200));
-                    return;
-                }
+                if (!response.ok) return;
                 
                 const newOrders = await response.json();
-                console.log('[SYNC] Órdenes desde servidor:', newOrders.length);
                 
-                // Obtener IDs de órdenes en pantalla
-                const domOrderMap = new Map();
-                document.querySelectorAll('[data-order-id]').forEach(el => {
-                    const orderId = parseInt(el.getAttribute('data-order-id'));
-                    const status = el.getAttribute('data-order-status');
-                    domOrderMap.set(orderId, { element: el, status: status });
-                });
+                // Crear mapa de órdenes del servidor
+                const serverOrderMap = new Map(newOrders.map(o => [o.id, o]));
                 
-                console.log('[SYNC] Órdenes en DOM:', domOrderMap.size);
-                
-                // Procesar cada orden del servidor
-                newOrders.forEach(order => {
-                    const domOrder = domOrderMap.get(order.id);
+                // Procesar órdenes del servidor
+                serverOrderMap.forEach((order, orderId) => {
+                    const card = orderCards.get(orderId);
                     
-                    if (!domOrder) {
-                        // Orden nueva: agregar a pantalla
-                        console.log(`[SYNC] ✅ Nueva orden: #${order.id} (${order.identifier})`);
+                    if (!card) {
                         addOrderToDOM(order);
-                    } else if (domOrder.status !== order.status) {
-                        // Orden con estado diferente: actualizar
-                        console.log(`[SYNC] 📝 Estado cambió: #${order.id} ${domOrder.status} → ${order.status}`);
-                        
-                        if (order.status === 'preparing') {
-                            moveOrderToPreparing(order.id);
-                        } else if (order.status === 'ready' || order.status === 'cancelled') {
-                            removeOrderFromDOM(order.id);
+                    } else {
+                        const currentStatus = card.dataset.orderStatus;
+                        if (currentStatus !== order.status) {
+                            if (order.status === 'preparing') {
+                                moveOrderToPreparing(orderId);
+                            } else if (['ready', 'cancelled'].includes(order.status)) {
+                                removeOrderFromDOM(orderId);
+                            }
                         }
                     }
-                    
-                    domOrderMap.delete(order.id);
                 });
                 
-                // Remover órdenes que ya no están en el servidor
-                domOrderMap.forEach((domOrder, orderId) => {
-                    console.log(`[SYNC] ❌ Removiendo orden: #${orderId}`);
-                    domOrder.element.remove();
+                // Remover órdenes que ya no existen en el servidor
+                orderCards.forEach((card, orderId) => {
+                    if (!serverOrderMap.has(orderId)) {
+                        removeOrderFromDOM(orderId);
+                    }
                 });
             } catch (error) {
-                console.error('[SYNC] Error:', error.message, error);
+                console.error('Sync error:', error.message);
             }
         }
 
         // --- Inicialización ---
-        console.log('[INIT] Iniciando cook dashboard. Órdenes iniciales:', initialOrders.length);
         initialOrders.forEach(addOrderToDOM);
-        setInterval(updateTimers, 1000);
+        timerInterval = setInterval(updateTimers, 1000);
+        syncInterval = setInterval(syncOrdersWithServer, 2000);
         setupPusher();
+        syncOrdersWithServer();
         
-        // Ejecutar sync inmediatamente y luego cada 2 segundos
-        syncOrdersWithServer(); // Primera sincronización inmediata
-        setInterval(syncOrdersWithServer, 2000);
-        
-        console.log('[INIT] Dashboard listo. Esperando órdenes...');
+        // Cleanup al descargar
+        window.addEventListener('beforeunload', function() {
+            clearInterval(timerInterval);
+            clearInterval(syncInterval);
+        });
     });
 </script>
 {% endblock %}

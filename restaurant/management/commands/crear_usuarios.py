@@ -10,15 +10,13 @@ class Command(BaseCommand):
     # Define los usuarios a crear. Puedes cambiar los nombres de usuario y contraseñas aquí.
     # La contraseña 'password123' es solo para desarrollo. ¡Cámbiala en producción!
     USERS = {
-        'Administrador': {'username': 'admin_user', 'password': 'password123', 'is_superuser': True},
-        'Recepcionista': {'username': 'recepcion_user', 'password': 'password123'},
-        'Garzón': {'username': 'garzon_user', 'password': 'password123'},
-        'Cocinero': {'username': 'cocinero_user', 'password': 'password123'},
+        'Administrador': {'username': 'Administrador', 'password': 'password123', 'is_superuser': True},
+        'Recepcionista': {'username': 'Recepcionista', 'password': 'password123'},
+        'Garzón': {'username': 'Garzon', 'password': 'password123'},
+        'Cocinero': {'username': 'Cocinero', 'password': 'password123'},
     }
 
-    # Define los platos iniciales del menú
     MENU_ITEMS = [
-        # --- Entradas ---
         {
             'name': 'Ceviche Clásico',
             'description': 'Pescado fresco marinado en jugo de limón, con cebolla roja, cilantro y ají limo.',

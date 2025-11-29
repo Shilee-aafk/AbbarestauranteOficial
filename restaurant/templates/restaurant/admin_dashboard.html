@@ -11,6 +11,21 @@
         .banner-hidden {
             opacity: 0;
         }
+        #close-banner {
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 0.25rem;
+            transition: background-color 0.2s ease;
+        }
+        #close-banner:hover {
+            background-color: rgba(34, 197, 94, 0.1);
+        }
+        #close-banner:active {
+            transform: scale(0.95);
+        }
+        .banner-hidden {
+            opacity: 0;
+        }
     </style>
 {% endblock %}
 
@@ -18,9 +33,7 @@
     <!-- Sidebar -->
     <div id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-amber-50 shadow-md transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-30">
         <div class="flex items-center h-16 bg-amber-50 border-b border-amber-200 px-6">
-            <svg class="w-8 h-8 text-amber-800 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-            </svg>
+            <img src="{% static 'restaurant/images/logo_d.png' %}" alt="Abba Hotel Logo" class="w-12 h-12 mr-2 object-contain">
             <span class="text-xl font-semibold text-amber-900">Abba Hotel</span>
         </div>
         <nav class="mt-8">
@@ -44,6 +57,13 @@
                 Gestión de Usuarios
             </a>
         </nav>
+        <!-- User Section at Bottom -->
+        <div class="absolute bottom-0 left-0 right-0 border-t border-amber-200 bg-amber-50 p-4">
+            <div class="flex items-center justify-between">
+                <span class="text-sm font-medium text-amber-900">{{ user.username }}</span>
+                <a href="{% url 'logout' %}" class="text-xs text-red-600 hover:text-red-800 font-normal">Cerrar</a>
+            </div>
+        </div>
     </div>
 
     <!-- Overlay for mobile when sidebar is open -->
@@ -54,14 +74,10 @@
         <!-- Header -->
         <div class="bg-white shadow-sm border-b border-gray-200 px-8 py-4 flex justify-between items-center">
             <div class="flex items-center">
-                <button id="sidebar-toggle" class="lg:hidden text-gray-500 hover:text-gray-700 mr-4">
+                <button id="sidebar-toggle" class="lg:hidden fixed top-4 left-4 z-40 text-gray-500 hover:text-gray-700 mr-4 bg-white p-2 rounded-lg shadow-md">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                 </button>
                 <h1 class="text-2xl font-bold text-gray-900 hidden sm:block">Panel de Administración</h1>
-            </div>
-            <div class="flex items-center space-x-4">
-                <span class="text-gray-700">{{ user.username }}</span>
-                <a href="{% url 'logout' %}" class="text-red-600 hover:text-red-800">Cerrar Sesión</a>
             </div>
         </div>
 
@@ -74,7 +90,7 @@
                     </svg>
                     <span class="text-green-800 font-medium">¡Bienvenido, {{ user.username }}!</span>
                 </div>
-                <button id="close-banner" class="text-green-600 hover:text-green-800">
+                <button id="close-banner" class="text-green-600 hover:text-green-800 flex-shrink-0" type="button" aria-label="Cerrar bienvenida">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
@@ -701,16 +717,29 @@
                 sidebarToggle?.addEventListener('click', toggleSidebar);
                 sidebarOverlay?.addEventListener('click', toggleSidebar);
 
-                // Banner de bienvenida
-                const banner = document.getElementById('welcome-banner');
-                if (localStorage.getItem('welcomeBannerClosed') === 'true') {
-                    banner.style.display = 'none';
-                }
-                document.getElementById('close-banner')?.addEventListener('click', () => {
-                    banner.classList.add('banner-hidden');
-                    localStorage.setItem('welcomeBannerClosed', 'true');
-                    setTimeout(() => banner.style.display = 'none', 500);
+                // Close banner functionality - using event delegation
+                document.addEventListener('click', (e) => {
+                    const closeBtn = e.target.closest('#close-banner');
+                    if (closeBtn) {
+                        console.log('Close banner clicked');
+                        const banner = document.getElementById('welcome-banner');
+                        if (banner) {
+                            banner.classList.add('banner-hidden');
+                            localStorage.setItem('welcomeBannerClosed', 'true');
+                            setTimeout(() => {
+                                banner.style.display = 'none';
+                            }, 500);
+                        }
+                    }
                 });
+
+                // Check if welcome banner was previously closed on page load
+                if (localStorage.getItem('welcomeBannerClosed') === 'true') {
+                    const welcomeBanner = document.getElementById('welcome-banner');
+                    if (welcomeBanner) {
+                        welcomeBanner.style.display = 'none';
+                    }
+                }
 
                 // Modales
                 document.getElementById('modal-close-btn')?.addEventListener('click', () => document.getElementById('order-details-modal').classList.add('hidden'));

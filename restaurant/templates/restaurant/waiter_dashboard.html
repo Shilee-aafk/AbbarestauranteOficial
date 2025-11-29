@@ -17,21 +17,41 @@
             left: 50%;
             display: flex;
             align-items: center;
-            padding: 1rem 1.5rem;
+            padding: 0.5rem 1rem;
             border-radius: 0.5rem;
             z-index: 1000;
             opacity: 0;
             transform: translate(-50%, -100px);
             transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.875rem;
         }
         .toast.show {
             opacity: 1;
             transform: translate(-50%, 0);
         }
-        .toast.success { background-color: transparent; color: #22c55e; } /* Green text only */
-        .toast.error { background-color: transparent; color: #ef4444; } /* Red text only */
-        .toast.info { background-color: transparent; color: #3b82f6; } /* Blue text only */
+        .toast.success { color: #22c55e; }
+        .toast.error { color: #ef4444; }
+        .toast.info { color: #3b82f6; }
         #welcome-banner { transition: opacity 0.5s ease, transform 0.5s ease; }
+        .banner-hidden {
+            opacity: 0;
+        }
+        #close-banner {
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 0.25rem;
+            transition: background-color 0.2s ease;
+        }
+        #close-banner:hover {
+            background-color: rgba(34, 197, 94, 0.1);
+        }
+        #close-banner:active {
+            transform: scale(0.95);
+        }
         .banner-hidden {
             opacity: 0;
         }
@@ -45,6 +65,15 @@
             opacity: 0;
             transform: scale(0.95);
             height: 0;
+        }
+        /* Button click animation */
+        @keyframes buttonPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+        .add-to-order-btn.pulse {
+            animation: buttonPulse 0.4s ease-out;
         }
     </style>
 {% endblock %}
@@ -79,6 +108,13 @@
                 Ver Menú QR
             </a>
         </nav>
+        <!-- User Section at Bottom -->
+        <div class="absolute bottom-0 left-0 right-0 border-t border-amber-200 bg-amber-50 p-4">
+            <div class="flex items-center justify-between">
+                <span class="text-sm font-medium text-amber-900">{{ user.username }}</span>
+                <a href="{% url 'logout' %}" class="text-xs text-red-600 hover:text-red-800 font-normal">Cerrar</a>
+            </div>
+        </div>
     </div>
 
     <!-- Overlay for mobile when sidebar is open -->
@@ -87,18 +123,24 @@
     <!-- Main Content -->
     <div class="lg:ml-64 bg-gray-50 min-h-screen">
         <!-- Header -->
-        <div class="bg-white shadow-sm border-b border-gray-200 px-8 py-4 flex justify-between items-center">
-            <div class="flex items-center">
-                <button id="sidebar-toggle" class="lg:hidden text-gray-500 hover:text-gray-700 mr-4">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                </button>
-                <h1 class="text-2xl font-bold text-gray-900">Panel del Garzón</h1>
-            </div>
-            <div class="flex items-center space-x-4">
-                <span class="text-gray-700">{{ user.username }}</span>
-                <a href="{% url 'logout' %}" class="text-red-600 hover:text-red-800">Cerrar Sesión</a>
+        <div class="bg-white shadow-sm border-b border-gray-200 px-8 py-4">
+            <div class="flex justify-between items-start sm:items-center gap-4 pt-8 sm:pt-0">
+                <h1 class="text-2xl font-bold text-gray-900 flex-1">Panel del Garzón</h1>
             </div>
         </div>
+
+        <!-- Fixed Shopping Cart Icon (top right) -->
+        <button id="cart-toggle" class="hidden lg:hidden fixed top-4 right-4 z-40 p-2 text-gray-600 hover:text-gray-900 bg-white rounded-lg shadow-md transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+            </svg>
+            <span id="cart-count" class="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">0</span>
+        </button>
+
+        <!-- Fixed Hamburger Button (only visible on mobile) -->
+        <button id="sidebar-toggle" class="lg:hidden fixed top-4 left-4 z-40 text-gray-500 hover:text-gray-700 bg-white p-2 rounded-lg shadow-md">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+        </button>
 
         <div class="p-8">
             <!-- Banner -->
@@ -107,7 +149,7 @@
                     <svg class="w-6 h-6 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                     <span class="text-green-800 font-medium">¡Bienvenido, {{ user.username }}!</span>
                 </div>
-                <button id="close-banner" class="text-green-600 hover:text-green-800">
+                <button id="close-banner" class="text-green-600 hover:text-green-800 flex-shrink-0" type="button" aria-label="Cerrar bienvenida">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
@@ -194,7 +236,7 @@
                                         <p class="text-xs text-gray-500">{{ item.description }}</p>
                                         <p class="text-gray-700 text-sm font-medium mt-1">${{ item.price|floatformat:0 }}</p>
                                     </div>
-                                    <button class="add-to-order-btn bg-amber-900 text-white px-3 py-1.5 rounded-md text-xs hover:bg-amber-900" onclick="addToOrder({{ item.id }}, '{{ item.name }}', {{ item.price }})">
+                                    <button class="add-to-order-btn bg-amber-900 text-white px-3 py-1.5 rounded-md text-xs hover:bg-amber-900" data-item-id="{{ item.id }}" data-name="{{ item.name }}" data-price="{{ item.price }}">
                                         Agregar
                                     </button>
                                 </div>
@@ -220,9 +262,6 @@
                                 <button id="clear-order-btn" class="flex items-center justify-center bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 w-full sm:w-auto shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 ease-in-out">
                                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
                                     Limpiar</button>
-                                <button id="submit-order-btn" class="flex items-center justify-center bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 w-full sm:w-auto shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 ease-in-out">
-                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
-                                    Guardar Pedido</button>
                             </div>
                         </div>
                     </div>
@@ -357,1176 +396,93 @@
         </div>
     </div>
 
+    <!-- Cart Modal -->
+    <div id="cart-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+        <div class="bg-white rounded-lg shadow-lg w-full max-w-md mx-4">
+            <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+                <h2 class="text-xl font-semibold text-gray-900">Carrito de Compras</h2>
+                <button id="close-cart" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div id="cart-items" class="p-6 max-h-96 overflow-y-auto">
+                <p class="text-gray-500 text-center">El carrito está vacío</p>
+            </div>
+            <div class="p-6 border-t border-gray-200">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-gray-700 font-semibold">Total:</span>
+                    <span id="cart-total" class="text-2xl font-bold text-amber-900">$0.00</span>
+                </div>
+                <button id="cart-submit-btn" class="w-full bg-amber-900 text-white py-2 rounded-lg hover:bg-amber-800 transition-colors flex items-center justify-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    Realizar Pedido
+                </button>
+            </div>
+        </div>
+    </div>
+
 {% endblock %}
 
 {% block extra_js %}
-    <script>
-        const csrfToken = '{{ csrf_token }}';
-        let editingOrderId = null; // To track if we are editing an order
-        const initialOrders = {{ initial_orders_json|safe }};
-        let selectedTableId = null; // To track the selected table without a dropdown
-        let currentOrder = [];
-let currentClientIdentifier = '';
-let currentRoomNumber = '';
-let playedSoundForOrders = new Set(); // Track which orders have had their ready sound played        // --- Sidebar Navigation Logic ---
+    <script type="module">
+        // Global configuration
+        window.csrftoken = '{{ csrf_token }}';
+        window.initialOrders = {{ initial_orders_json|safe }};
+        
+        // Import main app initialization function
+        import { initApp } from '{% static "restaurant/js/modules/app.js" %}';
+        
+        // Initialize application when DOM is ready
         document.addEventListener('DOMContentLoaded', function() {
-            const navLinks = document.querySelectorAll('.nav-link');
-            const contentSections = document.querySelectorAll('.content-section');
-
-            // Función para cerrar todos los modales
-            function closeAllModals() {
-                document.getElementById('payment-modal').classList.add('hidden');
-                document.getElementById('serve-confirmation-modal').classList.add('hidden');
-                document.getElementById('order-view').classList.add('hidden');
-                // Resetear el estado del modal de pago
-                document.getElementById('modal-charge-to-room-btn').classList.add('hidden');
-                document.getElementById('mark-served-btn').classList.add('hidden');
-            }
-
-            navLinks.forEach(link => {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const section = this.getAttribute('data-section');
-
-                    // Cerrar todos los modales antes de cambiar de sección
-                    closeAllModals();
-
-                    navLinks.forEach(l => {
-                        l.classList.remove('active', 'text-amber-800', 'bg-amber-100', 'border-r-4', 'border-amber-500');
-                        l.classList.add('text-gray-600', 'hover:bg-gray-100');
-                    });
-
-                    this.classList.add('active', 'text-amber-800', 'bg-amber-100', 'border-r-4', 'border-amber-500');
-                    this.classList.remove('text-gray-600', 'hover:bg-gray-100');
-
-                    contentSections.forEach(s => s.classList.add('hidden'));
-                    document.getElementById(section).classList.remove('hidden');
-                    
-                    // Guardar la sección activa en localStorage
-                    localStorage.setItem('activeWaiterSection', section);
-                });
+            console.log('Initializing app with orders:', window.initialOrders);
+            initApp(window.initialOrders);
+            
+            // Close banner functionality
+            document.addEventListener('click', (e) => {
+                const closeBtn = e.target.closest('#close-banner');
+                if (closeBtn) {
+                    console.log('Close banner clicked');
+                    const banner = document.getElementById('welcome-banner');
+                    if (banner) {
+                        banner.classList.add('banner-hidden');
+                        localStorage.setItem('welcomeBannerClosed', 'true');
+                        setTimeout(() => {
+                            banner.style.display = 'none';
+                        }, 500);
+                    }
+                }
             });
-
-            // Restaurar la sección guardada al cargar la página
-            const savedSection = localStorage.getItem('activeWaiterSection') || 'dashboard';
-            const savedLink = document.querySelector(`.nav-link[data-section="${savedSection}"]`);
-            if (savedLink) {
-                savedLink.click();
-            } else {
-                // Fallback si la sección guardada no existe
-                const dashboardLink = document.querySelector('.nav-link[data-section="dashboard"]');
-                if (dashboardLink) dashboardLink.click();
+            
+            // Check if welcome banner was previously closed on page load
+            if (localStorage.getItem('welcomeBannerClosed') === 'true') {
+                const welcomeBanner = document.getElementById('welcome-banner');
+                if (welcomeBanner) {
+                    welcomeBanner.style.display = 'none';
+                }
             }
-
-            // --- Sidebar Toggle Logic for Mobile ---
-            const sidebar = document.getElementById('sidebar');
-            const sidebarToggle = document.getElementById('sidebar-toggle');
-            const sidebarOverlay = document.getElementById('sidebar-overlay');
-
-            function toggleSidebar() {
-                sidebar.classList.toggle('-translate-x-full');
-                sidebarOverlay.classList.toggle('hidden');
-            }
-
-            if (sidebarToggle) {
-                sidebarToggle.addEventListener('click', toggleSidebar);
-            }
-            if (sidebarOverlay) {
-                sidebarOverlay.addEventListener('click', toggleSidebar);
-            }
-
-            // Inicializar el monitor con los pedidos iniciales
-            initializeMonitor();
-
-
-
-        });
-        // --- Category Filtering Logic ---
-        document.addEventListener('DOMContentLoaded', function() {
-            const filterButtons = document.querySelectorAll('#category-filters .category-filter');
-            const menuItems = document.querySelectorAll('.menu-item');
-            const searchInput = document.getElementById('menu-search-input');
-
-            function applyFilters() {
-                const selectedCategory = document.querySelector('.category-filter.active')?.getAttribute('data-category') || 'all';
-                const searchTerm = searchInput.value.toLowerCase();
-
-                menuItems.forEach(item => {
-                    const itemName = item.querySelector('h3').textContent.toLowerCase();
-                    const itemCategory = item.getAttribute('data-category');
-                    const categoryMatch = (selectedCategory === 'all' || itemCategory === selectedCategory);
-                    const searchMatch = itemName.includes(searchTerm);
-
-                    item.style.display = (categoryMatch && searchMatch) ? 'flex' : 'none';
-                });
-            }
-
-            filterButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    filterButtons.forEach(btn => btn.classList.remove('active'));
-                    this.classList.add('active');
-                    applyFilters();
-                });
-            });
-
-            searchInput.addEventListener('input', applyFilters);
-            applyFilters(); // Initial filter application
         });
         
-        document.getElementById('back-to-main-view-btn').addEventListener('click', () => {
-            showMainSectionView();
-        });
-
-        document.getElementById('start-table-order-btn').addEventListener('click', () => {
-            const clientIdentifier = document.getElementById('client-identifier').value.trim();
-            const roomNumber = document.getElementById('room-number').value.trim();
-
-            if (!clientIdentifier && !roomNumber) {
-                showToast('Debe ingresar un identificador de cliente o un número de habitación.', 'error');
-                return;
-            }
-
-            currentClientIdentifier = clientIdentifier;
-            currentRoomNumber = roomNumber;
+        // Setup Pusher event listener for real-time updates
+        if (typeof Pusher !== 'undefined' && '{{ pusher_key }}') {
+            const pusher = new Pusher('{{ pusher_key }}', {
+                cluster: '{{ pusher_cluster }}'
+            });
             
-            document.getElementById('order-identifier-display').textContent = roomNumber || clientIdentifier;
-
-            // Inicializar el estado del pedido para uno nuevo
-            currentOrder = []; // Asegurarse de que la lista de ítems esté vacía
-            editingOrderId = null; // Asegurarse de que no estamos editando
-            renderOrder(); // Renderizar la lista de ítems vacía
-            showOrderView();
-        });
-
-        document.getElementById('start-bar-order-btn').addEventListener('click', () => {
-            const clientIdentifier = document.getElementById('bar-client-identifier').value.trim();
-            const roomNumber = document.getElementById('bar-room-number').value.trim();
-
-            if (!clientIdentifier && !roomNumber) {
-                showToast('Debe ingresar un identificador o un número de habitación.', 'error');
-                return;
-            }
-
-            currentClientIdentifier = clientIdentifier || 'Barra'; // Si no hay identificador, se usa 'Barra'
-            currentRoomNumber = roomNumber;
-            
-            document.getElementById('order-identifier-display').textContent = roomNumber || currentClientIdentifier;
-            
-            // Preparamos para un nuevo pedido sin borrar los datos del cliente/habitación recién ingresados
-            currentOrder = [];
-            editingOrderId = null;
-            renderOrder();
-
-            document.getElementById('bar-client-identifier').value = ''; // Limpiar campos específicos de la barra
-            document.getElementById('bar-room-number').value = '';
-            filterBarCategories(true); // true para auto-seleccionar 'Cócteles'
-            showOrderView();
-        });
-
-        function filterBarCategories(autoSelectCocktails = false) {
-            const barCategories = ['cocteles', 'vinos-y-cervezas', 'bebestibles'];
-            const filterButtons = document.querySelectorAll('#category-filters .category-filter');
-            filterButtons.forEach(button => {
-                const category = button.dataset.category;
-                // Ocultamos los que no son de bar, excepto el botón "Todos"
-                button.style.display = (barCategories.includes(category) || category === 'all') ? 'inline-flex' : 'none';
+            const gazonChannel = pusher.subscribe('garzon-channel');
+            gazonChannel.bind('pedido-listo', function(data) {
+                console.log('Evento pedido-listo recibido:', data);
+                window.dispatchEvent(new CustomEvent('orderReady', { detail: data }));
             });
-
-            if (autoSelectCocktails) {
-                // Buscamos el botón de la categoría 'cocteles' y lo "clickeamos" para activar el filtro.
-                const cocktailsButton = document.querySelector('.category-filter[data-category="cocteles"]');
-                if (cocktailsButton) {
-                    cocktailsButton.click();
-                }
-            }
-        }
-
-        function showMainSectionView() {
-            // Muestra la sección principal que estaba activa antes de entrar a tomar pedido
-            try {
-                const activeSectionId = document.querySelector('.nav-link.active')?.dataset.section || 'dashboard';
-                document.querySelectorAll('.content-section').forEach(s => s.classList.add('hidden'));
-                const targetSection = document.getElementById(activeSectionId);
-                if (targetSection) {
-                    targetSection.classList.remove('hidden');
-                }
-                document.getElementById('order-view').classList.add('hidden');
-                resetCategoryFilters(); // Restaura la visibilidad de todos los filtros de categoría
-            } catch (error) {
-                console.error('Error in showMainSectionView:', error);
-                // Fallback: mostrar el dashboard
-                document.querySelectorAll('.content-section').forEach(s => s.classList.add('hidden'));
-                const dashboardSection = document.getElementById('dashboard');
-                if (dashboardSection) dashboardSection.classList.remove('hidden');
-                document.getElementById('order-view').classList.add('hidden');
-            }
-        }
-
-        function showOrderView() {
-            // Oculta todas las secciones de contenido principal para mostrar solo la de tomar pedido
-            document.querySelectorAll('.content-section').forEach(s => s.classList.add('hidden'));
-            document.getElementById('order-view').classList.remove('hidden');
-        }
-
-        function resetCategoryFilters() {
-            const filterButtons = document.querySelectorAll('#category-filters .category-filter');
-            filterButtons.forEach(button => {
-                button.style.display = 'inline-flex';
-                // Al resetear, nos aseguramos que 'Todos' sea el activo por defecto
-                const allButton = document.querySelector('.category-filter[data-category="all"]');
-                if(allButton) allButton.click();
+            gazonChannel.bind('actualizacion-estado', function(data) {
+                console.log('Evento actualizacion-estado recibido:', data);
+                window.dispatchEvent(new CustomEvent('orderUpdated', { detail: data }));
             });
-        }
-
-        function initializeMonitor() {
-            // Solo renderizar los pedidos iniciales sin enviar notificaciones a Pusher
-            initialOrders.forEach(order => {
-                // Renderizar directamente sin llamar a handleOrderUpdate para evitar notificaciones duplicadas
-                if (['paid', 'cancelled', 'charged_to_room'].includes(order.status)) {
-                    // Los pedidos finalizados no se muestran en el monitor
-                    return;
-                }
-                
-                if (order.status === 'served') {
-                    addOrUpdateServedOrder(order);
-                } else if (order.status === 'ready') {
-                    addOrUpdateReadyOrder(order);
-                } else {
-                    addOrUpdateInProgressOrder(order);
-                }
+            gazonChannel.bind('nuevo-pedido', function(data) {
+                console.log('Evento nuevo-pedido recibido:', data);
+                window.dispatchEvent(new CustomEvent('newOrder', { detail: data }));
             });
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('served-orders-list-monitor').addEventListener('click', function(e) {
-                // Find the closest charge-btn parent or the element itself
-                const chargeButton = e.target.closest('.charge-btn');
-                if (chargeButton) {
-                    const orderId = chargeButton.dataset.orderId;
-                    if (orderId && orderId !== 'undefined') {
-                        openPaymentModal(orderId);
-                    }
-                }
-                    // Find the closest edit-btn parent or the element itself
-                    const editButton = e.target.closest('.edit-btn');
-                    if (editButton) {
-                        const orderId = editButton.dataset.orderId;
-                        if (orderId && orderId !== 'undefined') {
-                            editOrderFromMonitor(orderId);
-                        }
-                    }
-            });
-
-            // Attach event listeners to initially loaded elements
-            document.querySelectorAll('.cancel-btn').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    const orderId = e.target.dataset.orderId;
-                    if (confirm(`¿Estás seguro de que quieres cancelar el pedido #? Esta acción no se puede deshacer.`)) {
-                        updateOrderStatus(orderId, 'cancelled');
-                    }
-                });
-            });
-    
-            document.querySelectorAll('.status-changer').forEach(select => {
-                select.addEventListener('change', (e) => {
-                    updateOrderStatus(e.target.dataset.orderId, e.target.value);
-                });
-            });
-        });
-
-        function handleOrderUpdate(order) {
-            // Si el pedido está finalizado (pagado, cancelado o cargado a habitación), se elimina de ambas listas del monitor.
-            if (['paid', 'cancelled', 'charged_to_room'].includes(order.status)) {
-                removeInProgressOrder(order.id);
-                removeReadyOrder(order.id);
-                removeServedOrder(order.id);
-                playedSoundForOrders.delete(order.id); // Clean up the sound flag
-                return;
-            }
-
-            // Si el pedido está servido, se mueve a la lista de "Servidos" y se quita de "Activos".
-            if (order.status === 'served') { // Va a la sección de Cobros
-                removeInProgressOrder(order.id);
-                removeReadyOrder(order.id);
-                addOrUpdateServedOrder(order);
-            } else if (order.status === 'ready') { // Va a la columna de Listos
-                removeInProgressOrder(order.id);
-                removeServedOrder(order.id);
-                addOrUpdateReadyOrder(order);
-                
-                // Solo reproducir el sonido si no se ha reproducido antes para este pedido
-                if (!playedSoundForOrders.has(order.id)) {
-                    showToast(`¡El pedido para ${order.identifier} está listo!`, 'info');
-                    const notificationSound = new Audio("{% static 'restaurant/sounds/notification.mp3' %}");
-                    notificationSound.play().catch(e => console.warn("La interacción del usuario es necesaria para reproducir audio."));
-                    playedSoundForOrders.add(order.id); // Mark that we've played the sound for this order
-                }
-            } else { // Si está pendiente o en preparación, va a la columna En Curso
-                removeReadyOrder(order.id);
-                removeServedOrder(order.id);
-                addOrUpdateInProgressOrder(order);
-            }
-        }
-
-        function addOrUpdateServedOrder(order) {
-            const servedOrdersList = document.getElementById('served-orders-list-monitor');
-            let orderLi = document.getElementById(`served-order-monitor-${order.id}`);
-
-            const orderHTML = `
-                <div class="flex-grow">
-                    <div class="flex justify-between items-center">
-                        <p class="font-semibold">${order.identifier} - Pedido #${order.id}</p>
-                    </div>
-                    <p class="text-sm text-gray-700 mt-1">Total: $${order.total.toLocaleString('es-CL')}</p>
-                </div>
-                <div class="flex items-center space-x-2 ml-4">
-                    <button class="edit-btn flex items-center justify-center bg-gray-500 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-600 shadow-md" data-order-id="${order.id}">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z"></path></svg>
-                    </button>
-                    <button class="charge-btn flex items-center justify-center bg-amber-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-amber-900 shadow-md" data-order-id="${order.id}">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H4a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
-                        <span>Cobrar</span>
-                    </button>
-                </div>
-            `;
-
-            if (orderLi) {
-                orderLi.innerHTML = orderHTML;
-                // Clonar y reemplazar para eliminar listeners antiguos
-                const newOrderLi = orderLi.cloneNode(true);
-                orderLi.parentNode.replaceChild(newOrderLi, orderLi);
-                orderLi = newOrderLi;
-            } else {
-                orderLi = document.createElement('li');
-                orderLi.id = `served-order-monitor-${order.id}`;
-                orderLi.dataset.updatedAt = order.updated_at;
-                orderLi.className = 'flex justify-between items-center bg-blue-50 p-3 rounded-lg';
-                orderLi.innerHTML = orderHTML;
-                servedOrdersList.prepend(orderLi);
-            }
-
-            document.getElementById('no-served-orders')?.remove();
-        }
-
-function removeServedOrder(orderId) {
-    const orderLi = document.getElementById(`served-order-monitor-${orderId}`);
-            if (orderLi) {
-                orderLi.remove();
-            }
-            const list = document.getElementById('served-orders-list-monitor');
-            if (list.children.length === 0) {
-                list.innerHTML = '<li id="no-served-orders" class="text-gray-500">No hay pedidos servidos pendientes de cobro.</li>';
-            }
-        }
-
-        function addOrUpdateInProgressOrder(order) {
-            const inProgressList = document.getElementById('in-progress-orders-list-monitor');
-            let orderLi = document.getElementById(`inprogress-order-${order.id}`);
-
-            const itemsHTML = (order.items && Array.isArray(order.items)) 
-                ? order.items.map(item => `<li>${item.quantity}x ${item.name}</li>`).join('')
-                : '<li>Items no disponibles</li>';
-
-            const statusOptions = ` 
-                <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pendiente</option>
-                <option value="preparing" ${order.status === 'preparing' ? 'selected' : ''}>En Preparación</option>
-                <option value="ready" ${order.status === 'ready' ? 'selected' : ''}>Listo</option>
-            `;
-
-            const orderHTML = `
-                <div class="flex justify-between items-center">
-                    <div>
-                        <p class="font-semibold">Pedido #${order.id} (${order.identifier})</p>
-                        <span class="px-2 py-1 text-xs font-medium rounded-full ${order.status_class}">${order.status_display}</span>
-                    </div>
-                </div>
-                <div class="text-sm text-gray-600 mt-1">
-                    <p>Total: $${order.total.toLocaleString('es-CL')}</p>
-                    <ul class="list-disc list-inside pl-1"></ul>
-                </div>
-                <div class="mt-2 text-right">
-                    <div class="flex items-center justify-end space-x-2">
-<select class="status-changer text-xs border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" data-order-id="${order.id}">
-    ${statusOptions}
-</select>
-                        <button class="edit-btn flex items-center justify-center bg-gray-500 text-white px-3 py-1 rounded-md text-xs font-medium hover:bg-gray-600" data-order-id="${order.id}">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z"></path></svg>
-                        </button>
-                        <button class="cancel-btn flex items-center justify-center bg-red-500 text-white px-3 py-1 rounded-md text-xs font-medium hover:bg-red-600 shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-150" data-order-id="${order.id}">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        </button>
-                    </div>
-                </div>
-            `;
-
-            if (orderLi) {
-                orderLi.innerHTML = orderHTML;
-                // Clonar y reemplazar para eliminar listeners antiguos
-                const newOrderLi = orderLi.cloneNode(true);
-                orderLi.parentNode.replaceChild(newOrderLi, orderLi);
-                orderLi = newOrderLi;
-            } else {
-                orderLi = document.createElement('li');
-                orderLi.id = `inprogress-order-${order.id}`;
-                orderLi.dataset.updatedAt = order.updated_at;
-                orderLi.className = 'bg-gray-50 p-3 rounded-lg border';
-                orderLi.innerHTML = orderHTML;
-                inProgressList.prepend(orderLi);
-            }
-
-            document.getElementById('no-in-progress-orders')?.remove();
-
-            orderLi.querySelector('.cancel-btn').addEventListener('click', (e) => {
-                const orderId = e.target.dataset.orderId;
-                if (confirm(`¿Estás seguro de que quieres cancelar el pedido #? Esta acción no se puede deshacer.`)) {
-                    updateOrderStatus(orderId, 'cancelled');
-                }
-            });
-
-            orderLi.querySelector('.status-changer').addEventListener('change', (e) => {
-                const orderId = e.target.dataset.orderId;
-                updateOrderStatus(orderId, e.target.value);
-            });
-
-            orderLi.querySelector('.edit-btn').addEventListener('click', (e) => {
-                const orderId = e.currentTarget.dataset.orderId;
-                editOrderFromMonitor(orderId);
-            });
-        }
-
-function removeInProgressOrder(orderId) {
-    const orderLi = document.getElementById(`inprogress-order-${orderId}`);
-            if (orderLi) {
-                orderLi.remove();
-            }
-            const list = document.getElementById('in-progress-orders-list-monitor');
-            if (list.children.length === 0) {
-                list.innerHTML = '<li id="no-in-progress-orders" class="text-gray-500">No hay pedidos en curso.</li>';
-            }
-        }
-
-        function addOrUpdateReadyOrder(order) {
-            const readyList = document.getElementById('ready-orders-list-monitor');
-            let orderLi = document.getElementById(`ready-order-${order.id}`);
-
-            const itemsHTML = (order.items && Array.isArray(order.items))
-                ? order.items.map(item => `<li>${item.quantity}x ${item.name}</li>`).join('')
-                : '<li>Items no disponibles</li>';
-
-            const orderHTML = `
-                <div class="flex justify-between items-center">
-                    <div>
-                        <p class="font-semibold">Pedido #${order.id} (${order.identifier})</p>
-                        <span class="px-2 py-1 text-xs font-medium rounded-full ${order.status_class}">${order.status_display}</span>
-                    </div>
-                </div>
-                <div class="text-sm text-gray-600 mt-1">
-                    <ul class="list-disc list-inside pl-1"></ul>
-                </div>
-                <div class="mt-3 flex items-center space-x-2">
-                    <button class="edit-btn flex-shrink-0 flex items-center justify-center bg-gray-500 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-600 shadow-md" data-order-id="${order.id}">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z"></path></svg>
-                    </button>
-                    <button class="mark-served-monitor-btn w-full flex items-center justify-center bg-green-900 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-green-900 shadow-md" data-order-id="${order.id}">
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-                        Marcar Servido
-                    </button>
-                </div>
-            `;
-
-            if (orderLi) {
-                orderLi.innerHTML = orderHTML;
-                // Clonar y reemplazar para eliminar listeners antiguos
-                const newOrderLi = orderLi.cloneNode(true);
-                orderLi.parentNode.replaceChild(newOrderLi, orderLi);
-                orderLi = newOrderLi;
-            } else {
-                orderLi = document.createElement('li');
-                orderLi.id = `ready-order-${order.id}`;
-                orderLi.dataset.updatedAt = order.updated_at;
-                orderLi.className = 'bg-green-50 p-3 rounded-lg border border-green-200';
-                orderLi.innerHTML = orderHTML;
-                readyList.prepend(orderLi);
-            }
-            document.getElementById('no-ready-orders')?.remove();
-
-            orderLi.querySelector('.mark-served-monitor-btn').addEventListener('click', (e) => {
-                const orderId = e.currentTarget.dataset.orderId;
-                openServeConfirmationModal(orderId);
-            });
-
-            orderLi.querySelector('.edit-btn').addEventListener('click', (e) => {
-                const orderId = e.currentTarget.dataset.orderId;
-                editOrderFromMonitor(orderId);
-            });
-        }
-
-function removeReadyOrder(orderId) {
-    const orderLi = document.getElementById(`ready-order-${orderId}`);
-            if (orderLi) {
-                orderLi.classList.add('fade-out');
-                // Esperar a que termine la animación para eliminar el elemento
-                setTimeout(() => {
-                    orderLi.remove();
-                    const list = document.getElementById('ready-orders-list-monitor');
-                    if (list.children.length === 1 && list.querySelector('.fade-out')) { // Check if only the fading element is left
-                        // This check might be tricky with timing, a simpler check is often enough
-                    } else if (list.children.length === 0) {
-                        list.innerHTML = '<li id="no-ready-orders" class="text-gray-500">No hay pedidos listos.</li>';
-                    }
-                }, 500); // Debe coincidir con la duración de la transición en CSS
-            }
-        }
-
-        function showToast(message, type = 'info') {
-            const toast = document.createElement('div');
-            toast.className = `toast `;
-
-            const icons = {
-                success: `<svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`,
-                error: `<svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`,
-                info: `<svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`
-            };
-
-            const iconHTML = icons[type] || icons['info'];
-
-            const messageSpan = document.createElement('span');
-            messageSpan.textContent = message;
-
-            toast.innerHTML = iconHTML;
-            toast.appendChild(messageSpan);
-
-            document.body.appendChild(toast);
-
-            // Trigger the animation
-            setTimeout(() => toast.classList.add('show'), 100);
-
-            // Hide and remove after 3 seconds
-            setTimeout(() => {
-                toast.classList.remove('show');
-                setTimeout(() => toast.remove(), 500);
-            }, 3000);
-        }
-
-        function getStatusInSpanish(status) {
-            const statuses = {
-                'pending': 'Pendiente',
-                'preparing': 'En Preparación',
-                'ready': 'Listo',
-                'served': 'Servido',
-                'paid': 'Pagado',
-                'charged_to_room': 'Cargado a Habitación',
-                'cancelled': 'Cancelado'
-            };
-            return statuses[status] || status;
-        }
-
-        async function updateOrderStatus(orderId, newStatus, statusText = null) {
-            // Validar que orderId sea válido
-            if (!orderId || orderId === 'undefined') {
-                console.error('Invalid orderId:', orderId);
-                showToast('Error: ID de pedido inválido', 'error');
-                return;
-            }
-            
-            const body = { status: newStatus };
-
-            // Si estamos finalizando el pedido (pagado o cargado a habitación), obtener y añadir la propina solo si la casilla está marcada.
-            if (newStatus === 'paid' || newStatus === 'charged_to_room') {
-                const includeTipCheckbox = document.getElementById('include-tip-checkbox');
-                if (includeTipCheckbox.checked) {
-                    body.tip_amount = parseFloat(document.getElementById('custom-tip-amount-input').value).toFixed(2) || '0.00';
-                } else {
-                    body.tip_amount = '0.00'; // Asegurarse de que la propina sea 0 si la casilla no está marcada.
-                }
-            }
-
-            try {
-                const response = await fetch(`/restaurant/api/orders/${orderId}/status/`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
-                    body: JSON.stringify(body)
-                });
-                if (response.ok) {
-                    const text = statusText || getStatusInSpanish(newStatus);
-                    showToast(`Pedido #${orderId} marcado como ${text}.`, 'success');
-                    // The websocket will handle the UI update
-                } else {
-                    showToast('Error al actualizar el estado del pedido.', 'error');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-            }
-        }
-        
-        document.querySelectorAll('.mark-served-monitor-btn').forEach(button => {
-            button.addEventListener('click', (e) => {
-                updateOrderStatus(e.target.dataset.orderId, 'served');
-            });
-        });
-
-        async function openPaymentModal(orderId) {
-            // Validar que orderId sea válido
-            if (!orderId || orderId === 'undefined') {
-                console.error('Invalid orderId:', orderId);
-                showToast('Error: ID de pedido inválido', 'error');
-                return;
-            }
-            
-    try {
-        const response = await fetch(`/restaurant/api/waiter/orders/${orderId}/`);
-                if (!response.ok) throw new Error('Failed to fetch order details');
-                const data = await response.json();
-
-                // Populate modal
-                document.getElementById('modal-title').textContent = `Confirmar Cobro - ${data.identifier || ''}`;
-                const itemsList = document.getElementById('modal-order-items');
-                itemsList.innerHTML = data.items.map(item => `
-                    <li class="flex justify-between">
-                        <span>${item.quantity}x ${item.name}</span> 
-                        <span>$${(item.price * item.quantity).toLocaleString('es-CL')}</span>
-                    </li>
-                `).join('');
-
-                const subtotal = data.subtotal; // Use subtotal from API response
-
-                const includeTipCheckbox = document.getElementById('include-tip-checkbox');
-                const customTipInput = document.getElementById('custom-tip-percentage-input');
-                const customTipAmountInput = document.getElementById('custom-tip-amount-input');
-                const modalOrderSubtotal = document.getElementById('modal-order-subtotal');
-                const modalOrderTip = document.getElementById('modal-order-tip');
-                const modalOrderTotal = document.getElementById('modal-order-total');
-                const splitInput = document.getElementById('split-bill-input');
-                const splitResult = document.getElementById('split-bill-result');
-                const tipPresetButtonsContainer = document.getElementById('tip-preset-buttons');
-                const tipLabel = document.querySelector('label[for="include-tip-checkbox"]');
-
-                let isUpdating = false; // Flag to prevent infinite loops
-
-                // Function to calculate and display totals
-                const calculateAndDisplayTotals = () => {
-                    modalOrderSubtotal.textContent = subtotal.toLocaleString('es-CL');
-
-                    let currentTip = 0;
-                    if (includeTipCheckbox.checked) {
-                        document.getElementById('tip-inputs').classList.remove('hidden');
-                        tipPresetButtonsContainer.classList.remove('hidden');
-                        // --- Estilos para propina ACTIVADA (Verde) ---
-                        tipLabel.classList.remove('bg-amber-200', 'text-amber-900', 'hover:bg-amber-300');
-                        tipLabel.classList.add('bg-green-100', 'text-green-800', 'hover:bg-green-200');
-                        includeTipCheckbox.classList.remove('text-amber-700');
-                        includeTipCheckbox.classList.add('text-green-600');
-                        currentTip = parseFloat(customTipAmountInput.value) || 0;
-
-                    } else {
-                        document.getElementById('tip-inputs').classList.add('hidden');
-                        tipPresetButtonsContainer.classList.add('hidden');
-                        // --- Estilos para propina DESACTIVADA (Café más notorio) ---
-                        tipLabel.classList.remove('bg-green-100', 'text-green-800', 'hover:bg-green-200');
-                        tipLabel.classList.add('bg-amber-200', 'text-amber-900', 'hover:bg-amber-300');
-                        includeTipCheckbox.classList.remove('text-green-600');
-                        includeTipCheckbox.classList.add('text-amber-700');
-                        currentTip = 0;
-                        // Asegurarse de que el input de monto se ponga a 0 para que el cálculo sea correcto
-                        customTipAmountInput.value = '0';
-                    }
-
-                    const totalWithTip = subtotal + currentTip;
-
-                    modalOrderTotal.textContent = totalWithTip.toLocaleString('es-CL');
-
-                    const numPeople = parseInt(splitInput.value) || 1;
-                    if (numPeople > 1) {
-                        const amountPerPerson = totalWithTip / numPeople;
-                        splitResult.textContent = ` pagos de $${amountPerPerson.toLocaleString('es-CL', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-                    } else {
-                        splitResult.textContent = '';
-                    }
-                };
-
-                // Initialize values and event listeners
-                includeTipCheckbox.checked = false; // Iniciar con la propina desactivada
-                customTipInput.value = "0"; // Porcentaje por defecto
-                includeTipCheckbox.classList.add('text-amber-700'); // Estilo inicial del checkbox
-
-                customTipInput.min = "0";
-                customTipAmountInput.min = "0";
-                customTipAmountInput.value = "10";
-
-                // --- Lógica para botones de propina preestablecida ---
-                const tipPresetButtons = tipPresetButtonsContainer.querySelectorAll('.tip-preset-btn');
-                tipPresetButtons.forEach(button => {
-                    button.onclick = () => {
-                        const percentage = button.dataset.percentage;
-                        customTipInput.value = percentage;
-                        // Activar visualmente el botón presionado
-                        tipPresetButtons.forEach(btn => btn.classList.remove('active'));
-                        button.classList.add('active');
-                        // Disparar el evento 'input' para que todo se recalcule
-                        customTipInput.dispatchEvent(new Event('input'));
-                    };
-                });
-
-                includeTipCheckbox.onchange = calculateAndDisplayTotals;
-
-                customTipInput.oninput = () => {
-                    if (isUpdating) return;
-                    isUpdating = true;
-                    const percentage = parseFloat(customTipInput.value) || 0;                    
-                    const tipAmount = subtotal * (percentage / 100);
-                    customTipAmountInput.value = Math.round(tipAmount);
-                    calculateAndDisplayTotals();
-                    isUpdating = false;
-                };
-
-                customTipAmountInput.oninput = () => {
-                    if (isUpdating) return;
-                    isUpdating = true;
-                    const amount = parseFloat(customTipAmountInput.value) || 0;
-                    const percentage = subtotal > 0 ? (amount / subtotal) * 100 : 0;
-                    customTipInput.value = percentage.toFixed(1);
-                    calculateAndDisplayTotals();
-                    isUpdating = false;
-                };
-
-                splitInput.value = "1"; // Reset
-                splitResult.textContent = '';
-                splitInput.oninput = calculateAndDisplayTotals;
-
-                // --- Lógica para botones de división de cuenta ---
-                const splitPresetButtons = document.querySelectorAll('.split-preset-btn');
-                splitPresetButtons.forEach(button => {
-                    button.onclick = () => {
-                        splitInput.value = button.dataset.split;
-                        // Disparar el evento 'input' para que todo se recalcule
-                        splitInput.dispatchEvent(new Event('input'));
-                    };
-                });
-
-                calculateAndDisplayTotals(); // Initial calculation
-
-                // Set up confirm button
-                const confirmBtn = document.getElementById('modal-confirm-payment-btn');
-                // Clonar y reemplazar para eliminar listeners antiguos y evitar ejecuciones múltiples
-                const newConfirmBtn = confirmBtn.cloneNode(true);
-                confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
-
-                newConfirmBtn.onclick = () => {
-                    updateOrderStatus(orderId, 'paid', 'Pagado');
-                    closePaymentModal();
-                };
-
-                // Lógica para el botón "Cargar a Habitación"
-                const chargeToRoomBtn = document.getElementById('modal-charge-to-room-btn');
-                // Verificamos si el identificador es un número (asumimos que es una habitación)
-                if (data.room_number) {
-                    chargeToRoomBtn.classList.remove('hidden');
-                    chargeToRoomBtn.onclick = () => {
-                        updateOrderStatus(orderId, 'charged_to_room', 'Cargado a Habitación');
-                        closePaymentModal();
-                    };
-                } else {
-                    chargeToRoomBtn.classList.add('hidden');
-                }
-
-                // Show modal
-                document.getElementById('payment-modal').classList.remove('hidden');
-            } catch (error) {
-                console.error('Error opening payment modal:', error);
-                showToast('No se pudo cargar el detalle del pedido.', 'error');
-            }
-        }
-
-        async function editOrderFromMonitor(orderId) {
-            // Validar que orderId sea válido
-            if (!orderId || orderId === 'undefined') {
-                console.error('Invalid orderId:', orderId);
-                showToast('Error: ID de pedido inválido', 'error');
-                return;
-            }
-            
-    try {
-        const response = await fetch(`/restaurant/api/waiter/orders/${orderId}/`);
-                if (!response.ok) {
-                    showToast('No se pudo cargar el pedido para editar.', 'error');
-                    return;
-                }
-                const data = await response.json();
-
-                // Set global state for editing
-                editingOrderId = orderId;
-                currentClientIdentifier = data.identifier;
-                currentRoomNumber = data.room_number;
-
-                // Populate the order view
-                document.getElementById('order-identifier-display').textContent = data.identifier;
-
-                currentOrder = data.items.map(item => ({
-                    ...item,
-                    lineItemId: Date.now() + Math.random() // Create a unique ID for the line item
-                }));
-
-                renderOrder();
-
-                // Update button texts and visibility
-                document.getElementById('submit-order-btn').textContent = 'Actualizar Pedido';
-                document.getElementById('mark-served-btn').classList.remove('hidden');
-
-                resetCategoryFilters();
-                showOrderView();
-            } catch (error) {
-                console.error('Error editing order:', error);
-                showToast('Error al cargar el pedido.', 'error');
-            }
-        }
-
-        async function openServeConfirmationModal(orderId) {
-            // Validar que orderId sea válido
-            if (!orderId || orderId === 'undefined') {
-                console.error('Invalid orderId:', orderId);
-                showToast('Error: ID de pedido inválido', 'error');
-                return;
-            }
-            
-    try {
-        const response = await fetch(`/restaurant/api/waiter/orders/${orderId}/`);
-                if (!response.ok) throw new Error('Failed to fetch order details for confirmation');
-                const data = await response.json();
-
-                // Populate modal
-                document.getElementById('serve-modal-title').textContent = `Confirmar Entrega - ${data.identifier || ''}`;
-                const itemsList = document.getElementById('serve-modal-order-items');
-                itemsList.innerHTML = data.items.map(item => `
-                    <li class="flex justify-between">
-                        <span>${item.quantity}x ${item.name}</span>
-                    </li>
-                `).join('');
-
-                // Set up confirm button
-                const confirmBtn = document.getElementById('serve-modal-confirm-btn');
-                const newConfirmBtn = confirmBtn.cloneNode(true);
-                confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
-
-                newConfirmBtn.onclick = () => {
-                    updateOrderStatus(orderId, 'served');
-                    closeServeConfirmationModal();
-                };
-
-                // Show modal
-                document.getElementById('serve-confirmation-modal').classList.remove('hidden');
-            } catch (error) {
-                console.error('Error opening serve confirmation modal:', error);
-                showToast('No se pudo cargar el detalle del pedido para confirmar.', 'error');
-            }
-        }
-
-        function closeServeConfirmationModal() {
-            document.getElementById('serve-confirmation-modal').classList.add('hidden');
-        }
-
-        function closePaymentModal() {
-            document.getElementById('modal-charge-to-room-btn').classList.add('hidden');
-            document.getElementById('payment-modal').classList.add('hidden');
-        }
-
-        document.getElementById('modal-cancel-btn').addEventListener('click', closePaymentModal);
-
-        document.getElementById('serve-modal-cancel-btn').addEventListener('click', closeServeConfirmationModal);
-        // --- Order Management Logic ---
-        function addToOrder(itemId, name, price) {
-            // Use a unique line ID to allow the same product with different notes
-            const lineItemId = Date.now() + Math.random(); 
-            currentOrder.push({ 
-                lineItemId: lineItemId,
-                id: itemId, 
-                name: name, 
-                price: price, 
-                quantity: 1, // Always start with 1
-                note: '' 
-            });
-            renderOrder();
-        }
-
-        function updateNote(lineItemId, note) {
-            const item = currentOrder.find(i => i.lineItemId === lineItemId);
-            if (item) {
-                item.note = note;
-            }
-        }
-
-        function increaseQuantity(lineItemId) {
-            const item = currentOrder.find(i => i.lineItemId === lineItemId);
-            if (item) {
-                item.quantity++;
-                renderOrder();
-            }
-        }
-
-        function decreaseQuantity(lineItemId) {
-            const item = currentOrder.find(i => i.lineItemId === lineItemId);
-            if (item) {
-                item.quantity--;
-                if (item.quantity <= 0) {
-                    removeFromOrder(lineItemId);
-                } else {
-                    renderOrder();
-                }
-            }
-        }
-
-        function removeFromOrder(lineItemId) {
-            const itemIndex = currentOrder.findIndex(item => item.lineItemId === lineItemId);
-            if (itemIndex > -1) {
-                currentOrder.splice(itemIndex, 1);
-            }
-            renderOrder();
-        }
-
-        function renderOrder() {
-            const orderList = document.getElementById('order-items-list');
-            const orderTotalEl = document.getElementById('order-total');
-            let total = 0;
-            
-            orderList.innerHTML = ''; // Clear list
-
-            if (currentOrder.length === 0) {
-                orderList.innerHTML = '<li class="text-gray-500">Aún no hay productos en el pedido.</li>';
-            } else {
-                currentOrder.forEach(item => {
-                    const itemTotal = item.price * item.quantity;
-                    total += itemTotal;
-                    const li = document.createElement('li');
-                    li.className = 'flex flex-col bg-gray-100 p-2 rounded';
-                    li.innerHTML = `
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <span class="font-medium">${item.name}</span>
-                                <span class="block text-sm text-gray-600">$${itemTotal.toFixed(0)}</span>
-                            </div>
-                            <div class="flex items-center">
-                                <button class="text-gray-600" onclick="decreaseQuantity(${item.lineItemId})"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 10a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1z" clip-rule="evenodd"></path></svg></button>
-                                <span class="w-8 text-center font-medium">${item.quantity}</span>
-                                <button class="text-gray-600" onclick="increaseQuantity(${item.lineItemId})"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path></svg></button>
-                            </div>
-                            <div class="flex items-center">
-                                <button class="text-red-500 hover:text-red-700 ml-2" onclick="removeFromOrder(${item.lineItemId})">
-                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd"></path></svg>
-                                </button>
-                            </div>
-                        </div>
-                        <input type="text" class="mt-2 w-full text-sm border border-gray-200 rounded p-1" placeholder="Agregar nota (ej: sin cebolla...)" value="${item.note}" oninput="updateNote(${item.lineItemId}, this.value)" onfocus="this.select()">
-                    `;
-                    orderList.appendChild(li);
-                });
-            }
-
-            // El total ahora solo refleja el subtotal de los productos. La propina se maneja en el modal de pago.
-            orderTotalEl.textContent = total.toLocaleString('es-CL');
-        }
-
-        function clearAndPrepareNewOrder() {
-            currentOrder = [];
-            editingOrderId = null;
-            currentClientIdentifier = ''; // Limpiar identificador
-            currentRoomNumber = ''; // Limpiar habitación
-            document.getElementById('client-identifier').value = ''; // Limpiar campo de texto
-            document.getElementById('room-number').value = ''; // Limpiar campo de texto
-            document.getElementById('submit-order-btn').textContent = 'Guardar Pedido';
-            document.getElementById('mark-served-btn').classList.add('hidden');
-            renderOrder();
-            document.getElementById('order-identifier-display').textContent = ''; // Limpiar el display del identificador
-        }
-
-        document.getElementById('mark-served-btn').addEventListener('click', () => {
-            if (editingOrderId) {
-                openServeConfirmationModal(editingOrderId);
-            }
-        });
-
-        document.getElementById('clear-order-btn').addEventListener('click', () => {
-            clearAndPrepareNewOrder();
-        });
-
-        document.getElementById('submit-order-btn').addEventListener('click', async () => {            
-            const submitBtn = document.getElementById('submit-order-btn');
-            submitBtn.disabled = true; // Deshabilitar botón para evitar doble clic
-            submitBtn.textContent = 'Guardando...';
-            const isEditing = !!editingOrderId;
-
-            if (currentOrder.length === 0) {
-                showToast('El pedido está vacío.', 'error');
-                submitBtn.disabled = false; // Reactivar si hay error
-                submitBtn.textContent = isEditing ? 'Actualizar Pedido' : 'Guardar Pedido';
-                return;
-            }
-
-            const url = isEditing ? `/restaurant/api/waiter/orders/${editingOrderId}/` : "{% url 'restaurant:save_order' %}";
-            const method = isEditing ? 'PUT' : 'POST';
-            const body = { 
-                items: currentOrder, 
-                client_identifier: currentClientIdentifier,
-                room_number: currentRoomNumber,
-                tip_amount: '0.00'  // Propina por defecto (puede agregarse interfaz después)
-            };
-
-            console.log(`Enviando ${isEditing ? 'actualización de' : ''} pedido:`, {
-                url: url,
-                method: method,
-                body: body,
-                itemsDetail: currentOrder.map(item => ({ id: item.id, quantity: item.quantity, note: item.note }))
-            });
-
-            try {
-                const response = await fetch(url, {
-                    method: method,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrfToken,
-                    },
-                    body: JSON.stringify(body),
-                });
-                const result = await response.json();
-                
-                console.log('Respuesta del servidor:', {
-                    status: response.status,
-                    success: result.success,
-                    orderId: result.order_id,
-                    error: result.error
-                });
-                
-                if (!response.ok || !result.success) {
-                    const errorMsg = result.error || result.message || 'Error desconocido';
-                    showToast(`Error al ${isEditing ? 'actualizar' : 'guardar'} el pedido: ${errorMsg}`, 'error');
-                    console.error('Error respuesta del servidor:', errorMsg);
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = isEditing ? 'Actualizar Pedido' : 'Guardar Pedido';
-                    return;
-                }
-                
-                if (result.success) {
-                    const message = isEditing ? `Pedido #${result.order_id} actualizado exitosamente.` : `Pedido #${result.order_id} creado exitosamente.`;
-                    showToast(message, 'success');
-
-                    // No hacer fetch adicional - dejar que Pusher maneje la sincronización en tiempo real
-                    // Las notificaciones de Pusher se encargarán de actualizar el monitor automáticamente
-                    
-                    showMainSectionView(); // Volver a la vista principal (Mesas o Bar)
-                    clearAndPrepareNewOrder(); // Resetear el formulario y variables después de guardar
-                    submitBtn.disabled = false; // Reactivar el botón para el próximo pedido
-                    submitBtn.textContent = 'Guardar Pedido';
-                }
-            } catch (error) {
-                console.error('Error submitting order:', error);
-                showToast('Error en la conexión. Por favor, intenta de nuevo.', 'error');
-                submitBtn.disabled = false; // Reactivar si hay error
-                submitBtn.textContent = isEditing ? 'Actualizar Pedido' : 'Guardar Pedido';
-            }
-        });
-
-        // Close banner functionality
-        document.getElementById('close-banner').addEventListener('click', () => {
-            const banner = document.getElementById('welcome-banner');
-            banner.classList.add('banner-hidden');
-            localStorage.setItem('welcomeBannerClosed', 'true');
-            setTimeout(() => {
-                banner.style.display = 'none';
-            }, 500); // Match CSS transition duration
-        });
-
-        // Check if welcome banner was previously closed on page load
-        if (localStorage.getItem('welcomeBannerClosed') === 'true') {
-            document.getElementById('welcome-banner').style.display = 'none';
-        }
-
-        renderOrder();
-
-        // --- Lógica de Pusher para Tiempo Real ---
-        if (PUSHER_KEY) {
-            Pusher.logToConsole = true;
-            const pusher = new Pusher(PUSHER_KEY, { cluster: PUSHER_CLUSTER });
-
-            // Canal para eventos de pedidos
-            const garzonChannel = pusher.subscribe('garzon-channel');
-            console.log("Escuchando en 'garzon-channel'...");
-
-            garzonChannel.bind('nuevo-pedido', (data) => {
-                console.log('Nuevo pedido recibido:', data.order);
-                // Cuando se crea un nuevo pedido (desde cualquier garzón), agregarlo al monitor
-                // Pero NO mostrar toast porque el garzón que lo creó ya vio su confirmación
-                handleOrderUpdate(data.order);
-            });
-
-            garzonChannel.bind('actualizacion-estado', (data) => {
-                handleOrderUpdate(data.order);
-            });
-
-            garzonChannel.bind('pedido-listo', (data) => {
-                showToast(`¡Pedido para ${data.order.identifier} está listo!`, 'info');
-                handleOrderUpdate(data.order);
-            });
-
-            // Canal para disponibilidad de menú (compartido con admin)
-            const adminChannel = pusher.subscribe('admin-channel');
-            console.log("Escuchando en 'admin-channel' para cambios de menú...");
-
-            adminChannel.bind('item-disponibilidad', function(data) {
-                console.log('Cambio de disponibilidad recibido:', data);
-                const message = data.available ? `'${data.name}' está disponible de nuevo.` : `¡ATENCIÓN! El plato '${data.name}' ya no está disponible.`;
-                showToast(message, data.available ? 'info' : 'error');
-                
-                // Find menu item by data-item-id attribute (more reliable)
-                const menuItemDiv = document.querySelector(`.menu-item[data-item-id="${data.item_id}"]`);
-                if (!menuItemDiv) {
-                    console.log(`Menu item with id ${data.item_id} not found in DOM`);
-                    return;
-                }
-                
-                const menuItemButton = menuItemDiv.querySelector('.add-to-order-btn');
-                if (menuItemButton) {
-                    menuItemButton.disabled = !data.available;
-                }
-                
-                // Get the title and description elements
-                const titleElement = menuItemDiv.querySelector('h3');
-                const descriptionElement = menuItemDiv.querySelector('p.text-xs');
-                const priceElement = menuItemDiv.querySelector('p.text-gray-700');
-                
-                if (data.available) {
-                    // Available: restore normal styling
-                    menuItemDiv.style.opacity = '1';
-                    if (titleElement) {
-                        titleElement.style.textDecoration = 'none';
-                        titleElement.style.color = '';
-                    }
-                    if (descriptionElement) {
-                        descriptionElement.style.textDecoration = 'none';
-                        descriptionElement.style.color = '';
-                    }
-                    if (priceElement) {
-                        // Restore original price from data attribute
-                        const originalPrice = menuItemDiv.getAttribute('data-item-price');
-                        priceElement.textContent = `$${originalPrice}`;
-                        priceElement.style.color = '';
-                    }
-                } else {
-                    // Not available: apply strikethrough and gray out
-                    menuItemDiv.style.opacity = '0.6';
-                    if (titleElement) {
-                        titleElement.style.textDecoration = 'line-through';
-                        titleElement.style.color = '#999';
-                    }
-                    if (descriptionElement) {
-                        descriptionElement.style.textDecoration = 'line-through';
-                        descriptionElement.style.color = '#999';
-                    }
-                    if (priceElement) {
-                        priceElement.textContent = 'No disponible';
-                        priceElement.style.color = '#ef4444'; // Red color for unavailable
-                    }
-                }
-            });
-        } else {
-            console.error("Pusher key no está configurada.");
         }
     </script>
 {% endblock %}

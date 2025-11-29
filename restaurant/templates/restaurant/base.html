@@ -7,6 +7,8 @@
     
     <title>{% block title %}Abba Hotel Restaurante{% endblock %}</title>
 
+    <meta name="csrf-token" content="{{ csrf_token }}">
+
     <link rel="icon" href="{% static 'restaurant/images/logo_principal_w.png' %}" type="image/x-icon">
 
     <!-- Scripts y Fuentes Globales -->
