@@ -341,6 +341,9 @@ function setupOrderFormListeners() {
  * Configura los listeners para eventos de Pusher (actualizaciones en tiempo real)
  */
 function setupPusherListeners() {
+  // Set para rastrear qué órdenes ya han sido notificadas como "ready"
+  const notifiedOrders = new Set();
+  
   // Event: Nuevo pedido creado
   window.addEventListener('newOrder', (e) => {
     console.log('newOrder event recibido:', e.detail);
@@ -357,11 +360,24 @@ function setupPusherListeners() {
     }
   });
 
-  // Event: Pedido listo
+  // Event: Pedido listo (evitar duplicados con orderUpdated)
   window.addEventListener('orderReady', (e) => {
     console.log('orderReady event recibido:', e.detail);
     if (e.detail && e.detail.order) {
-      ordersManager.handleOrderUpdate(e.detail.order);
+      const orderId = e.detail.order.id;
+      
+      // Solo procesar si no hemos notificado sobre este pedido recientemente
+      if (!notifiedOrders.has(orderId)) {
+        notifiedOrders.add(orderId);
+        ordersManager.handleOrderUpdate(e.detail.order);
+        
+        // Limpiar el set después de 5 segundos para evitar duplicados
+        setTimeout(() => {
+          notifiedOrders.delete(orderId);
+        }, 5000);
+      } else {
+        console.log('⚠️ Notificación duplicada evitada para orden:', orderId);
+      }
     }
   });
 }
