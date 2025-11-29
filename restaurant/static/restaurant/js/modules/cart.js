@@ -71,7 +71,8 @@ export class CartManager {
     const item = this.currentOrder.find(i => i.lineItemId === lineItemId);
     if (item) {
       item.note = note;
-      this.updateCartDisplay();
+      // NO llamar a updateCartDisplay() para evitar perder el focus del textarea
+      // Solo guardar el valor sin re-renderizar
     }
   }
 

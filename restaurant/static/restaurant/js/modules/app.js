@@ -160,6 +160,23 @@ function setupGlobalListeners() {
     ordersManager.updateOrderStatus(orderId, 'charged_to_room', 'Cargado a Habitación');
   });
 
+  // Botón para limpiar el carrito
+  const clearOrderBtn = document.getElementById('clear-order-btn');
+  if (clearOrderBtn) {
+    clearOrderBtn.addEventListener('click', () => {
+      if (cartManager.currentOrder.length === 0) {
+        uiManager.showToast('El carrito ya está vacío', 'info');
+        return;
+      }
+
+      // Confirmación antes de limpiar
+      if (confirm('¿Estás seguro de que deseas limpiar el carrito? Esto eliminará todos los items.')) {
+        cartManager.clear();
+        console.log('✅ Carrito limpiado exitosamente');
+      }
+    });
+  }
+
   // Listeners para el carrito modal
   const cartToggle = document.getElementById('cart-toggle');
   const cartModal = document.getElementById('cart-modal');
