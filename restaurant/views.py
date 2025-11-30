@@ -744,30 +744,38 @@ def api_menu_items(request):
 
     if request.method == 'POST':
         try:
-            available_str = request.POST.get('available', 'true')
-            available = available_str.lower() in ('true', '1', 'yes', 'on')
+            # Parse JSON data
+            data = json.loads(request.body)
+            print(f"[DEBUG] POST data: {data}")
             
-            # Debug log
-            print(f"[DEBUG] POST data: {request.POST.dict()}")
-            print(f"[DEBUG] FILES: {list(request.FILES.keys())}")
+            # Parse available boolean
+            available = data.get('available', True)
+            if isinstance(available, str):
+                available = available.lower() in ('true', '1', 'yes', 'on')
+            
+            # Validate required fields
+            if 'name' not in data or not data['name'].strip():
+                return JsonResponse({'error': 'Invalid data: name is required'}, status=400)
+            if 'price' not in data:
+                return JsonResponse({'error': 'Invalid data: price is required'}, status=400)
             
             item = MenuItem.objects.create(
-                name=request.POST['name'],
-                description=request.POST.get('description', ''),
-                price=request.POST['price'],
-                category=request.POST['category'],
+                name=data['name'].strip(),
+                description=data.get('description', ''),
+                price=data['price'],
+                category=data.get('category', 'General'),
                 available=available
             )
-            if 'image' in request.FILES:
-                item.image = request.FILES['image']
-                item.save()
-                print(f"[DEBUG] Image saved for item {item.id}: {item.image.name}")
             
             return JsonResponse({
                 'id': item.id, 'name': item.name, 'description': item.description,
                 'price': float(item.price), 'category': item.category, 'available': item.available,
                 'image_url': item.image_url
             }, status=201)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid data: malformed JSON'}, status=400)
+        except ValueError as e:
+            return JsonResponse({'error': f'Invalid data: {str(e)}'}, status=400)
         except Exception as e:
             print(f"[ERROR] Exception in POST: {str(e)}")
             import traceback
