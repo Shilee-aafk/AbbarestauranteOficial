@@ -454,6 +454,7 @@
                 const isClosed = sidebar.classList.contains('-translate-x-full');
                 sidebarOverlay.style.opacity = isClosed ? '0' : '0.5';
                 sidebarOverlay.style.pointerEvents = isClosed ? 'none' : 'auto';
+                sidebarToggle.style.display = isClosed ? 'block' : 'none';
                 sidebar.style.transition = 'transform 0.3s ease-in-out';
                 sidebarOverlay.style.transition = 'opacity 0.3s ease-in-out';
                 console.log(isClosed ? '✅ Sidebar cerrado' : '✅ Sidebar abierto');
