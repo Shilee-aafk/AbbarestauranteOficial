@@ -434,73 +434,94 @@
 {% endblock %}
 
 {% block extra_js %}
+    <!-- SIDEBAR TOGGLE SCRIPT - Cargado ANTES de otros módulos para garantizar funcionamiento -->
+    <script>
+        function initSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            const sidebarOverlay = document.getElementById('sidebar-overlay');
+            
+            if (!sidebar || !sidebarToggle || !sidebarOverlay) {
+                console.error('❌ Elementos del sidebar no encontrados');
+                return;
+            }
+            
+            console.log('✅ Sidebar elements found, initializing...');
+            
+            const toggleSidebar = () => {
+                console.log('🔄 Toggle sidebar clicked');
+                sidebar.classList.toggle('-translate-x-full');
+                const isClosed = sidebar.classList.contains('-translate-x-full');
+                sidebarOverlay.style.opacity = isClosed ? '0' : '0.5';
+                sidebarOverlay.style.pointerEvents = isClosed ? 'none' : 'auto';
+                sidebar.style.transition = 'transform 0.3s ease-in-out';
+                sidebarOverlay.style.transition = 'opacity 0.3s ease-in-out';
+                console.log(isClosed ? '✅ Sidebar cerrado' : '✅ Sidebar abierto');
+            };
+            
+            // Botón hamburguesa
+            sidebarToggle.addEventListener('click', toggleSidebar);
+            console.log('✅ Click listener agregado al botón hamburguesa');
+            
+            // Overlay para cerrar
+            sidebarOverlay.addEventListener('click', toggleSidebar);
+            
+            // Swipe para cerrar el sidebar cuando está abierto
+            let touchStart = null;
+            
+            sidebar.addEventListener('touchstart', (e) => {
+                touchStart = e.changedTouches[0].clientX;
+            }, false);
+            
+            sidebar.addEventListener('touchend', (e) => {
+                if (!touchStart) return;
+                const touchEnd = e.changedTouches[0].clientX;
+                const diff = touchStart - touchEnd;
+                touchStart = null;
+                
+                if (diff > 100) {
+                    console.log('👆 Swipe detectado, cerrando sidebar');
+                    toggleSidebar();
+                }
+            }, false);
+            
+            // Swipe desde borde izquierdo para abrir
+            let edgeStart = null;
+            
+            document.addEventListener('touchstart', (e) => {
+                if (e.changedTouches[0].clientX < 20) {
+                    edgeStart = e.changedTouches[0].clientX;
+                }
+            }, false);
+            
+            document.addEventListener('touchend', (e) => {
+                if (!edgeStart) return;
+                const diff = e.changedTouches[0].clientX - edgeStart;
+                edgeStart = null;
+                
+                const isClosed = sidebar.classList.contains('-translate-x-full');
+                if (isClosed && diff > 100) {
+                    console.log('👆 Swipe desde borde detectado, abriendo sidebar');
+                    toggleSidebar();
+                }
+            }, false);
+        }
+        
+        // Ejecutar apenas el DOM esté listo
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initSidebar);
+        } else {
+            initSidebar();
+        }
+    </script>
+
     <script type="module">
         // Global configuration
         window.csrftoken = '{{ csrf_token }}';
         window.initialOrders = {{ initial_orders_json|safe }};
         
         document.addEventListener('DOMContentLoaded', function() {
-            // --- UI COMPONENTS (Sidebar) ---
-            function initUIComponents() {
-                const sidebar = document.getElementById('sidebar');
-                const sidebarToggle = document.getElementById('sidebar-toggle');
-                const sidebarOverlay = document.getElementById('sidebar-overlay');
-                
-                const toggleSidebar = () => {
-                    sidebar.classList.toggle('-translate-x-full');
-                    const isClosed = sidebar.classList.contains('-translate-x-full');
-                    sidebarOverlay.style.opacity = isClosed ? '0' : '0.5';
-                    sidebarOverlay.style.pointerEvents = isClosed ? 'none' : 'auto';
-                    sidebarToggle.classList.toggle('hidden');
-                    sidebar.style.transition = 'transform 0.3s ease-in-out';
-                    sidebarOverlay.style.transition = 'opacity 0.3s ease-in-out';
-                    sidebar.style.transform = '';
-                };
-                
-                sidebarToggle?.addEventListener('click', toggleSidebar);
-                sidebarOverlay?.addEventListener('click', toggleSidebar);
-                
-                // Swipe para cerrar el sidebar cuando está abierto
-                let touchStart = null;
-                
-                sidebar?.addEventListener('touchstart', (e) => {
-                    touchStart = e.changedTouches[0].clientX;
-                }, false);
-                
-                sidebar?.addEventListener('touchend', (e) => {
-                    if (!touchStart) return;
-                    const touchEnd = e.changedTouches[0].clientX;
-                    const diff = touchStart - touchEnd;
-                    touchStart = null;
-                    
-                    if (diff > 100) {
-                        toggleSidebar();
-                    }
-                }, false);
-                
-                // Swipe desde borde izquierdo para abrir
-                let edgeStart = null;
-                
-                document?.addEventListener('touchstart', (e) => {
-                    if (e.changedTouches[0].clientX < 20) {
-                        edgeStart = e.changedTouches[0].clientX;
-                    }
-                }, false);
-                
-                document?.addEventListener('touchend', (e) => {
-                    if (!edgeStart) return;
-                    const diff = e.changedTouches[0].clientX - edgeStart;
-                    edgeStart = null;
-                    
-                    const isClosed = sidebar.classList.contains('-translate-x-full');
-                    if (isClosed && diff > 100) {
-                        toggleSidebar();
-                    }
-                }, false);
-            }
-            
-            // Initialize UI components (sidebar)
-            initUIComponents();
+            console.log('🚀 DOMContentLoaded event fired');
             
             // Close banner functionality
             document.addEventListener('click', (e) => {
@@ -521,9 +542,14 @@
             }
             
             // Import and initialize app
+            console.log('📦 Attempting to import app module...');
             import('{% static "restaurant/js/modules/app.js" %}').then(({ initApp }) => {
+                console.log('✅ App module loaded successfully');
                 initApp(window.initialOrders || []);
-            }).catch(err => console.error('Error loading app:', err));
+            }).catch(err => {
+                console.error('❌ Error loading app module:', err);
+                alert('⚠️ Error cargando módulos de la aplicación. Recarga la página si el menú no funciona.');
+            });
         });
         
         // Pusher real-time updates

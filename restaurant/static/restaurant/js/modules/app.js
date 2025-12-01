@@ -1,12 +1,12 @@
 /**
  * Waiter Dashboard App - Integración de todos los módulos
- * Importar y usar: import { initApp } from '/static/restaurant/js/modules/app.js'
+ * Importar y usar: import { initApp } from './restaurant/js/modules/app.js'
  */
 
-import { CartManager } from '/static/restaurant/js/modules/cart.js';
-import { OrdersManager } from '/static/restaurant/js/modules/orders.js';
-import { MenuManager } from '/static/restaurant/js/modules/menu.js';
-import { UIManager } from '/static/restaurant/js/modules/ui.js';
+import { CartManager } from './cart.js';
+import { OrdersManager } from './orders.js';
+import { MenuManager } from './menu.js';
+import { UIManager } from './ui.js';
 
 let cartManager;
 let ordersManager;
