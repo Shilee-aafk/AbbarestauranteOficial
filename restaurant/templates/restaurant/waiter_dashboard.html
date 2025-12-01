@@ -91,7 +91,7 @@
 
 {% block content %}
     <!-- Sidebar -->
-    <div id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-amber-50 shadow-sm -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-50">
+    <div id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-amber-50 shadow-sm -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-50" style="transform: translateX(-100%); transition: transform 0.3s ease-in-out;">
         <div class="flex items-center h-16 bg-amber-50 border-b border-gray-200 px-6">
             <!-- Cambia 'restaurant/images/mi_logo.png' por la ruta a tu logo -->
             <img src="{% static 'restaurant/images/logo_d.png' %}" alt="Logo de Mi Restaurante" class="h-10 w-auto">
@@ -454,13 +454,20 @@
             
             const toggleSidebar = () => {
                 console.log('🔄 Toggle sidebar clicked');
-                console.log('Antes - sidebar classList:', sidebar.className);
                 
                 sidebar.classList.toggle('-translate-x-full');
                 const isClosed = sidebar.classList.contains('-translate-x-full');
                 
-                console.log('Después - sidebar classList:', sidebar.className);
                 console.log('isClosed:', isClosed);
+                
+                // CRÍTICO: Aplicar transform inline directamente
+                if (isClosed) {
+                    sidebar.style.transform = 'translateX(-100%)';
+                    console.log('Aplicando transform: translateX(-100%)');
+                } else {
+                    sidebar.style.transform = 'translateX(0)';
+                    console.log('Aplicando transform: translateX(0)');
+                }
                 
                 // Animar overlay
                 sidebarOverlay.style.opacity = isClosed ? '0' : '0.5';

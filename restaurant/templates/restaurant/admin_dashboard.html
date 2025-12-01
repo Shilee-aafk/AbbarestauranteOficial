@@ -68,7 +68,7 @@
 
 {% block content %}
     <!-- Sidebar -->
-    <div id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-amber-50 shadow-sm -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-50">
+    <div id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-amber-50 shadow-sm -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-50" style="transform: translateX(-100%); transition: transform 0.3s ease-in-out;">
         <div class="flex items-center h-16 bg-amber-50 border-b border-amber-200 px-6">
             <img src="{% static 'restaurant/images/logo_d.png' %}" alt="Abba Hotel Logo" class="w-12 h-12 mr-2 object-contain">
             <span class="text-xl font-semibold text-amber-900">Abba Hotel</span>
@@ -601,6 +601,14 @@
                 console.log('🔄 Toggle sidebar clicked (admin)');
                 sidebar.classList.toggle('-translate-x-full');
                 const isClosed = sidebar.classList.contains('-translate-x-full');
+                
+                // Aplicar transform inline como respaldo
+                if (isClosed) {
+                    sidebar.style.transform = 'translateX(-100%)';
+                } else {
+                    sidebar.style.transform = 'translateX(0)';
+                }
+                
                 sidebarOverlay.style.opacity = isClosed ? '0' : '0.5';
                 sidebarOverlay.style.pointerEvents = isClosed ? 'none' : 'auto';
                 sidebarToggle.style.display = isClosed ? 'block' : 'none';
