@@ -56,12 +56,13 @@ function initSidebar() {
     });
     console.log('✅ Click listener agregado al botón hamburguesa');
     
-    // Cerrar sidebar cuando se hace click fuera del sidebar
+    // Overlay clickeable para cerrar el sidebar (aunque tiene pointerEvents: none)
+    // Usaremos una zona que detecte clicks "visuales" pero sin bloquear
     document.addEventListener('click', function(e) {
         const isClosed = sidebar.classList.contains('-translate-x-full');
         
-        // Si el sidebar está abierto y el click NO está en el sidebar ni en el botón
-        if (!isClosed && !sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
+        // Si el sidebar está abierto y clickeamos MUY lejos a la derecha (fuera del sidebar)
+        if (!isClosed && e.clientX > 280) { // 280 = 256px sidebar + margen
             console.log('👆 Click fuera del sidebar - cerrando');
             toggleSidebar();
         }
@@ -114,27 +115,32 @@ function initSidebar() {
         const touchEnd = e.changedTouches[0].clientX;
         const diff = touchStart - touchEnd;
         isDragging = false;
-        
         sidebar.style.transition = 'transform 0.3s ease-in-out';
         
         const isClosed = sidebar.classList.contains('-translate-x-full');
+        const sidebarWidth = sidebar.offsetWidth;
         
+        // Cerrar sidebar: swipe hacia izquierda (diff > 50px)
         if (!isClosed && diff > 50) {
             console.log('👆 Swipe hacia izquierda detectado, cerrando sidebar');
             sidebar.classList.add('-translate-x-full');
             sidebar.style.transform = 'translateX(-100%)';
             sidebarOverlay.style.opacity = '0';
-            sidebarOverlay.style.pointerEvents = 'none';
         }
+        // Abrir sidebar: swipe desde borde izquierdo hacia derecha
         else if (isClosed && touchStart < 20 && (touchEnd - touchStart) > 50) {
             console.log('👆 Swipe desde borde izquierdo detectado, abriendo sidebar');
             sidebar.classList.remove('-translate-x-full');
             sidebar.style.transform = 'translateX(0)';
             sidebarOverlay.style.opacity = '0.5';
-            sidebarOverlay.style.pointerEvents = 'none';
         }
+        // Revertir a posición anterior si el swipe no fue suficientemente largo
         else {
-            sidebar.style.transform = isClosed ? 'translateX(-100%)' : 'translateX(0)';
+            if (isClosed) {
+                sidebar.style.transform = 'translateX(-100%)';
+            } else {
+                sidebar.style.transform = 'translateX(0)';
+            }
         }
         
         touchStart = null;
