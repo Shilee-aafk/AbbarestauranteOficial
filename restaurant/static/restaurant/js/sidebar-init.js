@@ -1,4 +1,10 @@
 function initSidebar() {
+    // Evitar que se ejecute dos veces
+    if (window.__sidebarInitialized) {
+        return;
+    }
+    window.__sidebarInitialized = true;
+    
     const sidebar = document.getElementById('sidebar');
     const toggleBtn = document.getElementById('sidebar-toggle');
     const overlay = document.getElementById('sidebar-overlay');
