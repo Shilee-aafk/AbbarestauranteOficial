@@ -116,13 +116,21 @@ function initSidebar() {
         
         // CERRAR: swipe hacia izquierda > 50px
         if (isOpen && diff > 50) {
-            isOpen = true; // Toggle lo cambiará a false
-            toggleSidebar();
+            // Cerrar directamente
+            isOpen = false;
+            sidebar.classList.add('-translate-x-full');
+            sidebar.style.transform = 'translateX(-100%)';
+            overlay.style.opacity = '0';
+            overlay.style.pointerEvents = 'none';
         }
         // ABRIR: swipe desde borde izquierdo hacia derecha > 50px
         else if (!isOpen && touchStartX < 20 && (touchEndX - touchStartX) > 50) {
-            isOpen = false; // Toggle lo cambiará a true
-            toggleSidebar();
+            // Abrir directamente
+            isOpen = true;
+            sidebar.classList.remove('-translate-x-full');
+            sidebar.style.transform = 'translateX(0)';
+            overlay.style.opacity = '0.5';
+            overlay.style.pointerEvents = 'auto';
         }
         // REVERTIR: swipe no fue suficiente, volver a posición anterior
         else {
