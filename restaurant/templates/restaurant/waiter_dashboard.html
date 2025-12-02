@@ -129,7 +129,7 @@
     </div>
 
     <!-- Overlay for mobile when sidebar is open -->
-    <div id="sidebar-overlay" class="fixed inset-0 bg-black z-20 lg:hidden" style="opacity: 0; pointer-events: none; transition: opacity 0.3s ease-in-out;"></div>
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black z-20 lg:hidden" style="opacity: 0; pointer-events: none; transition: opacity 0.3s ease-in-out; background-color: rgba(0, 0, 0, 0.7);"></div>
 
     <!-- Fixed Hamburger Button (only visible on mobile) -->
     <button id="sidebar-toggle" class="lg:hidden fixed top-4 left-4 z-40 text-amber-700 hover:text-amber-900 bg-amber-50 p-2 rounded-lg shadow-sm border border-amber-300" style="display: block;">
@@ -434,108 +434,7 @@
 {% endblock %}
 
 {% block extra_js %}
-    <!-- SIDEBAR TOGGLE SCRIPT - Cargado ANTES de otros módulos para garantizar funcionamiento -->
-    <script>
-        function initSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const sidebarToggle = document.getElementById('sidebar-toggle');
-            const sidebarOverlay = document.getElementById('sidebar-overlay');
-            
-            if (!sidebar || !sidebarToggle || !sidebarOverlay) {
-                console.error('❌ Elementos del sidebar no encontrados');
-                console.error('sidebar:', sidebar);
-                console.error('sidebarToggle:', sidebarToggle);
-                console.error('sidebarOverlay:', sidebarOverlay);
-                return;
-            }
-            
-            console.log('✅ Sidebar elements found, initializing...');
-            console.log('Sidebar HTML:', sidebar.outerHTML.substring(0, 100));
-            
-            const toggleSidebar = () => {
-                console.log('🔄 Toggle sidebar clicked');
-                
-                sidebar.classList.toggle('-translate-x-full');
-                const isClosed = sidebar.classList.contains('-translate-x-full');
-                
-                console.log('isClosed:', isClosed);
-                
-                // CRÍTICO: Aplicar transform inline directamente
-                if (isClosed) {
-                    sidebar.style.transform = 'translateX(-100%)';
-                    console.log('Aplicando transform: translateX(-100%)');
-                } else {
-                    sidebar.style.transform = 'translateX(0)';
-                    console.log('Aplicando transform: translateX(0)');
-                }
-                
-                // Animar overlay
-                sidebarOverlay.style.opacity = isClosed ? '0' : '0.5';
-                sidebarOverlay.style.pointerEvents = isClosed ? 'none' : 'auto';
-                
-                // Mostrar/ocultar botón hamburguesa
-                sidebarToggle.style.display = isClosed ? 'block' : 'none';
-                sidebarToggle.style.opacity = isClosed ? '1' : '0';
-                sidebarToggle.style.pointerEvents = isClosed ? 'auto' : 'none';
-                
-                console.log(isClosed ? '✅ Sidebar cerrado' : '✅ Sidebar abierto');
-            };
-            
-            // Botón hamburguesa
-            sidebarToggle.addEventListener('click', toggleSidebar);
-            console.log('✅ Click listener agregado al botón hamburguesa');
-            
-            // Overlay para cerrar
-            sidebarOverlay.addEventListener('click', toggleSidebar);
-            
-            // Swipe para cerrar el sidebar cuando está abierto
-            let touchStart = null;
-            
-            sidebar.addEventListener('touchstart', (e) => {
-                touchStart = e.changedTouches[0].clientX;
-            }, false);
-            
-            sidebar.addEventListener('touchend', (e) => {
-                if (!touchStart) return;
-                const touchEnd = e.changedTouches[0].clientX;
-                const diff = touchStart - touchEnd;
-                touchStart = null;
-                
-                if (diff > 100) {
-                    console.log('👆 Swipe detectado, cerrando sidebar');
-                    toggleSidebar();
-                }
-            }, false);
-            
-            // Swipe desde borde izquierdo para abrir
-            let edgeStart = null;
-            
-            document.addEventListener('touchstart', (e) => {
-                if (e.changedTouches[0].clientX < 20) {
-                    edgeStart = e.changedTouches[0].clientX;
-                }
-            }, false);
-            
-            document.addEventListener('touchend', (e) => {
-                if (!edgeStart) return;
-                const diff = e.changedTouches[0].clientX - edgeStart;
-                edgeStart = null;
-                
-                const isClosed = sidebar.classList.contains('-translate-x-full');
-                if (isClosed && diff > 100) {
-                    console.log('👆 Swipe desde borde detectado, abriendo sidebar');
-                    toggleSidebar();
-                }
-            }, false);
-        }
-        
-        // Ejecutar apenas el DOM esté listo
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initSidebar);
-        } else {
-            initSidebar();
-        }
-    </script>
+    <script src="{% static 'restaurant/js/sidebar-init.js' %}"></script>
 
     <script type="module">
         // Global configuration

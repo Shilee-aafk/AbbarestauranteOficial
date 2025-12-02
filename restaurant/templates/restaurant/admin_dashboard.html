@@ -104,7 +104,7 @@
     </div>
 
     <!-- Overlay for mobile when sidebar is open -->
-    <div id="sidebar-overlay" class="fixed inset-0 bg-black z-20 lg:hidden" style="opacity: 0; pointer-events: none; transition: opacity 0.3s ease-in-out;"></div>
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black z-20 lg:hidden" style="opacity: 0; pointer-events: none; transition: opacity 0.3s ease-in-out; background-color: rgba(0, 0, 0, 0.7);"></div>
 
     <!-- Main Content -->
     <div class="lg:ml-64 bg-gray-50 min-h-screen">
@@ -609,59 +609,99 @@
                     sidebar.style.transform = 'translateX(0)';
                 }
                 
-                sidebarOverlay.style.opacity = isClosed ? '0' : '0.5';
+                sidebarOverlay.style.opacity = isClosed ? '0' : '1';
                 sidebarOverlay.style.pointerEvents = isClosed ? 'none' : 'auto';
-                sidebarToggle.style.display = isClosed ? 'block' : 'none';
-                sidebarToggle.style.opacity = isClosed ? '1' : '0';
-                sidebarToggle.style.pointerEvents = isClosed ? 'auto' : 'none';
+                // El botón SIEMPRE debe ser clickeable
+                sidebarToggle.style.pointerEvents = 'auto';
                 console.log(isClosed ? '✅ Admin sidebar cerrado' : '✅ Admin sidebar abierto');
             };
             
             // Botón hamburguesa
-            sidebarToggle.addEventListener('click', toggleSidebar);
+            sidebarToggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('🔘 Hamburguesa clickeada!');
+                toggleSidebar();
+            });
             console.log('✅ Click listener agregado al botón hamburguesa (admin)');
             
             // Overlay para cerrar
             sidebarOverlay.addEventListener('click', toggleSidebar);
             
-            // Swipe para cerrar el sidebar cuando está abierto
+            // Swipe para cerrar/abrir el sidebar - SIGUE EL DEDO
             let touchStart = null;
+            let isDragging = false;
             
-            sidebar.addEventListener('touchstart', (e) => {
-                touchStart = e.changedTouches[0].clientX;
-            }, false);
-            
-            sidebar.addEventListener('touchend', (e) => {
-                if (!touchStart) return;
-                const touchEnd = e.changedTouches[0].clientX;
-                const diff = touchStart - touchEnd;
-                touchStart = null;
+            document.addEventListener('touchstart', (e) => {
+                const isClosed = sidebar.classList.contains('-translate-x-full');
+                const isOpeningSide = e.changedTouches[0].clientX < 20;
                 
-                if (diff > 100) {
-                    console.log('👆 Swipe detectado, cerrando sidebar (admin)');
-                    toggleSidebar();
+                // Solo inicia el drag si:
+                // 1. Sidebar está abierto (puede cerrar desde cualquier lugar)
+                // 2. Sidebar está cerrado Y toco el borde izquierdo (para abrir)
+                if (!isClosed || isOpeningSide) {
+                    touchStart = e.changedTouches[0].clientX;
+                    isDragging = true;
+                    sidebar.style.transition = 'none'; // Desactivar transición mientras se arrastra
                 }
             }, false);
             
-            // Swipe desde borde izquierdo para abrir
-            let edgeStart = null;
-            
-            document.addEventListener('touchstart', (e) => {
-                if (e.changedTouches[0].clientX < 20) {
-                    edgeStart = e.changedTouches[0].clientX;
+            document.addEventListener('touchmove', (e) => {
+                if (!isDragging || !touchStart) return;
+                
+                const currentX = e.changedTouches[0].clientX;
+                const diff = touchStart - currentX;
+                const isClosed = sidebar.classList.contains('-translate-x-full');
+                
+                if (!isClosed) {
+                    // Sidebar abierto: puedes arrastrarlo hacia la izquierda
+                    const newTranslate = Math.max(-sidebarWidth, -diff);
+                    sidebar.style.transform = `translateX(${newTranslate}px)`;
+                } else if (touchStart < 20) {
+                    // Sidebar cerrado pero arrastrando desde borde: lo abre
+                    const newTranslate = Math.min(0, currentX - touchStart - sidebarWidth);
+                    sidebar.style.transform = `translateX(${newTranslate}px)`;
                 }
             }, false);
             
             document.addEventListener('touchend', (e) => {
-                if (!edgeStart) return;
-                const diff = e.changedTouches[0].clientX - edgeStart;
-                edgeStart = null;
+                if (!isDragging || !touchStart) {
+                    isDragging = false;
+                    touchStart = null;
+                    return;
+                }
+                
+                const touchEnd = e.changedTouches[0].clientX;
+                const diff = touchStart - touchEnd;
+                isDragging = false;
+                
+                // Restaurar transición
+                sidebar.style.transition = 'transform 0.3s ease-in-out';
                 
                 const isClosed = sidebar.classList.contains('-translate-x-full');
-                if (isClosed && diff > 100) {
-                    console.log('👆 Swipe desde borde detectado, abriendo sidebar (admin)');
-                    toggleSidebar();
+                
+                // Si el sidebar está ABIERTO y deslizaste >50px hacia la izquierda, CIÉRRALO
+                if (!isClosed && diff > 50) {
+                    console.log('👆 Swipe hacia izquierda detectado, cerrando sidebar (admin)');
+                    sidebar.classList.add('-translate-x-full');
+                    sidebar.style.transform = 'translateX(-100%)';
+                    sidebarOverlay.style.opacity = '0';
+                    sidebarOverlay.style.pointerEvents = 'none';
                 }
+                // Si el sidebar está CERRADO y deslizaste >50px hacia la derecha desde borde, ÁBRELO
+                else if (isClosed && touchStart < 20 && (touchEnd - touchStart) > 50) {
+                    console.log('👆 Swipe desde borde izquierdo detectado, abriendo sidebar (admin)');
+                    sidebar.classList.remove('-translate-x-full');
+                    sidebar.style.transform = 'translateX(0)';
+                    sidebarOverlay.style.opacity = '1';
+                    sidebarOverlay.style.pointerEvents = 'auto';
+                }
+                // Si no llegaste al umbral, vuelve al estado anterior
+                else {
+                    sidebar.style.transform = isClosed ? 'translateX(-100%)' : 'translateX(0)';
+                }
+                
+                touchStart = null;
             }, false);
         }
         
@@ -673,8 +713,9 @@
         }
     </script>
 
+    <script src="{% static 'restaurant/js/sidebar-init.js' %}"></script>
+
     <script>
-        /* eslint-disable */
         const csrfToken = '{{ csrf_token }}';
         
         // --- TOAST NOTIFICATION FUNCTION ---
