@@ -9,8 +9,18 @@ function initSidebar() {
     const toggleBtn = document.getElementById('sidebar-toggle');
     const overlay = document.getElementById('sidebar-overlay');
     
+    console.log('🔍 Sidebar init check:', {
+        sidebar: !!sidebar,
+        toggleBtn: !!toggleBtn,
+        overlay: !!overlay
+    });
+    
     if (!sidebar || !toggleBtn || !overlay) {
-        console.error('❌ Elementos del sidebar no encontrados');
+        console.error('❌ Elementos del sidebar no encontrados', {
+            sidebar: !!sidebar,
+            toggleBtn: !!toggleBtn,
+            overlay: !!overlay
+        });
         return;
     }
     
@@ -140,6 +150,14 @@ function initSidebar() {
         
         touchStartX = null;
     }, { passive: true });
+}
+
+// Ejecutar cuando el DOM esté listo
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSidebar);
+} else {
+    // El DOM ya está listo (el script se cargó tarde)
+    initSidebar();
 }
 
 // Ejecutar cuando el DOM esté listo
