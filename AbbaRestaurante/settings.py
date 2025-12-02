@@ -60,7 +60,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'compressor',
     'cloudinary',
     'restaurant.apps.RestaurantConfig',
     
@@ -129,13 +128,8 @@ else:
 
 STATIC_URL = '/static/'
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# Configuración de Compressor para minificar CSS y JS
-COMPRESS_ENABLED = True
-COMPRESS_OFFLINE = False
-COMPRESS_CSS_FILTERS = ['compressor.filters.css_default.CssAbsoluteFilter']
-COMPRESS_JS_FILTERS = ['compressor.filters.jsmin.JSMinFilter']
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Configuración de WhiteNoise para servir archivos estáticos en producción
 if not DEBUG:
