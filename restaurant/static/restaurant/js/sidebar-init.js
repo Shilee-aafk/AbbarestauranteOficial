@@ -2,152 +2,152 @@ console.log('📝 Sidebar init script cargado');
 
 function initSidebar() {
     console.log('🚀 initSidebar() ejecutándose...');
-    const sidebar = document.getElementById('sidebar');
-    const sidebarToggle = document.getElementById('sidebar-toggle');
-    const sidebarOverlay = document.getElementById('sidebar-overlay');
     
-    if (!sidebar || !sidebarToggle || !sidebarOverlay) {
+    const sidebar = document.getElementById('sidebar');
+    const toggleBtn = document.getElementById('sidebar-toggle');
+    const overlay = document.getElementById('sidebar-overlay');
+    
+    if (!sidebar || !toggleBtn || !overlay) {
         console.error('❌ Elementos del sidebar no encontrados');
-        console.error('sidebar:', sidebar);
-        console.error('sidebarToggle:', sidebarToggle);
-        console.error('sidebarOverlay:', sidebarOverlay);
         return;
     }
     
-    console.log('✅ Sidebar elements found, initializing...');
+    console.log('✅ Todos los elementos encontrados, inicializando...');
     
-    const toggleSidebar = () => {
-        console.log('🔄 Toggle sidebar clicked');
-        sidebar.classList.toggle('-translate-x-full');
-        const isClosed = sidebar.classList.contains('-translate-x-full');
+    // Estado del sidebar
+    let isOpen = false;
+    let touchStartX = null;
+    let isDragging = false;
+    
+    // Función para abrir/cerrar
+    function toggleSidebar() {
+        isOpen = !isOpen;
+        console.log(isOpen ? '📂 Abriendo sidebar...' : '📁 Cerrando sidebar...');
         
-        // Aplicar transform inline como respaldo
-        if (isClosed) {
-            sidebar.style.transform = 'translateX(-100%)';
-            console.log('Aplicando transform: translateX(-100%)');
-        } else {
+        if (isOpen) {
+            // ABIERTO
+            sidebar.classList.remove('-translate-x-full');
             sidebar.style.transform = 'translateX(0)';
-            console.log('Aplicando transform: translateX(0)');
-        }
-        
-        // El overlay debe ser invisible y no bloquear clicks
-        if (isClosed) {
-            sidebarOverlay.style.opacity = '0';
-            sidebarOverlay.style.pointerEvents = 'none';
-            console.log('❌ Overlay invisible');
+            overlay.style.opacity = '0.5';
+            overlay.style.visibility = 'visible';
+            toggleBtn.style.pointerEvents = 'auto';
         } else {
-            sidebarOverlay.style.opacity = '0.5';
-            // IMPORTANTE: El overlay NO debe bloquear clicks en elementos debajo
-            sidebarOverlay.style.pointerEvents = 'none';
-            console.log('✅ Overlay visible pero transparente a clicks');
+            // CERRADO
+            sidebar.classList.add('-translate-x-full');
+            sidebar.style.transform = 'translateX(-100%)';
+            overlay.style.opacity = '0';
+            overlay.style.visibility = 'hidden';
+            toggleBtn.style.pointerEvents = 'auto';
         }
-        sidebarToggle.style.pointerEvents = 'auto';
         
-        console.log(isClosed ? '✅ Sidebar cerrado' : '✅ Sidebar abierto');
-    };
+        console.log(isOpen ? '✅ Sidebar abierto' : '✅ Sidebar cerrado');
+    }
     
-    // Botón hamburguesa
-    console.log('🔔 Registrando listener para el botón hamburguesa...');
-    sidebarToggle.addEventListener('click', function(e) {
+    // ========== CLICK EN BOTÓN HAMBURGUESA ==========
+    toggleBtn.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        console.log('🔘 Hamburguesa clickeada!');
+        console.log('🔘 Hamburguesa clickeada');
         toggleSidebar();
     });
-    console.log('✅ Click listener agregado al botón hamburguesa');
     
-    // Overlay clickeable para cerrar el sidebar (aunque tiene pointerEvents: none)
-    // Usaremos una zona que detecte clicks "visuales" pero sin bloquear
-    document.addEventListener('click', function(e) {
-        const isClosed = sidebar.classList.contains('-translate-x-full');
-        
-        // Si el sidebar está abierto y clickeamos MUY lejos a la derecha (fuera del sidebar)
-        if (!isClosed && e.clientX > 280) { // 280 = 256px sidebar + margen
-            console.log('👆 Click fuera del sidebar - cerrando');
+    // ========== CLICK EN OVERLAY PARA CERRAR ==========
+    overlay.addEventListener('click', function(e) {
+        if (isOpen && e.target === overlay) {
+            console.log('👆 Overlay clickeado, cerrando');
             toggleSidebar();
         }
     });
     
-    // Swipe para cerrar/abrir el sidebar - SIGUE EL DEDO
-    let touchStart = null;
-    let isDragging = false;
+    // ========== PERMITIR CLICKS EN ELEMENTOS DENTRO DEL SIDEBAR ==========
+    sidebar.addEventListener('click', function(e) {
+        // Los clicks dentro del sidebar no cierran el sidebar
+        console.log('🖱️ Click dentro del sidebar - permitido');
+    });
     
-    document.addEventListener('touchstart', (e) => {
-        const sidebarWidth = sidebar.offsetWidth;
-        const isClosed = sidebar.classList.contains('-translate-x-full');
-        const isOpeningSide = e.changedTouches[0].clientX < 20;
+    // ========== SWIPE/DRAG DETECTION ==========
+    document.addEventListener('touchstart', function(e) {
+        // Solo detectar si:
+        // 1. El sidebar está abierto (para cerrar con swipe)
+        // 2. O el toque es en el borde izquierdo < 20px (para abrir)
+        const touchX = e.touches[0].clientX;
         
-        if (!isClosed || isOpeningSide) {
-            touchStart = e.changedTouches[0].clientX;
+        if (isOpen || touchX < 20) {
+            touchStartX = touchX;
             isDragging = true;
             sidebar.style.transition = 'none';
+            console.log(`👆 Toque detectado en X: ${touchX}`);
         }
-    }, false);
+    }, { passive: true });
     
-    document.addEventListener('touchmove', (e) => {
-        if (!isDragging || !touchStart) return;
+    document.addEventListener('touchmove', function(e) {
+        if (!isDragging || touchStartX === null) return;
         
+        const currentX = e.touches[0].clientX;
+        const diff = touchStartX - currentX;
         const sidebarWidth = sidebar.offsetWidth;
-        const currentX = e.changedTouches[0].clientX;
-        const diff = touchStart - currentX;
-        const isClosed = sidebar.classList.contains('-translate-x-full');
         
-        // Solo seguir el dedo si el movimiento es hacia la IZQUIERDA (diff positivo)
-        if (!isClosed && diff > 0) {
-            const newTranslate = Math.max(-sidebarWidth, -diff);
-            sidebar.style.transform = `translateX(${newTranslate}px)`;
-            console.log(`📍 Arrastrando sidebar: ${newTranslate}px`);
-        } else if (isClosed && touchStart < 20 && diff < 0) {
-            // Abrir desde el borde izquierdo con movimiento hacia la DERECHA
-            const newTranslate = Math.min(0, currentX - touchStart - sidebarWidth);
-            sidebar.style.transform = `translateX(${newTranslate}px)`;
-            console.log(`📍 Abriendo sidebar: ${newTranslate}px`);
+        // Solo responder a movimientos hacia la IZQUIERDA (para cerrar)
+        if (isOpen && diff > 0) {
+            // Sidebar está abierto, usuario está deslizando hacia la izquierda
+            const translateValue = Math.max(-sidebarWidth, -diff);
+            sidebar.style.transform = `translateX(${translateValue}px)`;
+            overlay.style.opacity = Math.max(0, 0.5 - (diff / sidebarWidth * 0.5));
+        } else if (!isOpen && touchStartX < 20 && diff < 0) {
+            // Sidebar está cerrado, usuario está deslizando desde borde izquierdo hacia la derecha
+            const distanceFromEdge = Math.abs(diff);
+            const translateValue = Math.min(0, -sidebarWidth + distanceFromEdge);
+            sidebar.style.transform = `translateX(${translateValue}px)`;
+            overlay.style.opacity = Math.min(0.5, (distanceFromEdge / sidebarWidth * 0.5));
         }
-    }, false);
+    }, { passive: true });
     
-    document.addEventListener('touchend', (e) => {
-        if (!isDragging || !touchStart) {
+    document.addEventListener('touchend', function(e) {
+        if (!isDragging || touchStartX === null) {
             isDragging = false;
-            touchStart = null;
+            touchStartX = null;
             return;
         }
         
-        const touchEnd = e.changedTouches[0].clientX;
-        const diff = touchStart - touchEnd;
+        const touchEndX = e.changedTouches[0].clientX;
+        const diff = touchStartX - touchEndX;
         isDragging = false;
+        
+        // Restaurar transición
         sidebar.style.transition = 'transform 0.3s ease-in-out';
         
-        const isClosed = sidebar.classList.contains('-translate-x-full');
-        const sidebarWidth = sidebar.offsetWidth;
-        
-        // Cerrar sidebar: swipe hacia izquierda (diff > 50px)
-        if (!isClosed && diff > 50) {
-            console.log('👆 Swipe hacia izquierda detectado, cerrando sidebar');
-            sidebar.classList.add('-translate-x-full');
-            sidebar.style.transform = 'translateX(-100%)';
-            sidebarOverlay.style.opacity = '0';
+        // CERRAR: swipe hacia izquierda > 50px
+        if (isOpen && diff > 50) {
+            console.log('🎯 Swipe izquierda detectado, cerrando');
+            isOpen = true; // Toggle lo cambiará a false
+            toggleSidebar();
         }
-        // Abrir sidebar: swipe desde borde izquierdo hacia derecha
-        else if (isClosed && touchStart < 20 && (touchEnd - touchStart) > 50) {
-            console.log('👆 Swipe desde borde izquierdo detectado, abriendo sidebar');
-            sidebar.classList.remove('-translate-x-full');
-            sidebar.style.transform = 'translateX(0)';
-            sidebarOverlay.style.opacity = '0.5';
+        // ABRIR: swipe desde borde izquierdo hacia derecha > 50px
+        else if (!isOpen && touchStartX < 20 && (touchEndX - touchStartX) > 50) {
+            console.log('🎯 Swipe derecha desde borde detectado, abriendo');
+            isOpen = false; // Toggle lo cambiará a true
+            toggleSidebar();
         }
-        // Revertir a posición anterior si el swipe no fue suficientemente largo
+        // REVERTIR: swipe no fue suficiente, volver a posición anterior
         else {
-            if (isClosed) {
-                sidebar.style.transform = 'translateX(-100%)';
-            } else {
+            sidebar.style.transition = 'transform 0.3s ease-in-out';
+            if (isOpen) {
                 sidebar.style.transform = 'translateX(0)';
+                overlay.style.opacity = '0.5';
+            } else {
+                sidebar.style.transform = 'translateX(-100%)';
+                overlay.style.opacity = '0';
             }
+            console.log('↩️ Swipe insuficiente, revertiendo');
         }
         
-        touchStart = null;
-    }, false);
+        touchStartX = null;
+    }, { passive: true });
+    
+    console.log('✅ Sidebar inicializado correctamente');
 }
 
-// Ejecutar apenas el DOM esté listo
+// Ejecutar cuando el DOM esté listo
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initSidebar);
 } else {
