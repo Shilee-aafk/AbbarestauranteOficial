@@ -85,13 +85,18 @@ function initSidebar() {
             // Sidebar está abierto, usuario está deslizando hacia la izquierda
             const translateValue = Math.max(-sidebarWidth, -diff);
             sidebar.style.transform = `translateX(${translateValue}px)`;
-            overlay.style.opacity = Math.max(0, 0.5 - (diff / sidebarWidth * 0.5));
+            // Opacidad del overlay decrece mientras deslizas
+            const newOpacity = Math.max(0, 0.5 - (diff / sidebarWidth * 0.5));
+            overlay.style.opacity = newOpacity;
+            overlay.style.pointerEvents = newOpacity > 0 ? 'auto' : 'none';
         } else if (!isOpen && touchStartX < 20 && diff < 0) {
             // Sidebar está cerrado, usuario está deslizando desde borde izquierdo hacia la derecha
             const distanceFromEdge = Math.abs(diff);
             const translateValue = Math.min(0, -sidebarWidth + distanceFromEdge);
             sidebar.style.transform = `translateX(${translateValue}px)`;
-            overlay.style.opacity = Math.min(0.5, (distanceFromEdge / sidebarWidth * 0.5));
+            const newOpacity = Math.min(0.5, (distanceFromEdge / sidebarWidth * 0.5));
+            overlay.style.opacity = newOpacity;
+            overlay.style.pointerEvents = newOpacity > 0 ? 'auto' : 'none';
         }
     }, { passive: true });
     
