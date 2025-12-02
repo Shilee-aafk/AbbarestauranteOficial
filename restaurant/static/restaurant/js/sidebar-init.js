@@ -22,17 +22,16 @@ function initSidebar() {
             sidebar.classList.remove('-translate-x-full');
             sidebar.style.transform = 'translateX(0)';
             overlay.style.opacity = '0.5';
-            overlay.style.visibility = 'visible';
+            overlay.style.pointerEvents = 'auto';
             toggleBtn.style.pointerEvents = 'auto';
         } else {
             // CERRADO
             sidebar.classList.add('-translate-x-full');
             sidebar.style.transform = 'translateX(-100%)';
             overlay.style.opacity = '0';
-            overlay.style.visibility = 'hidden';
+            overlay.style.pointerEvents = 'none';
             toggleBtn.style.pointerEvents = 'auto';
         }
-        
     }
     
     // ========== CLICK EN BOTÓN HAMBURGUESA ==========
@@ -120,9 +119,11 @@ function initSidebar() {
             if (isOpen) {
                 sidebar.style.transform = 'translateX(0)';
                 overlay.style.opacity = '0.5';
+                overlay.style.pointerEvents = 'auto';
             } else {
                 sidebar.style.transform = 'translateX(-100%)';
                 overlay.style.opacity = '0';
+                overlay.style.pointerEvents = 'none';
             }
         }
         
