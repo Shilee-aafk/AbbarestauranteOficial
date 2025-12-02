@@ -132,15 +132,14 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Configuración de Compressor para minificar CSS y JS
-COMPRESS_ENABLED = not DEBUG
+COMPRESS_ENABLED = True
+COMPRESS_OFFLINE = False
 COMPRESS_CSS_FILTERS = ['compressor.filters.css_default.CssAbsoluteFilter']
 COMPRESS_JS_FILTERS = ['compressor.filters.jsmin.JSMinFilter']
-COMPRESS_OFFLINE = True
-COMPRESS_STORAGE = 'compressor.storage.CompressedManifestStaticFilesStorage'
 
 # Configuración de WhiteNoise para servir archivos estáticos en producción
 if not DEBUG:
-    STATICFILES_STORAGE = 'compressor.storage.CompressedManifestStaticFilesStorage'
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

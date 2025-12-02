@@ -4,7 +4,7 @@ services:
     env: python
     region: oregon
     plan: free
-    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --no-input && python manage.py compress --force && python manage.py migrate && python manage.py crear_usuarios
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --no-input && python manage.py migrate && python manage.py crear_usuarios
     startCommand: gunicorn AbbaRestaurante.wsgi:application
     envVars:
       - key: PYTHON_VERSION
