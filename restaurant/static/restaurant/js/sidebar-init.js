@@ -93,16 +93,15 @@ function initSidebar() {
             // Sidebar está abierto, usuario está deslizando hacia la izquierda
             const translateValue = Math.max(-sidebarWidth, -diff);
             sidebar.style.transform = `translateX(${translateValue}px)`;
-            // Opacidad del overlay decrece mientras deslizas
-            const newOpacity = Math.max(0, 0.5 - (diff / sidebarWidth * 0.5));
-            overlay.style.opacity = newOpacity;
+            // Mantener overlay visible durante el arrastre
+            overlay.style.opacity = '0.5';
         } else if (!isOpen && touchStartX < 20 && diff < 0) {
             // Sidebar está cerrado, usuario está deslizando desde borde izquierdo hacia la derecha
             const distanceFromEdge = Math.abs(diff);
             const translateValue = Math.min(0, -sidebarWidth + distanceFromEdge);
             sidebar.style.transform = `translateX(${translateValue}px)`;
-            const newOpacity = Math.min(0.5, (distanceFromEdge / sidebarWidth * 0.5));
-            overlay.style.opacity = newOpacity;
+            // Mantener overlay visible durante el arrastre
+            overlay.style.opacity = '0.5';
         }
     }, { passive: true });
     
@@ -117,34 +116,35 @@ function initSidebar() {
         const diff = touchStartX - touchEndX;
         isDragging = false;
         
-        // Restaurar transición
+        // Siempre restaurar transición
         sidebar.style.transition = 'transform 0.3s ease-in-out';
         
         // CERRAR: swipe hacia izquierda > 50px
         if (isOpen && diff > 50) {
-            // Cerrar directamente
             isOpen = false;
             sidebar.classList.add('-translate-x-full');
             sidebar.style.transform = 'translateX(-100%)';
             overlay.style.opacity = '0';
+            overlay.style.pointerEvents = 'none';
         }
         // ABRIR: swipe desde borde izquierdo hacia derecha > 50px
         else if (!isOpen && touchStartX < 20 && (touchEndX - touchStartX) > 50) {
-            // Abrir directamente
             isOpen = true;
             sidebar.classList.remove('-translate-x-full');
             sidebar.style.transform = 'translateX(0)';
             overlay.style.opacity = '0.5';
+            overlay.style.pointerEvents = 'auto';
         }
         // REVERTIR: swipe no fue suficiente, volver a posición anterior
         else {
-            sidebar.style.transition = 'transform 0.3s ease-in-out';
             if (isOpen) {
                 sidebar.style.transform = 'translateX(0)';
                 overlay.style.opacity = '0.5';
+                overlay.style.pointerEvents = 'auto';
             } else {
                 sidebar.style.transform = 'translateX(-100%)';
                 overlay.style.opacity = '0';
+                overlay.style.pointerEvents = 'none';
             }
         }
         
