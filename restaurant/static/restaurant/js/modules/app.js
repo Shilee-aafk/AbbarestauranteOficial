@@ -19,7 +19,6 @@ let uiManager;
 export function initApp(initialOrders = []) {
   try {
     // Crear instancias de los managers
-    console.log('Creating manager instances...');
     cartManager = new CartManager();
     uiManager = new UIManager();
     ordersManager = new OrdersManager(cartManager, uiManager);
@@ -32,23 +31,16 @@ export function initApp(initialOrders = []) {
     window.uiManager = uiManager;
 
     // Inicializar módulos
-    console.log('Initializing UI...');
     uiManager.init();
     
-    console.log('Initializing Menu...');
     menuManager.init();
     
-    console.log('Initializing Orders monitor...');
     ordersManager.initializeMonitor(initialOrders);
 
     // Configurar event listeners globales
-    console.log('Setting up global listeners...');
     setupGlobalListeners();
     setupMenuItemListeners();
     setupPusherListeners();
-    
-    console.log('✅ App initialized successfully');
-    console.log('Managers:', { cartManager, ordersManager, menuManager, uiManager });
   } catch (error) {
     console.error('❌ Error initializing app:', error);
     console.error('Stack:', error.stack);
@@ -59,8 +51,6 @@ export function initApp(initialOrders = []) {
  * Configura los listeners globales de la aplicación
  */
 function setupGlobalListeners() {
-  console.log('setupGlobalListeners starting...');
-  
   // Botón de volver a vista principal
   const backToMainBtn = document.getElementById('back-to-main-view-btn');
   if (backToMainBtn) {
@@ -183,7 +173,6 @@ function setupGlobalListeners() {
       // Confirmación antes de limpiar
       if (confirm('¿Estás seguro de que deseas limpiar el carrito? Esto eliminará todos los items.')) {
         cartManager.clear();
-        console.log('✅ Carrito limpiado exitosamente');
       }
     });
   }
@@ -193,13 +182,8 @@ function setupGlobalListeners() {
   const cartModal = document.getElementById('cart-modal');
   const closeCartBtn = document.getElementById('close-cart');
 
-  console.log('cartToggle element:', cartToggle);
-  console.log('cartModal element:', cartModal);
-  console.log('closeCartBtn element:', closeCartBtn);
-
   if (cartToggle && cartModal) {
     cartToggle.addEventListener('click', () => {
-      console.log('Toggle carrito');
       cartModal.classList.toggle('hidden');
       // Actualizar el botón cuando se abre el modal
       if (!cartModal.classList.contains('hidden')) {
@@ -212,7 +196,6 @@ function setupGlobalListeners() {
 
   if (closeCartBtn && cartModal) {
     closeCartBtn.addEventListener('click', () => {
-      console.log('Cerrar carrito');
       cartModal.classList.add('hidden');
       // Si se cierra el modal sin enviar y estaba en modo edición, limpiar estado
       // pero solo si no hay cambios pendientes (carrito vacío o igual al original)
@@ -230,7 +213,6 @@ function setupGlobalListeners() {
   const orderViewCartBtn = document.getElementById('order-view-cart-btn');
   if (orderViewCartBtn && cartModal) {
     orderViewCartBtn.addEventListener('click', () => {
-      console.log('Abrir carrito desde vista de pedido');
       cartModal.classList.remove('hidden');
     });
   }
@@ -248,7 +230,6 @@ function setupGlobalListeners() {
   const cartSubmitBtn = document.getElementById('cart-submit-btn');
   if (cartSubmitBtn) {
     cartSubmitBtn.addEventListener('click', async () => {
-      console.log('Enviar pedido desde carrito');
       if (cartManager.currentOrder.length === 0) {
         uiManager.showToast('El carrito está vacío', 'error');
         return;
@@ -284,7 +265,6 @@ function setupGlobalListeners() {
       }
 
       try {
-        console.log('Enviando pedido desde carrito:', orderData);
         const response = await fetch(endpoint, {
           method: method,
           headers: {
@@ -294,15 +274,10 @@ function setupGlobalListeners() {
           body: JSON.stringify(orderData)
         });
 
-        console.log('Response status:', response.status, response.statusText);
-        
         const responseText = await response.text();
-        console.log('Response text:', responseText.substring(0, 500));
 
         if (response.ok) {
           const data = JSON.parse(responseText);
-          console.log('✅ Respuesta completa:', data);
-          console.log('Order data:', data.order);
           
           // Determinar si es creación o actualización
           const isUpdate = cartManager.editingOrderId && cartManager.editingOrderStatus === 'ready';
@@ -316,15 +291,11 @@ function setupGlobalListeners() {
           // Actualizar el monitor de pedidos localmente de inmediato
           // (sin esperar a que llegue el evento de Pusher)
           if (data.order && ordersManager) {
-            console.log('✅ Actualizando monitor con nuevo pedido:', data.order);
             try {
               ordersManager.handleOrderUpdate(data.order);
-              console.log('✅ Monitor actualizado correctamente');
             } catch (updateError) {
               console.error('❌ Error al actualizar monitor:', updateError);
             }
-          } else {
-            console.warn('⚠️ No hay data.order o ordersManager disponible');
           }
           
           // Cerrar el carrito modal
@@ -349,7 +320,6 @@ function setupGlobalListeners() {
               'error'
             );
           } catch (parseError) {
-            console.error('Could not parse error JSON. Raw response:', responseText.substring(0, 200));
             uiManager.showToast('Error del servidor al procesar el pedido.', 'error');
           }
         }
@@ -412,7 +382,6 @@ function setupPusherListeners() {
   
   // Event: Nuevo pedido creado
   window.addEventListener('newOrder', (e) => {
-    console.log('newOrder event recibido:', e.detail);
     if (e.detail && e.detail.order) {
       ordersManager.handleOrderUpdate(e.detail.order);
     }
@@ -420,7 +389,6 @@ function setupPusherListeners() {
 
   // Event: Pedido actualizado
   window.addEventListener('orderUpdated', (e) => {
-    console.log('orderUpdated event recibido:', e.detail);
     if (e.detail && e.detail.order) {
       ordersManager.handleOrderUpdate(e.detail.order);
     }
@@ -428,7 +396,6 @@ function setupPusherListeners() {
 
   // Event: Pedido listo (evitar duplicados con orderUpdated)
   window.addEventListener('orderReady', (e) => {
-    console.log('orderReady event recibido:', e.detail);
     if (e.detail && e.detail.order) {
       const orderId = e.detail.order.id;
       
@@ -441,8 +408,6 @@ function setupPusherListeners() {
         setTimeout(() => {
           notifiedOrders.delete(orderId);
         }, 5000);
-      } else {
-        console.log('⚠️ Notificación duplicada evitada para orden:', orderId);
       }
     }
   });

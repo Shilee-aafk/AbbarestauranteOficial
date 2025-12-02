@@ -1,8 +1,4 @@
-console.log('📝 Sidebar init script cargado');
-
 function initSidebar() {
-    console.log('🚀 initSidebar() ejecutándose...');
-    
     const sidebar = document.getElementById('sidebar');
     const toggleBtn = document.getElementById('sidebar-toggle');
     const overlay = document.getElementById('sidebar-overlay');
@@ -12,8 +8,6 @@ function initSidebar() {
         return;
     }
     
-    console.log('✅ Todos los elementos encontrados, inicializando...');
-    
     // Estado del sidebar
     let isOpen = false;
     let touchStartX = null;
@@ -22,7 +16,6 @@ function initSidebar() {
     // Función para abrir/cerrar
     function toggleSidebar() {
         isOpen = !isOpen;
-        console.log(isOpen ? '📂 Abriendo sidebar...' : '📁 Cerrando sidebar...');
         
         if (isOpen) {
             // ABIERTO
@@ -37,24 +30,21 @@ function initSidebar() {
             sidebar.style.transform = 'translateX(-100%)';
             overlay.style.opacity = '0';
             overlay.style.visibility = 'hidden';
-            toggleBtn.style.pointerEvents = 'auto';
+            sidebarOverlay.style.pointerEvents = 'auto';
         }
         
-        console.log(isOpen ? '✅ Sidebar abierto' : '✅ Sidebar cerrado');
     }
     
     // ========== CLICK EN BOTÓN HAMBURGUESA ==========
     toggleBtn.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        console.log('🔘 Hamburguesa clickeada');
         toggleSidebar();
     });
     
     // ========== CLICK EN OVERLAY PARA CERRAR ==========
     overlay.addEventListener('click', function(e) {
         if (isOpen && e.target === overlay) {
-            console.log('👆 Overlay clickeado, cerrando');
             toggleSidebar();
         }
     });
@@ -62,7 +52,6 @@ function initSidebar() {
     // ========== PERMITIR CLICKS EN ELEMENTOS DENTRO DEL SIDEBAR ==========
     sidebar.addEventListener('click', function(e) {
         // Los clicks dentro del sidebar no cierran el sidebar
-        console.log('🖱️ Click dentro del sidebar - permitido');
     });
     
     // ========== SWIPE/DRAG DETECTION ==========
@@ -76,7 +65,6 @@ function initSidebar() {
             touchStartX = touchX;
             isDragging = true;
             sidebar.style.transition = 'none';
-            console.log(`👆 Toque detectado en X: ${touchX}`);
         }
     }, { passive: true });
     
@@ -118,13 +106,11 @@ function initSidebar() {
         
         // CERRAR: swipe hacia izquierda > 50px
         if (isOpen && diff > 50) {
-            console.log('🎯 Swipe izquierda detectado, cerrando');
             isOpen = true; // Toggle lo cambiará a false
             toggleSidebar();
         }
         // ABRIR: swipe desde borde izquierdo hacia derecha > 50px
         else if (!isOpen && touchStartX < 20 && (touchEndX - touchStartX) > 50) {
-            console.log('🎯 Swipe derecha desde borde detectado, abriendo');
             isOpen = false; // Toggle lo cambiará a true
             toggleSidebar();
         }
@@ -138,13 +124,10 @@ function initSidebar() {
                 sidebar.style.transform = 'translateX(-100%)';
                 overlay.style.opacity = '0';
             }
-            console.log('↩️ Swipe insuficiente, revertiendo');
         }
         
         touchStartX = null;
     }, { passive: true });
-    
-    console.log('✅ Sidebar inicializado correctamente');
 }
 
 // Ejecutar cuando el DOM esté listo
