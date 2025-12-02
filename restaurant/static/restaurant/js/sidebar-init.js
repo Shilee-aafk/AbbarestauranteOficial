@@ -28,14 +28,12 @@ function initSidebar() {
             sidebar.classList.remove('-translate-x-full');
             sidebar.style.transform = 'translateX(0)';
             overlay.style.opacity = '0.5';
-            overlay.style.pointerEvents = 'auto';
             toggleBtn.style.pointerEvents = 'auto';
         } else {
             // CERRADO
             sidebar.classList.add('-translate-x-full');
             sidebar.style.transform = 'translateX(-100%)';
             overlay.style.opacity = '0';
-            overlay.style.pointerEvents = 'none';
             toggleBtn.style.pointerEvents = 'auto';
         }
     }
@@ -88,7 +86,6 @@ function initSidebar() {
             // Opacidad del overlay decrece mientras deslizas
             const newOpacity = Math.max(0, 0.5 - (diff / sidebarWidth * 0.5));
             overlay.style.opacity = newOpacity;
-            overlay.style.pointerEvents = newOpacity > 0 ? 'auto' : 'none';
         } else if (!isOpen && touchStartX < 20 && diff < 0) {
             // Sidebar está cerrado, usuario está deslizando desde borde izquierdo hacia la derecha
             const distanceFromEdge = Math.abs(diff);
@@ -96,7 +93,6 @@ function initSidebar() {
             sidebar.style.transform = `translateX(${translateValue}px)`;
             const newOpacity = Math.min(0.5, (distanceFromEdge / sidebarWidth * 0.5));
             overlay.style.opacity = newOpacity;
-            overlay.style.pointerEvents = newOpacity > 0 ? 'auto' : 'none';
         }
     }, { passive: true });
     
@@ -121,7 +117,6 @@ function initSidebar() {
             sidebar.classList.add('-translate-x-full');
             sidebar.style.transform = 'translateX(-100%)';
             overlay.style.opacity = '0';
-            overlay.style.pointerEvents = 'none';
         }
         // ABRIR: swipe desde borde izquierdo hacia derecha > 50px
         else if (!isOpen && touchStartX < 20 && (touchEndX - touchStartX) > 50) {
@@ -130,7 +125,6 @@ function initSidebar() {
             sidebar.classList.remove('-translate-x-full');
             sidebar.style.transform = 'translateX(0)';
             overlay.style.opacity = '0.5';
-            overlay.style.pointerEvents = 'auto';
         }
         // REVERTIR: swipe no fue suficiente, volver a posición anterior
         else {
@@ -138,11 +132,9 @@ function initSidebar() {
             if (isOpen) {
                 sidebar.style.transform = 'translateX(0)';
                 overlay.style.opacity = '0.5';
-                overlay.style.pointerEvents = 'auto';
             } else {
                 sidebar.style.transform = 'translateX(-100%)';
                 overlay.style.opacity = '0';
-                overlay.style.pointerEvents = 'none';
             }
         }
         
