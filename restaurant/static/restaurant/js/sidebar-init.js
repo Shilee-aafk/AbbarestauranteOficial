@@ -30,8 +30,17 @@ function initSidebar() {
             console.log('Aplicando transform: translateX(0)');
         }
         
-        sidebarOverlay.style.opacity = isClosed ? '0' : '1';
-        sidebarOverlay.style.pointerEvents = isClosed ? 'none' : 'auto';
+        // El overlay debe ser invisible y no bloquear clicks
+        if (isClosed) {
+            sidebarOverlay.style.opacity = '0';
+            sidebarOverlay.style.pointerEvents = 'none';
+            console.log('❌ Overlay invisible');
+        } else {
+            sidebarOverlay.style.opacity = '0.5';
+            // IMPORTANTE: El overlay NO debe bloquear clicks en elementos debajo
+            sidebarOverlay.style.pointerEvents = 'none';
+            console.log('✅ Overlay visible pero transparente a clicks');
+        }
         sidebarToggle.style.pointerEvents = 'auto';
         
         console.log(isClosed ? '✅ Sidebar cerrado' : '✅ Sidebar abierto');
@@ -47,8 +56,16 @@ function initSidebar() {
     });
     console.log('✅ Click listener agregado al botón hamburguesa');
     
-    // Overlay para cerrar
-    sidebarOverlay.addEventListener('click', toggleSidebar);
+    // Cerrar sidebar cuando se hace click fuera del sidebar
+    document.addEventListener('click', function(e) {
+        const isClosed = sidebar.classList.contains('-translate-x-full');
+        
+        // Si el sidebar está abierto y el click NO está en el sidebar ni en el botón
+        if (!isClosed && !sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
+            console.log('👆 Click fuera del sidebar - cerrando');
+            toggleSidebar();
+        }
+    });
     
     // Swipe para cerrar/abrir el sidebar - SIGUE EL DEDO
     let touchStart = null;
@@ -74,12 +91,16 @@ function initSidebar() {
         const diff = touchStart - currentX;
         const isClosed = sidebar.classList.contains('-translate-x-full');
         
-        if (!isClosed) {
+        // Solo seguir el dedo si el movimiento es hacia la IZQUIERDA (diff positivo)
+        if (!isClosed && diff > 0) {
             const newTranslate = Math.max(-sidebarWidth, -diff);
             sidebar.style.transform = `translateX(${newTranslate}px)`;
-        } else if (touchStart < 20) {
+            console.log(`📍 Arrastrando sidebar: ${newTranslate}px`);
+        } else if (isClosed && touchStart < 20 && diff < 0) {
+            // Abrir desde el borde izquierdo con movimiento hacia la DERECHA
             const newTranslate = Math.min(0, currentX - touchStart - sidebarWidth);
             sidebar.style.transform = `translateX(${newTranslate}px)`;
+            console.log(`📍 Abriendo sidebar: ${newTranslate}px`);
         }
     }, false);
     
@@ -109,8 +130,8 @@ function initSidebar() {
             console.log('👆 Swipe desde borde izquierdo detectado, abriendo sidebar');
             sidebar.classList.remove('-translate-x-full');
             sidebar.style.transform = 'translateX(0)';
-            sidebarOverlay.style.opacity = '1';
-            sidebarOverlay.style.pointerEvents = 'auto';
+            sidebarOverlay.style.opacity = '0.5';
+            sidebarOverlay.style.pointerEvents = 'none';
         }
         else {
             sidebar.style.transform = isClosed ? 'translateX(-100%)' : 'translateX(0)';
@@ -126,3 +147,4 @@ if (document.readyState === 'loading') {
 } else {
     initSidebar();
 }
+
