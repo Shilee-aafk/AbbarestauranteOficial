@@ -30,7 +30,7 @@ function initSidebar() {
             sidebar.style.transform = 'translateX(-100%)';
             overlay.style.opacity = '0';
             overlay.style.visibility = 'hidden';
-            sidebarOverlay.style.pointerEvents = 'auto';
+            toggleBtn.style.pointerEvents = 'auto';
         }
         
     }
