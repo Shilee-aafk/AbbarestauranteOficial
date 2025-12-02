@@ -7,19 +7,16 @@ function initSidebar() {
     
     const sidebar = document.getElementById('sidebar');
     const toggleBtn = document.getElementById('sidebar-toggle');
-    const overlay = document.getElementById('sidebar-overlay');
     
     console.log('🔍 Sidebar init check:', {
         sidebar: !!sidebar,
-        toggleBtn: !!toggleBtn,
-        overlay: !!overlay
+        toggleBtn: !!toggleBtn
     });
     
-    if (!sidebar || !toggleBtn || !overlay) {
+    if (!sidebar || !toggleBtn) {
         console.error('❌ Elementos del sidebar no encontrados', {
             sidebar: !!sidebar,
-            toggleBtn: !!toggleBtn,
-            overlay: !!overlay
+            toggleBtn: !!toggleBtn
         });
         return;
     }
@@ -36,16 +33,12 @@ function initSidebar() {
             // ABIERTO
             sidebar.classList.remove('-translate-x-full');
             sidebar.style.transform = 'translateX(0)';
-            overlay.style.opacity = '0.5';
-            overlay.style.pointerEvents = 'auto';
             toggleBtn.style.pointerEvents = 'auto';
             console.log('✅ Sidebar abierto');
         } else {
             // CERRADO
             sidebar.classList.add('-translate-x-full');
             sidebar.style.transform = 'translateX(-100%)';
-            overlay.style.opacity = '0';
-            overlay.style.pointerEvents = 'none';
             toggleBtn.style.pointerEvents = 'auto';
             console.log('✅ Sidebar cerrado');
         }
@@ -57,15 +50,6 @@ function initSidebar() {
         e.preventDefault();
         e.stopPropagation();
         toggleSidebar();
-    });
-    
-    // ========== CLICK EN OVERLAY PARA CERRAR ==========
-    overlay.addEventListener('click', function(e) {
-        console.log('🖱️ Click en overlay, isOpen:', isOpen);
-        if (isOpen && e.target === overlay) {
-            console.log('✋ Cerrando por click en overlay');
-            toggleSidebar();
-        }
     });
     
     // ========== CLICK EN ITEMS DEL SIDEBAR PARA CERRAR ==========
