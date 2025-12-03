@@ -106,8 +106,8 @@ if DEBUG:
             'ENGINE': 'django.db.backends.mysql',
             'NAME': os.environ.get('DB_NAME', 'abbarestaurante'),
             'USER': os.environ.get('DB_USER', 'root'),
-            'PASSWORD': os.environ.get('DB_PASSWORD', ''),
-            'HOST': os.environ.get('DB_HOST', '127.0.0.1'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', 'Inacap.2025'),
+            'HOST': os.environ.get('DB_HOST', 'localhost'),
             'PORT': os.environ.get('DB_PORT', '3306'),
             'OPTIONS': {
                 'charset': 'utf8mb4',

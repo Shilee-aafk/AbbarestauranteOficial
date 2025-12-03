@@ -385,9 +385,6 @@
             const isClosed = sidebar.classList.contains('-translate-x-full');
             const isOpeningSide = e.changedTouches[0].clientX < 20;
             
-            // Solo inicia el drag si:
-            // 1. Sidebar está abierto (puede cerrar desde cualquier lugar)
-            // 2. Sidebar está cerrado Y toco el borde izquierdo (para abrir)
             if (!isClosed || isOpeningSide) {
                 touchStart = e.changedTouches[0].clientX;
                 isDragging = true;
@@ -404,11 +401,9 @@
             const isClosed = sidebar.classList.contains('-translate-x-full');
             
             if (!isClosed) {
-                // Sidebar abierto: puedes arrastrarlo hacia la izquierda
                 const newTranslate = Math.max(-sidebarWidth, -diff);
                 sidebar.style.transform = `translateX(${newTranslate}px)`;
             } else if (touchStart < 20) {
-                // Sidebar cerrado pero arrastrando desde borde: lo abre
                 const newTranslate = Math.min(0, currentX - touchStart - sidebarWidth);
                 sidebar.style.transform = `translateX(${newTranslate}px)`;
             }
@@ -425,12 +420,10 @@
             const diff = touchStart - touchEnd;
             isDragging = false;
             
-            // Restaurar transición
             sidebar.style.transition = 'transform 0.3s ease-in-out';
             
             const isClosed = sidebar.classList.contains('-translate-x-full');
             
-            // Si el sidebar está ABIERTO y deslizaste >50px hacia la izquierda, CIÉRRALO
             if (!isClosed && diff > 50) {
                 console.log('👆 Swipe hacia izquierda detectado, cerrando sidebar (receptionist)');
                 sidebar.classList.add('-translate-x-full');
@@ -438,7 +431,6 @@
                 sidebarOverlay.style.opacity = '0';
                 sidebarOverlay.style.pointerEvents = 'none';
             }
-            // Si el sidebar está CERRADO y deslizaste >50px hacia la derecha desde borde, ÁBRELO
             else if (isClosed && touchStart < 20 && (touchEnd - touchStart) > 50) {
                 console.log('👆 Swipe desde borde izquierdo detectado, abriendo sidebar (receptionist)');
                 sidebar.classList.remove('-translate-x-full');
@@ -446,7 +438,6 @@
                 sidebarOverlay.style.opacity = '1';
                 sidebarOverlay.style.pointerEvents = 'auto';
             }
-            // Si no llegaste al umbral, vuelve al estado anterior
             else {
                 sidebar.style.transform = isClosed ? 'translateX(-100%)' : 'translateX(0)';
             }
@@ -455,7 +446,6 @@
         }, false);
     }
     
-    // Ejecutar apenas el DOM esté listo
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initReceptionistSidebar);
     } else {
@@ -465,10 +455,9 @@
 
 {% block extra_js %}
     <script src="{% static 'restaurant/js/sidebar-init.js' %}"></script>
-
+    <script>
         document.addEventListener('DOMContentLoaded', function() {
             // --- Sidebar Toggle Logic for Mobile ---
-            // Sidebar is already initialized by initReceptionistSidebar() above
             console.log('🚀 Receptionist dashboard DOMContentLoaded fired');
 
             // --- Navigation Logic ---
@@ -511,7 +500,6 @@
             if (savedLink) {
                 savedLink.click();
             } else {
-                // Fallback si la sección guardada no existe
                 const dashboardLink = document.querySelector('.nav-link[data-section="dashboard"]');
                 if (dashboardLink) dashboardLink.click();
             }
@@ -552,14 +540,11 @@
             // --- Reports Logic ---
             document.getElementById('filter-btn').addEventListener('click', fetchOrdersReport);
             document.getElementById('export-excel-btn').addEventListener('click', exportOrdersToExcel);
-
         });
 
         function handleOrderUpdate(order) {
-            // La recepcionista debe ver los pedidos 'servidos' y 'cargados a habitación'
             if (order.status === 'served' || order.status === 'charged_to_room') {
                 addOrUpdateServedOrder(order);
-            // Si el pedido es pagado o cancelado, se elimina de la lista de cobros pendientes.
             } else {
                 removeServedOrder(order.id);
             }
@@ -571,7 +556,7 @@
 
             const orderHTML = `
                 <div class="truncate mr-4">
-                    <p class="font-semibold truncate">Pedido #${order.id} - ${order.identifier || ''}</p>
+                    <p class="font-semibold truncate">Pedido #${order.id} - ${order.room_number || order.client_identifier || ''}</p>
                     <div class="flex items-center space-x-2 mt-1">
                         <span class="px-2 py-1 text-xs font-medium rounded-full ${order.status_class}">${order.status_display}</span>
                         <p class="text-sm text-gray-700">Total: $${order.total.toLocaleString('es-CL')}</p>
@@ -611,24 +596,21 @@
 
             const rowHTML = `
                 <td class="py-4">${order.id}</td>
-                <td class="py-4 font-semibold">${order.identifier}</td>
+                <td class="py-4 font-semibold">${order.room_number || order.client_identifier || ''}</td>
                 <td class="py-4">${new Date(order.created_at).toLocaleString('es-CL', { dateStyle: 'short', timeStyle: 'short' })}</td>
                 <td class="py-4">$${order.total.toFixed(0)}</td>
             `;
 
             if (row) {
-                // Actualizar una fila existente (aunque es poco común para esta tabla)
                 row.innerHTML = rowHTML;
             } else {
-                // Crear una nueva fila
                 row = document.createElement('tr');
                 row.id = `room-charge-row-${order.id}`;
                 row.className = 'border-b border-gray-100';
                 row.innerHTML = rowHTML;
-                tbody.prepend(row); // Añadir al principio
+                tbody.prepend(row);
             }
 
-            // Eliminar el mensaje "No hay cargos" si existe
             const noChargesRow = document.getElementById('no-room-charges');
             if (noChargesRow) noChargesRow.remove();
         }
@@ -654,17 +636,14 @@
 
             receptionChannel.bind('pedido-pagado', function(data) {
                 console.log('Evento "pedido-pagado" recibido:', data);
-                // Actualizar total_sales_today sumando el total del pedido pagado
                 const totalSalesElement = document.getElementById('total-sales-today');
                 const currentTotal = parseFloat(totalSalesElement.textContent.replace('$', '').replace(/\./g, '').replace(',', '.')) || 0;
                 const newTotal = currentTotal + (data.order.total || 0);
                 totalSalesElement.textContent = `$${newTotal.toLocaleString('es-CL', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
                 showToast(`Pedido pagado: ${data.order.client_identifier}`, 'success');
-                // Remover de la lista de cobros pendientes si está ahí
                 removeServedOrder(data.order.id);
             });
 
-            // También escuchamos actualizaciones generales para la lista de cobros pendientes
             pusher.subscribe('garzon-channel').bind('actualizacion-estado', (data) => handleOrderUpdate(data.order));
         });
 
@@ -692,9 +671,8 @@
                 const splitResult = document.getElementById('split-bill-result');
                 const tipRow = document.getElementById('modal-tip-row');
                 
-                // Lógica simplificada: solo mostrar datos, no calcular.
                 const displayTotals = () => {
-                    const totalAmount = data.total; // Total final desde la API
+                    const totalAmount = data.total;
                     
                     modalOrderSubtotal.textContent = subtotal.toLocaleString('es-CL');
                     modalOrderTotal.textContent = totalAmount.toLocaleString('es-CL');
@@ -706,7 +684,6 @@
                         tipRow.classList.add('hidden');
                     }
 
-                    // Actualizar lógica de división de cuenta
                     const numPeople = parseInt(splitSelect.value);
                     if (numPeople > 1) {
                         const amountPerPerson = totalAmount / numPeople;
@@ -716,14 +693,13 @@
                     }
                 };
 
-                splitSelect.innerHTML = '<option value="1">No dividir</option>'; // Reset
+                splitSelect.innerHTML = '<option value="1">No dividir</option>';
                 for (let i = 2; i <= 6; i++) splitSelect.innerHTML += `<option value="${i}">Dividir por ${i} personas</option>`;
                 splitResult.textContent = '';
                 splitSelect.onchange = displayTotals;
-                displayTotals(); // Llamada inicial para mostrar los montos
+                displayTotals();
 
                 const confirmBtn = document.getElementById('modal-confirm-payment-btn');
-                // Clonar y reemplazar para eliminar listeners antiguos y evitar ejecuciones múltiples
                 const newConfirmBtn = confirmBtn.cloneNode(true);
                 confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
 
@@ -757,7 +733,6 @@
 
         async function updateOrderStatus(orderId, newStatus, statusText) {
             const body = { status: newStatus };
-            // Ya no se agrega propina desde este modal. El backend se encargará de mantener la propina existente.
 
             try {
                 const response = await fetch(`/restaurant/api/orders/${orderId}/status/`, {
@@ -768,13 +743,11 @@
                 if (response.ok) {
                     showToast(`Pedido #${orderId} marcado como ${statusText}.`, 'success');
                     
-                    // Eliminar inmediatamente de la lista de pedidos servidos
                     const servedOrderItem = document.getElementById(`served-order-${orderId}`);
                     if (servedOrderItem) {
                         servedOrderItem.style.animation = 'fadeOut 0.5s ease-out';
                         setTimeout(() => {
                             servedOrderItem.remove();
-                            // Si no hay más pedidos, mostrar mensaje
                             const list = document.getElementById('served-orders-list');
                             if (list && list.children.length === 0) {
                                 list.innerHTML = '<li id="no-served-orders" class="text-gray-500">No hay pedidos servidos pendientes de cobro.</li>';
@@ -782,13 +755,11 @@
                         }, 500);
                     }
                     
-                    // También eliminar de la tabla de cargos a habitación si existe
                     const roomChargeRow = document.getElementById(`room-charge-row-${orderId}`);
                     if (roomChargeRow) {
                         roomChargeRow.style.animation = 'fadeOut 0.5s ease-out';
                         setTimeout(() => {
                             roomChargeRow.remove();
-                            // Si no hay más filas, mostrar mensaje
                             const tbody = document.getElementById('room-charges-tbody');
                             if (tbody && tbody.children.length === 0) {
                                 tbody.innerHTML = '<tr id="no-room-charges"><td colspan="4" class="text-center py-12 text-gray-500">No hay cargos a habitaciones</td></tr>';
@@ -828,7 +799,7 @@
                     const row = `
                         <tr class="border-b border-gray-100">
                             <td class="py-4">${order.id}</td>
-                            <td class="py-4">${order.identifier}</td>
+                            <td class="py-4">${order.room_number || order.client_identifier || ''}</td>
                             <td class="py-4">
                                 <span class="px-2 py-1 text-xs font-medium rounded-full ${order.status_class}">${order.status_display}</span>
                             </td>
@@ -838,7 +809,6 @@
                     `;
                     tbody.innerHTML += row;
                 });
-
             } catch (error) {
                 console.error('Error fetching orders report:', error);
                 tbody.innerHTML = '<tr><td colspan="5" class="text-center py-12 text-red-500">Error al cargar el reporte.</td></tr>';
@@ -858,7 +828,6 @@
                 date_to: dateTo
             }).toString();
 
-            // Redirect to the export URL, the browser will handle the download
             window.location.href = `/restaurant/export/orders-excel/?${query}`;
         }
 
@@ -888,3 +857,4 @@
         }
     </script>
 {% endblock %}
+
