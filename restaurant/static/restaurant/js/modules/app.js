@@ -235,9 +235,9 @@ function setupGlobalListeners() {
         return;
       }
 
-      // Obtener valores de los campos de entrada
-      const clientIdentifier = document.getElementById('client-identifier')?.value || '';
-      const roomNumber = document.getElementById('room-number')?.value || '';
+      // Usar los valores almacenados en cartManager (que ya fueron seteados al iniciar el pedido)
+      const clientIdentifier = cartManager.currentClientIdentifier || '';
+      const roomNumber = cartManager.currentRoomNumber || '';
 
       if (!clientIdentifier) {
         uiManager.showToast('Por favor, ingresa un identificador del cliente', 'error');
