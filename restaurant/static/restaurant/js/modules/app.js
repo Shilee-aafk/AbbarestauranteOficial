@@ -101,16 +101,16 @@ function setupGlobalListeners() {
       const clientIdentifier = document.getElementById('bar-client-identifier').value.trim();
       const roomNumber = document.getElementById('bar-room-number').value.trim();
 
-      if (!clientIdentifier && !roomNumber) {
-        uiManager.showToast(
-          'Debe ingresar un identificador o un número de habitación.',
-          'error'
-        );
-        return;
-      }
+      // Permitir iniciar con "Barra" como default si no ingresa nada
+      const finalIdentifier = clientIdentifier || 'Barra';
 
-      cartManager.currentClientIdentifier = clientIdentifier || 'Barra';
+      cartManager.currentClientIdentifier = finalIdentifier;
       cartManager.currentRoomNumber = roomNumber;
+      
+      // Guardar en localStorage para persistencia
+      localStorage.setItem('cartClientIdentifier', finalIdentifier);
+      localStorage.setItem('cartRoomNumber', roomNumber);
+      
       document.getElementById('order-identifier-display').textContent = 
         roomNumber || cartManager.currentClientIdentifier;
 
@@ -232,26 +232,19 @@ function setupGlobalListeners() {
   const cartSubmitBtn = document.getElementById('cart-submit-btn');
   if (cartSubmitBtn) {
     cartSubmitBtn.addEventListener('click', async () => {
+      console.log('📤 Cart submit clicked');
+      
       if (cartManager.currentOrder.length === 0) {
+        console.log('❌ Carrito vacío');
         uiManager.showToast('El carrito está vacío', 'error');
         return;
       }
 
-      // Usar los valores almacenados en cartManager (que ya fueron seteados al iniciar el pedido)
-      let clientIdentifier = cartManager.currentClientIdentifier || '';
-      let roomNumber = cartManager.currentRoomNumber || '';
+      // Usar los valores almacenados en cartManager
+      let clientIdentifier = cartManager.currentClientIdentifier || localStorage.getItem('cartClientIdentifier') || 'Barra';
+      let roomNumber = cartManager.currentRoomNumber || localStorage.getItem('cartRoomNumber') || '';
 
-      // Si no hay identificador ni habitación, pedir al usuario
-      if (!clientIdentifier && !roomNumber) {
-        // Mostrar un modal/prompt para pedir los datos
-        const identifier = prompt('Por favor, ingresa un identificador del cliente (ej: Barra 1, Juan Pérez):');
-        if (!identifier) {
-          uiManager.showToast('Debes ingresar un identificador', 'error');
-          return;
-        }
-        clientIdentifier = identifier;
-        cartManager.currentClientIdentifier = identifier;
-      }
+      console.log('📋 clientIdentifier:', clientIdentifier, 'roomNumber:', roomNumber);
 
       const orderData = {
         items: cartManager.currentOrder.map(item => ({
@@ -264,6 +257,8 @@ function setupGlobalListeners() {
         tip_amount: 0
       };
 
+      console.log('📦 Order data:', orderData);
+
       // Determinar si es creación o actualización
       let endpoint = '/restaurant/save_order/';
       let method = 'POST';
@@ -272,6 +267,8 @@ function setupGlobalListeners() {
         endpoint = `/restaurant/api/waiter/orders/${cartManager.editingOrderId}/`;
         method = 'PUT';
       }
+
+      console.log('🌐 Sending to endpoint:', endpoint, 'method:', method);
 
       try {
         const response = await fetch(endpoint, {
@@ -283,7 +280,9 @@ function setupGlobalListeners() {
           body: JSON.stringify(orderData)
         });
 
+        console.log('📡 Response status:', response.status, response.statusText);
         const responseText = await response.text();
+        console.log('📄 Response text:', responseText);
 
         if (response.ok) {
           const data = JSON.parse(responseText);
@@ -296,6 +295,10 @@ function setupGlobalListeners() {
           
           uiManager.showToast(message, 'success');
           cartManager.clear();
+          
+          // Limpiar localStorage
+          localStorage.removeItem('cartClientIdentifier');
+          localStorage.removeItem('cartRoomNumber');
           
           // Actualizar el monitor de pedidos localmente de inmediato
           // (sin esperar a que llegue el evento de Pusher)
