@@ -238,13 +238,19 @@ function setupGlobalListeners() {
       }
 
       // Usar los valores almacenados en cartManager (que ya fueron seteados al iniciar el pedido)
-      const clientIdentifier = cartManager.currentClientIdentifier || '';
-      const roomNumber = cartManager.currentRoomNumber || '';
+      let clientIdentifier = cartManager.currentClientIdentifier || '';
+      let roomNumber = cartManager.currentRoomNumber || '';
 
-      // Permitir pedido si tiene client_identifier O room_number
+      // Si no hay identificador ni habitación, pedir al usuario
       if (!clientIdentifier && !roomNumber) {
-        uiManager.showToast('Por favor, ingresa un identificador del cliente o número de habitación', 'error');
-        return;
+        // Mostrar un modal/prompt para pedir los datos
+        const identifier = prompt('Por favor, ingresa un identificador del cliente (ej: Barra 1, Juan Pérez):');
+        if (!identifier) {
+          uiManager.showToast('Debes ingresar un identificador', 'error');
+          return;
+        }
+        clientIdentifier = identifier;
+        cartManager.currentClientIdentifier = identifier;
       }
 
       const orderData = {
