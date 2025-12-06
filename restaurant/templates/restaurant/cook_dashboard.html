@@ -192,6 +192,17 @@
             const card = orderCards.get(orderId);
             if (card) {
                 card.setAttribute('data-order-status', 'preparing');
+                
+                // Actualizar el botón: remover "Empezar Preparación" y añadir "Marcar como Listo"
+                const startBtn = card.querySelector('.start-btn');
+                if (startBtn) {
+                    const newBtn = document.createElement('button');
+                    newBtn.className = 'ready-btn bg-amber-700 text-white px-5 py-2 rounded-lg font-semibold hover:bg-amber-800';
+                    newBtn.setAttribute('data-order-id', orderId);
+                    newBtn.textContent = 'Marcar como Listo';
+                    startBtn.replaceWith(newBtn);
+                }
+                
                 insertOrderedById(preparingContainer, card, orderId);
             }
         }
@@ -220,6 +231,13 @@
                     body: JSON.stringify({ status: newStatus }),
                 });
                 if (!response.ok) throw new Error('Error al actualizar el estado');
+                
+                // Actualizar la UI inmediatamente sin esperar a Pusher
+                if (newStatus === 'preparing') {
+                    moveOrderToPreparing(orderId);
+                } else if (newStatus === 'ready') {
+                    removeOrderFromDOM(orderId);
+                }
             } catch (error) {
                 console.error('Error:', error);
                 showToast('Error al actualizar el pedido.', 'error');
@@ -330,6 +348,19 @@
             } catch (error) {
                 console.error('Sync error:', error.message);
             }
+        }
+
+        // --- Función de Notificaciones ---
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type} show`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 500);
+            }, 3000);
         }
 
         // --- Inicialización ---

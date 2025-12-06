@@ -305,6 +305,24 @@ export class UIManager {
     document.querySelectorAll('.content-section').forEach(s => s.classList.add('hidden'));
     document.getElementById('order-view')?.classList.remove('hidden');
     
+    // Restaurar el carrito a vista normal (no oculto)
+    const currentOrderDiv = document.getElementById('current-order');
+    if (currentOrderDiv) {
+      currentOrderDiv.classList.remove('hidden');
+    }
+    
+    // Restaurar el grid de 2 columnas
+    const menuContainer = document.querySelector('#order-view .grid.grid-cols-1');
+    if (menuContainer) {
+      menuContainer.classList.add('md:grid-cols-2');
+      menuContainer.classList.remove('md:grid-cols-1');
+    }
+    
+    const menuLeftDiv = document.querySelector('#order-view .border-r');
+    if (menuLeftDiv) {
+      // El border-r y pr-6 ya deberían estar en el HTML
+    }
+    
     // Asegurar que el botón del carrito SIEMPRE sea visible
     const cartToggle = document.getElementById('cart-toggle');
     if (cartToggle) {
@@ -320,6 +338,32 @@ export class UIManager {
     const isMobile = window.innerWidth < 768; // md breakpoint in Tailwind
     if (isMobile && cartModal) {
       cartModal.classList.remove('hidden');
+    }
+  }
+
+  /**
+   * Muestra la vista de menú sin abrir el carrito (para editar desde cobros)
+   */
+  showMenuView() {
+    document.querySelectorAll('.content-section').forEach(s => s.classList.add('hidden'));
+    document.getElementById('order-view')?.classList.remove('hidden');
+    
+    // Ocultar el carrito lateral para que solo se vea el menú
+    const currentOrderDiv = document.getElementById('current-order');
+    if (currentOrderDiv) {
+      currentOrderDiv.classList.add('hidden');
+    }
+    
+    // Mostrar el menú a pantalla completa sin la división de columnas
+    const menuContainer = document.querySelector('#order-view .grid.grid-cols-1');
+    if (menuContainer) {
+      menuContainer.classList.remove('md:grid-cols-2');
+      menuContainer.classList.add('md:grid-cols-1');
+    }
+    
+    const menuLeftDiv = document.querySelector('#order-view .border-r');
+    if (menuLeftDiv) {
+      menuLeftDiv.classList.remove('border-r', 'pr-6');
     }
   }
 

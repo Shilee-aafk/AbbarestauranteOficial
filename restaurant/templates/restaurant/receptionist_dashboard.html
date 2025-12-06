@@ -330,11 +330,21 @@
     function initReceptionistSidebar() {
         const sidebar = document.getElementById('sidebar');
         const sidebarToggle = document.getElementById('sidebar-toggle');
-        const sidebarOverlay = document.getElementById('sidebar-overlay');
         
-        if (!sidebar || !sidebarToggle || !sidebarOverlay) {
+        if (!sidebar || !sidebarToggle) {
             console.error('❌ Elementos del sidebar no encontrados en recepcionista dashboard');
             return;
+        }
+
+        // Crear overlay si no existe
+        let sidebarOverlay = document.getElementById('sidebar-overlay');
+        if (!sidebarOverlay) {
+            sidebarOverlay = document.createElement('div');
+            sidebarOverlay.id = 'sidebar-overlay';
+            sidebarOverlay.className = 'fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden';
+            sidebarOverlay.style.opacity = '0';
+            sidebarOverlay.style.pointerEvents = 'none';
+            document.body.appendChild(sidebarOverlay);
         }
         
         console.log('✅ Receptionist sidebar elements found, initializing...');

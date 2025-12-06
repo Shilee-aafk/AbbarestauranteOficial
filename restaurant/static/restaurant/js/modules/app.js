@@ -86,6 +86,7 @@ function setupGlobalListeners() {
         roomNumber || clientIdentifier;
 
       cartManager.currentOrder = [];
+      cartManager.servedItems = [];
       cartManager.editingOrderId = null;
       cartManager.editingOrderStatus = null;
       cartManager.render();
@@ -114,6 +115,7 @@ function setupGlobalListeners() {
         roomNumber || cartManager.currentClientIdentifier;
 
       cartManager.currentOrder = [];
+      cartManager.servedItems = [];
       cartManager.editingOrderId = null;
       cartManager.editingOrderStatus = null;
       cartManager.render();
