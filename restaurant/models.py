@@ -33,13 +33,13 @@ class MenuItem(models.Model):
 
 class Order(models.Model):
     STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('preparing', 'Preparing'),
-        ('ready', 'Ready'),
-        ('served', 'Served'),
-        ('paid', 'Paid'),
+        ('pending', 'Pendiente'),
+        ('preparing', 'En Preparación'),
+        ('ready', 'Listo'),
+        ('served', 'Servido'),
+        ('paid', 'Pagado'),
         ('charged_to_room', 'Cargado a Habitación'),
-        ('cancelled', 'Cancelled'),
+        ('cancelled', 'Cancelado'),
     ]
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     room_number = models.CharField(max_length=10, blank=True, null=True, help_text="Número de habitación del huésped")

@@ -419,7 +419,20 @@ function setupPusherListeners() {
  * Obtiene el token CSRF del DOM
  */
 function getCsrfToken() {
-  return document.querySelector('meta[name="csrf-token"]')?.content || '';
+  // Intentar obtener desde la meta etiqueta primero
+  const metaToken = document.querySelector('meta[name="csrf-token"]')?.content;
+  if (metaToken) return metaToken;
+  
+  // Si no está en meta, intentar desde la variable global window.csrftoken
+  if (window.csrftoken) return window.csrftoken;
+  
+  // Si tampoco está en window, intentar desde {% csrf_token %}
+  const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+  if (csrfInput) return csrfInput.value;
+  
+  // Si nada funciona, retornar vacío (causará error en CSRF validation, lo que es lo esperado)
+  console.warn('⚠️ CSRF token no encontrado. El servidor rechazará la petición.');
+  return '';
 }
 
 /**

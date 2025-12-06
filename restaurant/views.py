@@ -338,9 +338,23 @@ def calculate_order_subtotal(order_instance):
 def save_order(request):
     if request.method == 'POST':
         try:
-            data = json.loads(request.body)
+            # Verificar que el usuario está autenticado
+            if not request.user.is_authenticated:
+                return JsonResponse({'success': False, 'error': 'User not authenticated'}, status=401)
+            
+            # Parsear los datos JSON
+            try:
+                data = json.loads(request.body)
+            except json.JSONDecodeError as e:
+                print(f"❌ JSON decode error: {str(e)}, body: {request.body}")
+                return JsonResponse({'success': False, 'error': f'Invalid JSON: {str(e)}'}, status=400)
+            
             items = data.get('items', [])
             tip_amount = decimal.Decimal(str(data.get('tip_amount', '0.00')))
+
+            # Validar que hay items
+            if not items:
+                return JsonResponse({'success': False, 'error': 'Order must have at least one item'}, status=400)
 
             order = None
             # Usar una transacción atómica para asegurar la integridad de los datos.
@@ -353,39 +367,52 @@ def save_order(request):
                     try:
                         menu_item = MenuItem.objects.get(id=item['id'])
                         subtotal += menu_item.price * int(item.get('quantity', 1))
-                    except MenuItem.DoesNotExist:
+                    except MenuItem.DoesNotExist as e:
+                        print(f"❌ MenuItem not found: {item['id']}")
                         raise ValueError(f"MenuItem with id {item['id']} not found")
+                    except KeyError as e:
+                        print(f"❌ Missing key in item: {str(e)}")
+                        raise ValueError(f"Missing required field in item: {str(e)}")
                 
                 # Create order with final total amount in one go
-                order = Order.objects.create(
-                    client_identifier=data.get('client_identifier'),
-                    room_number=data.get('room_number'),
-                    user=request.user, 
-                    status='pending',
-                    tip_amount=tip_amount,
-                    total_amount=subtotal + tip_amount  # Set total_amount on creation
-                )
+                try:
+                    order = Order.objects.create(
+                        client_identifier=data.get('client_identifier', 'Sin identificar'),
+                        room_number=data.get('room_number', ''),
+                        user=request.user, 
+                        status='pending',
+                        tip_amount=tip_amount,
+                        total_amount=subtotal + tip_amount  # Set total_amount on creation
+                    )
+                    print(f"✅ Order created: {order.id}")
+                except Exception as e:
+                    print(f"❌ Error creating order: {str(e)}")
+                    raise
 
                 # Create order items
                 for item in items:
-                    menu_item = MenuItem.objects.get(id=item['id'])
-                    OrderItem.objects.create(
-                        order=order,
-                        menu_item=menu_item,
-                        quantity=int(item.get('quantity', 1)),
-                        note=str(item.get('note', ''))
-                    )
+                    try:
+                        menu_item = MenuItem.objects.get(id=item['id'])
+                        OrderItem.objects.create(
+                            order=order,
+                            menu_item=menu_item,
+                            quantity=int(item.get('quantity', 1)),
+                            note=str(item.get('note', ''))
+                        )
+                    except Exception as e:
+                        print(f"❌ Error creating order item: {str(e)}")
+                        raise
             
             if order:
                 # Obtener items del pedido para retornarlos en la respuesta
-                items = order.orderitem_set.all()
+                items_list = order.orderitem_set.all()
                 items_data = [{
                     'id': item.menu_item.id,
                     'name': item.menu_item.name,
                     'price': float(item.menu_item.price),
                     'quantity': item.quantity,
                     'note': item.note,
-                } for item in items]
+                } for item in items_list]
                 
                 # Mapeo de estados para mostrar en UI
                 status_display_map = {
@@ -425,25 +452,26 @@ def save_order(request):
                         'created_at': order.created_at.isoformat(),
                     }
                 }
+                print(f"✅ Order response sent successfully")
                 return JsonResponse(order_data, safe=False)
             else:
                 return JsonResponse({'success': False, 'error': 'Order could not be created'}, status=400)
                 
         except MenuItem.DoesNotExist as e:
-            return JsonResponse({'success': False, 'error': f'MenuItem not found: {str(e)}'}, status=400)
-        except json.JSONDecodeError as e:
-            return JsonResponse({'success': False, 'error': f'Invalid JSON: {str(e)}'}, status=400)
+            print(f"❌ MenuItem.DoesNotExist: {str(e)}")
+            return JsonResponse({'success': False, 'error': f'MenuItem not found'}, status=400)
         except ValueError as e:
+            print(f"❌ ValueError: {str(e)}")
             return JsonResponse({'success': False, 'error': f'Validation error: {str(e)}'}, status=400)
         except Exception as e:
             import traceback
             error_msg = str(e)
             traceback_msg = traceback.format_exc()
-            print(f"Error in save_order: {error_msg}")
-            print(traceback_msg)
-            return JsonResponse({'success': False, 'error': f'Server error: {error_msg}'}, status=500)
+            print(f"❌ Error in save_order: {error_msg}")
+            print(f"Traceback:\n{traceback_msg}")
+            return JsonResponse({'success': False, 'error': f'Server error: {error_msg}', 'detail': traceback_msg if settings.DEBUG else None}, status=500)
     
-    return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=405)
+    return JsonResponse({'success': False, 'error': 'Invalid request method. Use POST.'}, status=405)
 
 @csrf_exempt
 @login_required
