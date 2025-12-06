@@ -241,8 +241,9 @@ function setupGlobalListeners() {
       const clientIdentifier = cartManager.currentClientIdentifier || '';
       const roomNumber = cartManager.currentRoomNumber || '';
 
-      if (!clientIdentifier) {
-        uiManager.showToast('Por favor, ingresa un identificador del cliente', 'error');
+      // Permitir pedido si tiene client_identifier O room_number
+      if (!clientIdentifier && !roomNumber) {
+        uiManager.showToast('Por favor, ingresa un identificador del cliente o número de habitación', 'error');
         return;
       }
 
