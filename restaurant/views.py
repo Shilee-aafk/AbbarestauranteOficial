@@ -845,7 +845,7 @@ def api_menu_items(request):
                 name=data['name'].strip(),
                 description=data.get('description', ''),
                 price=data['price'],
-                category=data.get('category', 'General'),
+                categoria=data.get('categoria', 'General'),
                 available=available
             )
             
@@ -1167,12 +1167,12 @@ def api_dashboard_charts(request):
     if chart_type == 'sales_by_category':
         # Ventas de hoy por categoría de producto
         category_sales = ItemPedido.objects.filter(
-            order__status='paid',
-            order__created_at__date=today
-        ).values('menu_item__category').annotate(
-            total=Sum(F('menu_item__price') * F('quantity'))
+            pedido__status='paid',
+            pedido__created_at__date=today
+        ).values('articulo_menu__categoria').annotate(
+            total=Sum(F('articulo_menu__price') * F('quantity'))
         ).order_by('-total')
-        labels = [c['menu_item__category'] for c in category_sales]
+        labels = [c['articulo_menu__categoria'] for c in category_sales]
         data = [float(c['total']) for c in category_sales]
         return JsonResponse({'labels': labels, 'data': data})
 

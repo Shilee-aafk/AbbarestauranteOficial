@@ -9,12 +9,12 @@ from .models import ArticuloMenu, Pedido, ItemPedido, Categoria, PinRegistro
 class ArticuloMenuForm(forms.ModelForm):
     class Meta:
         model = ArticuloMenu
-        fields = ['name', 'description', 'price', 'category', 'available', 'image']
+        fields = ['name', 'description', 'price', 'categoria', 'available', 'image']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'vTextField'}),
             'description': forms.Textarea(attrs={'class': 'vLargeTextField'}),
             'price': forms.NumberInput(attrs={'class': 'vDecimalField', 'step': '0.01'}),
-            'category': forms.TextInput(attrs={'class': 'vTextField'}),
+            'categoria': forms.TextInput(attrs={'class': 'vTextField'}),
             'available': forms.CheckboxInput(attrs={'class': 'vCheckboxField'}),
             'image': forms.FileInput(attrs={'class': 'vFileField', 'accept': 'image/*'}),
         }
@@ -22,14 +22,14 @@ class ArticuloMenuForm(forms.ModelForm):
 # Clase personalizada para ArticuloMenu
 class ArticuloMenuAdmin(admin.ModelAdmin):
     form = ArticuloMenuForm
-    list_display = ('name', 'category', 'price', 'available', 'image_thumbnail')
-    list_filter = ('category', 'available')
+    list_display = ('name', 'categoria', 'price', 'available', 'image_thumbnail')
+    list_filter = ('categoria', 'available')
     search_fields = ('name', 'description')
     list_editable = ('available',)
     
     fieldsets = (
         ('Información Básica', {
-            'fields': ('name', 'description', 'category', 'price', 'available')
+            'fields': ('name', 'description', 'categoria', 'price', 'available')
         }),
         ('Imagen del Plato', {
             'fields': ('image', 'image_preview'),

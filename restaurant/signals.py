@@ -122,7 +122,7 @@ def menu_item_changed(sender, instance, **kwargs):
         'name': instance.name,
         'description': instance.description,
         'price': float(instance.price),
-        'category': instance.category,
+        'categoria': instance.categoria,
         'available': instance.available,
         'image_url': image_url
     })
