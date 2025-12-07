@@ -1,7 +1,7 @@
 import os
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User, Group, Permission
-from restaurant.models import MenuItem
+from restaurant.models import ArticuloMenu
 from django.db import transaction
 
 class Command(BaseCommand):
@@ -21,96 +21,96 @@ class Command(BaseCommand):
             'name': 'Ceviche Clásico',
             'description': 'Pescado fresco marinado en jugo de limón, con cebolla roja, cilantro y ají limo.',
             'price': 9800,
-            'category': 'Entradas'
+            'categoria': 'Entradas'
         },
         {
             'name': 'Causa Limeña de Pollo',
             'description': 'Suave puré de papa amarilla sazonado con ají y limón, relleno de pollo y mayonesa.',
             'price': 7500,
-            'category': 'Entradas'
+            'categoria': 'Entradas'
         },
         {
             'name': 'Tequeños de Queso',
             'description': 'Crujientes bastones de masa frita rellenos de queso, acompañados de salsa de palta.',
             'price': 6900,
-            'category': 'Entradas'
+            'categoria': 'Entradas'
         },
         # --- Platos de Fondo ---
         {
             'name': 'Lomo Saltado',
             'description': 'Trozos de lomo de res salteados con cebolla, tomate y ají amarillo, servido con papas fritas y arroz.',
             'price': 12500,
-            'category': 'Platos de Fondo'
+            'categoria': 'Platos de Fondo'
         },
         {
             'name': 'Aji de Gallina',
             'description': 'Pechuga de gallina deshilachada en una cremosa salsa de ají amarillo, nueces y queso.',
             'price': 10500,
-            'category': 'Platos de Fondo'
+            'categoria': 'Platos de Fondo'
         },
         {
             'name': 'Seco de Cordero',
             'description': 'Tierno cordero cocido a fuego lento en salsa de cilantro, acompañado de frijoles y arroz.',
             'price': 13500,
-            'category': 'Platos de Fondo'
+            'categoria': 'Platos de Fondo'
         },
         {
             'name': 'Arroz con Mariscos',
             'description': 'Sabrosa mezcla de arroz con mariscos frescos, aderezo de ajíes y un toque de vino blanco.',
             'price': 14200,
-            'category': 'Platos de Fondo'
+            'categoria': 'Platos de Fondo'
         },
         # --- Postres ---
         {
             'name': 'Suspiro a la Limeña',
             'description': 'Dulce de manjar blanco cubierto con merengue al oporto.',
             'price': 4500,
-            'category': 'Postres'
+            'categoria': 'Postres'
         },
         {
             'name': 'Torta Tres Leches',
             'description': 'Bizcocho esponjoso bañado en una mezcla de tres tipos de leche, cubierto con crema batida.',
             'price': 5200,
-            'category': 'Postres'
+            'categoria': 'Postres'
         },
         # --- Bebestibles (Sin Alcohol) ---
         {
             'name': 'Jugo Natural de Frutilla',
             'description': 'Jugo fresco preparado con frutillas de temporada.',
             'price': 3500,
-            'category': 'Bebestibles'
+            'categoria': 'Bebestibles'
         },
         {
             'name': 'Limonada Menta Jengibre',
             'description': 'Refrescante limonada con toques de menta fresca y jengibre.',
             'price': 3800,
-            'category': 'Bebestibles'
+            'categoria': 'Bebestibles'
         },
         # --- Cócteles (Bar) ---
         {
             'name': 'Pisco Sour',
             'description': 'El clásico cóctel peruano con pisco, jugo de limón, jarabe de goma y clara de huevo.',
             'price': 5500,
-            'category': 'Cócteles'
+            'categoria': 'Cócteles'
         },
         {
             'name': 'Mojito Clásico',
             'description': 'Refrescante mezcla de ron, menta, limón, azúcar y agua con gas.',
             'price': 6200,
-            'category': 'Cócteles'
+            'categoria': 'Cócteles'
         },
         # --- Vinos y Cervezas (Bar) ---
         {
             'name': 'Copa de Vino Tinto (Carmenere)',
             'description': 'Copa de vino tinto reserva, variedad Carmenere.',
             'price': 4800,
-            'category': 'Vinos y Cervezas'
+            'categoria': 'Vinos y Cervezas'
         },
         {
             'name': 'Cerveza Nacional',
             'description': 'Botella de cerveza lager nacional.',
             'price': 3500,
-            'category': 'Vinos y Cervezas'
+            'categoria': 'Vinos y Cervezas'
         },
     ]
 
@@ -194,7 +194,7 @@ class Command(BaseCommand):
         for item_data in self.MENU_ITEMS:
             try:
                 # Usamos el nombre como identificador único para evitar duplicados
-                item, created = MenuItem.objects.get_or_create(
+                item, created = ArticuloMenu.objects.get_or_create(
                     name=item_data['name'],
                     defaults=item_data
                 )

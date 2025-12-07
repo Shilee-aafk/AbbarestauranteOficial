@@ -16,6 +16,16 @@ export class UIManager {
     this.setupNavigation();
     this.setupSidebar();
     this.setupModals();
+    
+    // Asegurar que el botón del carrito esté visible inicialmente y NUNCA tenga hidden
+    const cartToggle = document.getElementById('cart-toggle');
+    if (cartToggle) {
+      cartToggle.classList.remove('hidden');
+      cartToggle.style.display = 'block';
+      cartToggle.style.visibility = 'visible';
+      cartToggle.style.opacity = '1';
+    }
+    
     this.restoreLastSection();
   }
 
@@ -62,11 +72,17 @@ export class UIManager {
       targetSection.classList.remove('hidden');
     }
 
+    // Ocultar carrito en la pestaña de cobros, mostrar en otras
     const cartToggle = document.getElementById('cart-toggle');
-    if (section === 'cobros') {
-      cartToggle?.classList.add('hidden');
-    } else {
-      cartToggle?.classList.remove('hidden');
+    if (cartToggle) {
+      if (section === 'cobros') {
+        cartToggle.classList.add('hidden');
+      } else {
+        cartToggle.classList.remove('hidden');
+        cartToggle.style.display = 'block';
+        cartToggle.style.visibility = 'visible';
+        cartToggle.style.opacity = '1';
+      }
     }
 
     this.currentSection = section;
@@ -74,19 +90,10 @@ export class UIManager {
 
   /**
    * Configura el toggle del sidebar para móvil
+   * NOTA: El sidebar se controla desde initUIComponents() en waiter_dashboard.html
    */
   setupSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    const sidebarToggle = document.getElementById('sidebar-toggle');
-    const sidebarOverlay = document.getElementById('sidebar-overlay');
-
-    const toggleSidebar = () => {
-      sidebar?.classList.toggle('-translate-x-full');
-      sidebarOverlay?.classList.toggle('hidden');
-    };
-
-    sidebarToggle?.addEventListener('click', toggleSidebar);
-    sidebarOverlay?.addEventListener('click', toggleSidebar);
+    // Sidebar logic is handled in initUIComponents() template - do nothing here
   }
 
   /**
@@ -298,11 +305,65 @@ export class UIManager {
     document.querySelectorAll('.content-section').forEach(s => s.classList.add('hidden'));
     document.getElementById('order-view')?.classList.remove('hidden');
     
+    // Restaurar el carrito a vista normal (no oculto)
+    const currentOrderDiv = document.getElementById('current-order');
+    if (currentOrderDiv) {
+      currentOrderDiv.classList.remove('hidden');
+    }
+    
+    // Restaurar el grid de 2 columnas
+    const menuContainer = document.querySelector('#order-view .grid.grid-cols-1');
+    if (menuContainer) {
+      menuContainer.classList.add('md:grid-cols-2');
+      menuContainer.classList.remove('md:grid-cols-1');
+    }
+    
+    const menuLeftDiv = document.querySelector('#order-view .border-r');
+    if (menuLeftDiv) {
+      // El border-r y pr-6 ya deberían estar en el HTML
+    }
+    
+    // Asegurar que el botón del carrito SIEMPRE sea visible
+    const cartToggle = document.getElementById('cart-toggle');
+    if (cartToggle) {
+      cartToggle.classList.remove('hidden');
+      cartToggle.style.display = 'block';
+      cartToggle.style.visibility = 'visible';
+      cartToggle.style.opacity = '1';
+      cartToggle.style.pointerEvents = 'auto';
+    }
+    
     // Open cart modal on mobile when editing
     const cartModal = document.getElementById('cart-modal');
     const isMobile = window.innerWidth < 768; // md breakpoint in Tailwind
     if (isMobile && cartModal) {
       cartModal.classList.remove('hidden');
+    }
+  }
+
+  /**
+   * Muestra la vista de menú sin abrir el carrito (para editar desde cobros)
+   */
+  showMenuView() {
+    document.querySelectorAll('.content-section').forEach(s => s.classList.add('hidden'));
+    document.getElementById('order-view')?.classList.remove('hidden');
+    
+    // Ocultar el carrito lateral para que solo se vea el menú
+    const currentOrderDiv = document.getElementById('current-order');
+    if (currentOrderDiv) {
+      currentOrderDiv.classList.add('hidden');
+    }
+    
+    // Mostrar el menú a pantalla completa sin la división de columnas
+    const menuContainer = document.querySelector('#order-view .grid.grid-cols-1');
+    if (menuContainer) {
+      menuContainer.classList.remove('md:grid-cols-2');
+      menuContainer.classList.add('md:grid-cols-1');
+    }
+    
+    const menuLeftDiv = document.querySelector('#order-view .border-r');
+    if (menuLeftDiv) {
+      menuLeftDiv.classList.remove('border-r', 'pr-6');
     }
   }
 
@@ -325,13 +386,6 @@ export class UIManager {
         targetSection.classList.remove('hidden');
       }
       this.hideOrderView();
-      
-      // Ocultar el botón del carrito en la vista de edición
-      const orderViewCartBtn = document.getElementById('order-view-cart-btn');
-      if (orderViewCartBtn) {
-        orderViewCartBtn.classList.add('hidden');
-      }
-      
       this.resetCategoryFilters();
     } catch (error) {
       console.error('Error in showMainSectionView:', error);
@@ -339,12 +393,6 @@ export class UIManager {
       const dashboardSection = document.getElementById('dashboard');
       if (dashboardSection) dashboardSection.classList.remove('hidden');
       this.hideOrderView();
-      
-      // Ocultar el botón del carrito en la vista de edición
-      const orderViewCartBtn = document.getElementById('order-view-cart-btn');
-      if (orderViewCartBtn) {
-        orderViewCartBtn.classList.add('hidden');
-      }
     }
   }
 

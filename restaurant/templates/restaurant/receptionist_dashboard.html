@@ -466,6 +466,9 @@
 {% block extra_js %}
     <script src="{% static 'restaurant/js/sidebar-init.js' %}"></script>
     <script>
+        // Obtener el CSRF token del DOM
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '{{ csrf_token }}';
+        
         document.addEventListener('DOMContentLoaded', function() {
             // --- Sidebar Toggle Logic for Mobile ---
             console.log('🚀 Receptionist dashboard DOMContentLoaded fired');

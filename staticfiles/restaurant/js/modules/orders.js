@@ -23,10 +23,17 @@ export class OrdersManager {
       const cancelBtn = e.target.closest('.cancel-btn');
       const markServedBtn = e.target.closest('.mark-served-monitor-btn');
       const chargeBtn = e.target.closest('.charge-btn');
+      const viewDetailsBtn = e.target.closest('.view-details-btn');
 
       if (editBtn) {
         const orderId = editBtn.dataset.orderId;
         this.editOrderFromMonitor(orderId);
+      }
+
+      if (viewDetailsBtn) {
+        const orderId = String(viewDetailsBtn.dataset.orderId);
+        console.log('Opening details for order:', orderId);
+        this.showOrderDetailsModal(orderId);
       }
 
       if (cancelBtn) {
@@ -239,10 +246,10 @@ export class OrdersManager {
         <ul class="list-disc list-inside pl-1">${itemsHTML}</ul>
       </div>
       <div class="mt-3 flex items-center space-x-2">
-        <button class="edit-btn flex-shrink-0 flex items-center justify-center bg-amber-200 text-amber-900 px-3 py-2 rounded-lg text-sm font-medium hover:bg-amber-300" data-order-id="${order.id}">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z"></path></svg>
+        <button class="view-details-btn flex-shrink-0 flex items-center justify-center bg-blue-200 text-blue-900 px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-300" data-order-id="${String(order.id)}">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
         </button>
-        <button class="mark-served-monitor-btn w-full flex items-center justify-center bg-amber-100 text-amber-900 px-4 py-2 rounded-lg text-sm font-bold hover:bg-amber-200" data-order-id="${order.id}">
+        <button class="mark-served-monitor-btn w-full flex items-center justify-center bg-amber-100 text-amber-900 px-4 py-2 rounded-lg text-sm font-bold hover:bg-amber-200" data-order-id="${String(order.id)}">
           <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
           Marcar Servido
         </button>
@@ -368,12 +375,105 @@ export class OrdersManager {
       if (response.ok) {
         const text = statusText || this.getStatusInSpanish(newStatus);
         this.uiManager.showToast(`Pedido #${orderId} marcado como ${text}.`, 'success');
+        
+        // Actualizar el botón en cook_dashboard si existe
+        const orderCard = document.querySelector(`[data-order-id="${orderId}"]`);
+        if (orderCard) {
+          const button = orderCard.querySelector('button[onclick*="updateOrderStatus"]');
+          if (button && newStatus === 'preparing') {
+            // Cambiar el botón de "Empezar Preparación" a "Marcar como Listo"
+            button.textContent = 'Marcar como Listo';
+            button.setAttribute('onclick', `updateOrderStatus(${orderId}, 'ready')`);
+          }
+        }
       } else {
         this.uiManager.showToast('Error al actualizar el estado del pedido.', 'error');
       }
     } catch (error) {
       console.error('Error:', error);
       this.uiManager.showToast('Error al actualizar el estado.', 'error');
+    }
+  }
+
+  /**
+   * Muestra los detalles de un pedido en un modal (solo lectura)
+   */
+  async showOrderDetailsModal(orderId) {
+    if (!orderId || orderId === 'undefined') {
+      console.error('Invalid orderId:', orderId);
+      this.uiManager.showToast('Error: ID de pedido inválido', 'error');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/restaurant/api/waiter/orders/${orderId}/`);
+      if (!response.ok) throw new Error('Failed to fetch order details');
+      const data = await response.json();
+
+      console.log('Order details fetched:', data);
+
+      // Crear modal de detalles si no existe
+      let modal = document.getElementById('order-details-modal');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'order-details-modal';
+        modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden';
+        modal.innerHTML = `
+          <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+            <div class="flex justify-between items-center mb-4">
+              <h2 id="details-modal-title" class="text-xl font-bold">Detalles del Pedido</h2>
+              <button class="close-details-modal text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</button>
+            </div>
+            <div class="space-y-3">
+              <div>
+                <p class="text-sm text-gray-600">Para:</p>
+                <p id="details-client-id" class="font-semibold text-gray-900"></p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-600">Total:</p>
+                <p id="details-total" class="font-semibold text-gray-900"></p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-600">Items:</p>
+                <ul id="details-items-list" class="mt-2 space-y-1 text-sm"></ul>
+              </div>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(modal);
+      }
+
+      // Actualizar contenido del modal usando orderId en lugar de data.id
+      document.getElementById('details-modal-title').textContent = `Detalles - Pedido #${orderId}`;
+      document.getElementById('details-client-id').textContent = data.identifier || 'Sin identificar';
+      document.getElementById('details-total').textContent = `$${(data.total || 0).toLocaleString('es-CL')}`;
+      
+      const itemsList = document.getElementById('details-items-list');
+      itemsList.innerHTML = (data.items && Array.isArray(data.items)) 
+        ? data.items.map(item => {
+            const strikeClass = item.is_prepared ? 'line-through text-gray-500' : '';
+            return `<li class="${strikeClass}">${item.quantity}x ${item.name}</li>`;
+          }).join('')
+        : '<li class="text-gray-500">No hay items</li>';
+
+      // Mostrar modal
+      modal.classList.remove('hidden');
+
+      // Event listener para cerrar modal
+      const closeBtn = modal.querySelector('.close-details-modal');
+      if (closeBtn) {
+        closeBtn.onclick = () => modal.classList.add('hidden');
+      }
+      
+      // Cerrar al hacer click fuera del modal
+      modal.onclick = (e) => {
+        if (e.target === modal) {
+          modal.classList.add('hidden');
+        }
+      };
+    } catch (error) {
+      console.error('Error opening order details modal:', error);
+      this.uiManager.showToast('No se pudo cargar el detalle del pedido.', 'error');
     }
   }
 
@@ -437,8 +537,8 @@ export class OrdersManager {
       }
       const data = await response.json();
 
-      // Show the order view first so elements are visible
-      this.uiManager.showOrderView();
+      // Show the menu view (without cart modal) so user can add items
+      this.uiManager.showMenuView();
 
       // Wait a tick to ensure DOM is updated
       await new Promise(resolve => setTimeout(resolve, 0));
@@ -448,6 +548,24 @@ export class OrdersManager {
         identifierElement.textContent = data.identifier;
       } else {
         console.error('Element order-identifier-display not found');
+      }
+
+      // Si el pedido está "servido", marcar los items actuales como "ya servidos"
+      if (data.status === 'served') {
+        // Marcar todos los items con status 'served' para mostrarlos tachados
+        data.items = data.items.map(item => ({
+          ...item,
+          is_served: true // Marcar como ya servido
+        }));
+      }
+      
+      // Si el pedido está "ready" (preparado), marcar los items como "ya preparados"
+      if (data.status === 'ready') {
+        // Marcar todos los items existentes como ya preparados
+        data.items = data.items.map(item => ({
+          ...item,
+          is_prepared: true // Marcar como ya preparado
+        }));
       }
 
       this.cartManager.loadOrder(orderId, data);

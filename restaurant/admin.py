@@ -3,12 +3,12 @@ from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
 from django.utils.html import format_html
 from django import forms
-from .models import MenuItem, Order, OrderItem
+from .models import ArticuloMenu, Pedido, ItemPedido, Categoria, PinRegistro
 
-# Formulario personalizado para MenuItem
-class MenuItemForm(forms.ModelForm):
+# Formulario personalizado para ArticuloMenu
+class ArticuloMenuForm(forms.ModelForm):
     class Meta:
-        model = MenuItem
+        model = ArticuloMenu
         fields = ['name', 'description', 'price', 'category', 'available', 'image']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'vTextField'}),
@@ -19,9 +19,9 @@ class MenuItemForm(forms.ModelForm):
             'image': forms.FileInput(attrs={'class': 'vFileField', 'accept': 'image/*'}),
         }
 
-# Clase personalizada para MenuItem
-class MenuItemAdmin(admin.ModelAdmin):
-    form = MenuItemForm
+# Clase personalizada para ArticuloMenu
+class ArticuloMenuAdmin(admin.ModelAdmin):
+    form = ArticuloMenuForm
     list_display = ('name', 'category', 'price', 'available', 'image_thumbnail')
     list_filter = ('category', 'available')
     search_fields = ('name', 'description')
@@ -57,9 +57,11 @@ class MenuItemAdmin(admin.ModelAdmin):
     image_preview.short_description = "Vista previa"
 
 # Registrar modelos
-admin.site.register(MenuItem, MenuItemAdmin)
-admin.site.register(Order)
-admin.site.register(OrderItem)
+admin.site.register(ArticuloMenu, ArticuloMenuAdmin)
+admin.site.register(Pedido)
+admin.site.register(ItemPedido)
+admin.site.register(Categoria)
+admin.site.register(PinRegistro)
 
 
 class CustomUserAdmin(UserAdmin):

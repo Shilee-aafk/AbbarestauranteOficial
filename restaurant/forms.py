@@ -1,7 +1,7 @@
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import Group
 from django import forms
-from .models import RegistrationPin
+from .models import PinRegistro
 
 class CustomUserCreationForm(UserCreationForm):
     pin = forms.CharField(
@@ -38,10 +38,10 @@ class CustomUserCreationForm(UserCreationForm):
     def clean_pin(self):
         pin_value = self.cleaned_data.get("pin")
         try:
-            pin_obj = RegistrationPin.objects.get(pin=pin_value, used_by__isnull=True)
+            pin_obj = PinRegistro.objects.get(pin=pin_value, used_by__isnull=True)
             # Guardamos el objeto pin para usarlo en el método save()
             self.pin_obj = pin_obj
-        except RegistrationPin.DoesNotExist:
+        except PinRegistro.DoesNotExist:
             raise forms.ValidationError("Este PIN no es válido o ya ha sido utilizado.")
         return pin_value
 
