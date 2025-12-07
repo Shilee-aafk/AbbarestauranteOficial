@@ -1353,16 +1353,15 @@ def serve_media_file(request, file_path):
 
 
 @csrf_exempt
-@login_required
-@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
 def api_categories(request):
     """
     API para gestionar categorías.
-    - GET /api/categories/ -> Devuelve todas las categorías.
-    - POST /api/categories/ -> Crea una nueva categoría.
-    - DELETE /api/categories/<pk>/ -> Elimina una categoría.
+    - GET /api/categories/ -> Devuelve todas las categorías (público).
+    - POST /api/categories/ -> Crea una nueva categoría (requiere admin).
+    - DELETE /api/categories/<pk>/ -> Elimina una categoría (requiere admin).
     """
     if request.method == 'GET':
+        # GET es público - no requiere autenticación
         categories = Category.objects.all().order_by('name')
         data = [{
             'id': cat.id,
@@ -1373,6 +1372,10 @@ def api_categories(request):
         return JsonResponse(data, safe=False)
     
     elif request.method == 'POST':
+        # POST requiere que sea admin
+        if not (request.user.is_authenticated and (request.user.is_superuser or request.user.groups.filter(name='Administrador').exists())):
+            return JsonResponse({'error': 'No tienes permiso para crear categorías.'}, status=403)
+        
         try:
             data = json.loads(request.body)
             name = data.get('name', '').strip()
@@ -1402,6 +1405,10 @@ def api_categories(request):
             return JsonResponse({'error': f'Error al crear categoría: {str(e)}'}, status=500)
     
     elif request.method == 'DELETE':
+        # DELETE requiere que sea admin
+        if not (request.user.is_authenticated and (request.user.is_superuser or request.user.groups.filter(name='Administrador').exists())):
+            return JsonResponse({'error': 'No tienes permiso para eliminar categorías.'}, status=403)
+        
         # Eliminar una categoría específica
         pk = request.GET.get('id')
         if pk:
@@ -1421,8 +1428,6 @@ def api_categories(request):
 
 
 @csrf_exempt
-@login_required
-@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
 def api_categories_check(request):
     """
     Verifica si una categoría existe (case-insensitive).

@@ -568,7 +568,6 @@
             </div>
         </div>
     </div>
-    </div>
 
     <!-- User Edit Modal -->
     <div id="user-edit-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -859,6 +858,27 @@
                         </div>
                     </td>
                 </tr>`;
+        }
+
+        async function populateCategoriesDropdown() {
+            try {
+                const categories = await apiRequest("{% url 'restaurant:api_categories' %}");
+                const select = document.getElementById('menu-category');
+                
+                // Limpiar opciones (mantener la opción por defecto)
+                select.innerHTML = '<option value="">Seleccionar categoría...</option>';
+                
+                // Agregar las categorías
+                categories.forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat.name;
+                    option.textContent = cat.name;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading categories:', error);
+                showToast('Error al cargar categorías', 'error');
+            }
         }
 
         function editMenuItem(itemId) {
@@ -1184,27 +1204,6 @@
             }
 
             function initMenuManagement() {
-                // Cargar categorías en el dropdown cuando se abre el modal
-                async function populateCategoriesDropdown() {
-                    try {
-                        const categories = await apiRequest("{% url 'restaurant:api_categories' %}");
-                        const select = document.getElementById('menu-category');
-                        
-                        // Limpiar opciones (mantener la opción por defecto)
-                        select.innerHTML = '<option value="">Seleccionar categoría...</option>';
-                        
-                        // Agregar las categorías
-                        categories.forEach(cat => {
-                            const option = document.createElement('option');
-                            option.value = cat.name;
-                            option.textContent = cat.name;
-                            select.appendChild(option);
-                        });
-                    } catch (error) {
-                        console.error('Error loading categories:', error);
-                        showToast('Error al cargar categorías', 'error');
-                    }
-                }
                 
                 document.getElementById('add-menu-btn').addEventListener('click', async () => {
                     await populateCategoriesDropdown();
@@ -1456,6 +1455,9 @@
 
             window.editMenuItem = async (id) => {
                 try {
+                    // Primero, poblar el dropdown de categorías
+                    await populateCategoriesDropdown();
+                    
                     const item = await apiRequest(`/restaurant/api/menu-items/${id}/`);
                     document.getElementById('menu-item-id').value = item.id;
                     document.getElementById('menu-name').value = item.name;
