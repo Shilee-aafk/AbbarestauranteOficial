@@ -15,7 +15,7 @@ from openpyxl.styles import Font, Alignment, PatternFill
 from openpyxl.utils import get_column_letter
 from .forms import CustomUserCreationForm
 from django.contrib.auth.forms import AuthenticationForm
-from .models import Order, OrderItem, MenuItem, Group, RegistrationPin
+from .models import Order, OrderItem, MenuItem, Group, RegistrationPin, Category
 import json
 import decimal
 
@@ -1350,3 +1350,95 @@ def serve_media_file(request, file_path):
         return FileResponse(open(requested_file, 'rb'), content_type='image/jpeg')
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+
+@csrf_exempt
+@login_required
+@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
+def api_categories(request):
+    """
+    API para gestionar categorías.
+    - GET /api/categories/ -> Devuelve todas las categorías.
+    - POST /api/categories/ -> Crea una nueva categoría.
+    - DELETE /api/categories/<pk>/ -> Elimina una categoría.
+    """
+    if request.method == 'GET':
+        categories = Category.objects.all().order_by('name')
+        data = [{
+            'id': cat.id,
+            'name': cat.name,
+            'description': cat.description or '',
+            'created_at': cat.created_at.isoformat()
+        } for cat in categories]
+        return JsonResponse(data, safe=False)
+    
+    elif request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            name = data.get('name', '').strip()
+            
+            if not name:
+                return JsonResponse({'error': 'El nombre de la categoría es requerido.'}, status=400)
+            
+            # Verificar si la categoría ya existe (case-insensitive)
+            if Category.objects.filter(name__iexact=name).exists():
+                return JsonResponse({'error': 'Esta categoría ya existe.'}, status=400)
+            
+            category = Category.objects.create(
+                name=name,
+                description=data.get('description', '')
+            )
+            
+            return JsonResponse({
+                'id': category.id,
+                'name': category.name,
+                'description': category.description or '',
+                'created_at': category.created_at.isoformat()
+            }, status=201)
+        
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'JSON inválido.'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': f'Error al crear categoría: {str(e)}'}, status=500)
+    
+    elif request.method == 'DELETE':
+        # Eliminar una categoría específica
+        pk = request.GET.get('id')
+        if pk:
+            try:
+                category = Category.objects.get(pk=pk)
+                # Verificar si hay items usando esta categoría
+                if MenuItem.objects.filter(category=category.name).exists():
+                    return JsonResponse({'error': 'No se puede eliminar una categoría que está en uso.'}, status=400)
+                category.delete()
+                return JsonResponse({'success': True, 'message': 'Categoría eliminada.'}, status=204)
+            except Category.DoesNotExist:
+                return JsonResponse({'error': 'Categoría no encontrada.'}, status=404)
+        else:
+            return JsonResponse({'error': 'ID de categoría requerido.'}, status=400)
+    
+    return JsonResponse({'error': f'Método {request.method} no permitido.'}, status=405)
+
+
+@csrf_exempt
+@login_required
+@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
+def api_categories_check(request):
+    """
+    Verifica si una categoría existe (case-insensitive).
+    GET /api/categories/check/?name=Entradas
+    """
+    if request.method == 'GET':
+        name = request.GET.get('name', '').strip()
+        
+        if not name:
+            return JsonResponse({'error': 'El nombre de la categoría es requerido.'}, status=400)
+        
+        exists = Category.objects.filter(name__iexact=name).exists()
+        
+        return JsonResponse({
+            'name': name,
+            'exists': exists
+        })
+    
+    return JsonResponse({'error': f'Método {request.method} no permitido.'}, status=405)

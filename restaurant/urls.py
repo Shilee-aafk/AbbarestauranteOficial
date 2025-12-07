@@ -33,6 +33,10 @@ urlpatterns = [
     # La ruta general para listar/crear va PRIMERO, la específica para un recurso DESPUÉS.
     path('api/pins/', views.api_registration_pins, name='api_registration_pins'),
     path('api/pins/<int:pk>/', views.api_registration_pins, name='api_registration_pin_detail'),
+    
+    # Categorías API
+    path('api/categories/', views.api_categories, name='api_categories'),
+    path('api/categories/check/', views.api_categories_check, name='api_categories_check'),
 
     path('export/orders-excel/', views.export_orders_excel, name='export_orders_excel'),
     path('api/dashboard-charts/', views.api_dashboard_charts, name='api_dashboard_charts'),

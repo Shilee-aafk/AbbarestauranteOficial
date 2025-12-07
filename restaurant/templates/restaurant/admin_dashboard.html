@@ -467,7 +467,10 @@
                         <h1 class="text-3xl font-bold text-gray-900">Gestión de Menú y Platos</h1>
                         <p class="text-gray-600 mt-2">Añade, edita o elimina platos del menú.</p>
                     </div>
-                    <button id="add-menu-btn" class="bg-amber-900 text-white px-6 py-2 rounded-lg font-medium hover:bg-amber-900">Añadir Plato</button>
+                    <div class="flex gap-3">
+                        <button id="manage-categories-btn" class="bg-gray-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700">Gestionar Categorías</button>
+                        <button id="add-menu-btn" class="bg-amber-900 text-white px-6 py-2 rounded-lg font-medium hover:bg-amber-900">Añadir Plato</button>
+                    </div>
                 </div>
 
                 <div class="bg-amber-50 rounded-lg border border-amber-300 shadow-sm overflow-hidden">
@@ -475,11 +478,11 @@
                         <table id="menu-table" class="w-full table-auto">
                             <thead>
                                 <tr class="text-left border-b border-amber-300 bg-amber-50">
-                                    <th class="p-3 font-semibold text-gray-600 text-sm">Imagen</th>
+                                    <th class="p-3 font-semibold text-gray-600 text-sm">Imágenes</th>
                                     <th class="p-3 font-semibold text-gray-600 text-sm">Nombre</th>
                                     <th class="p-3 font-semibold text-gray-600 text-sm">Precio</th>
                                     <th class="p-3 font-semibold text-gray-600 text-sm">Categoría</th>
-                                    <th class="p-3 font-semibold text-gray-600 text-sm">Disponible</th>
+                                    <th class="p-3 font-semibold text-gray-600 text-sm">Disponibilidad</th>
                                     <th class="p-3 font-semibold text-gray-600 text-sm">Acciones</th>
                                 </tr>
                             </thead>
@@ -505,7 +508,9 @@
                     <textarea id="menu-description" placeholder="Descripción" class="w-full p-2 border border-amber-200 rounded" rows="3"></textarea>
                     <div class="grid grid-cols-2 gap-4">
                         <input type="number" id="menu-price" placeholder="Precio" required class="w-full p-2 border border-amber-200 rounded" step="0.01">
-                        <input type="text" id="menu-category" placeholder="Categoría" required class="w-full p-2 border border-amber-200 rounded">
+                        <select id="menu-category" required class="w-full p-2 border border-amber-200 rounded focus:outline-none focus:ring-2 focus:ring-amber-500">
+                            <option value="">Seleccionar categoría...</option>
+                        </select>
                     </div>
                     
                     <!-- Image Upload Section -->
@@ -530,6 +535,39 @@
                 </div>
             </form>
         </div>
+    </div>
+
+    <!-- Categorías Management Modal -->
+    <div id="categories-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="modal-container bg-amber-50 rounded-lg border border-amber-300 shadow-sm w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-2xl font-semibold">Gestión de Categorías</h3>
+                <button id="close-categories-modal" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Crear nueva categoría -->
+            <div class="bg-white rounded-lg p-4 mb-6 border border-amber-200">
+                <h4 class="font-semibold text-amber-900 mb-3">Crear Nueva Categoría</h4>
+                <div class="flex gap-3">
+                    <input type="text" id="new-category-input" placeholder="Nombre de la categoría" class="flex-1 px-3 py-2 border border-amber-200 rounded focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    <button id="add-category-btn" class="bg-amber-900 text-white px-4 py-2 rounded font-medium hover:bg-amber-800">Crear</button>
+                </div>
+                <div id="category-check-message" class="mt-2 text-sm hidden"></div>
+            </div>
+            
+            <!-- Lista de categorías existentes -->
+            <div>
+                <h4 class="font-semibold text-amber-900 mb-3">Categorías Existentes</h4>
+                <div id="categories-list" class="space-y-2 max-h-96 overflow-y-auto">
+                    <p class="text-gray-500">Cargando categorías...</p>
+                </div>
+            </div>
+        </div>
+    </div>
     </div>
 
     <!-- User Edit Modal -->
@@ -1146,7 +1184,30 @@
             }
 
             function initMenuManagement() {
-                document.getElementById('add-menu-btn').addEventListener('click', () => {
+                // Cargar categorías en el dropdown cuando se abre el modal
+                async function populateCategoriesDropdown() {
+                    try {
+                        const categories = await apiRequest("{% url 'restaurant:api_categories' %}");
+                        const select = document.getElementById('menu-category');
+                        
+                        // Limpiar opciones (mantener la opción por defecto)
+                        select.innerHTML = '<option value="">Seleccionar categoría...</option>';
+                        
+                        // Agregar las categorías
+                        categories.forEach(cat => {
+                            const option = document.createElement('option');
+                            option.value = cat.name;
+                            option.textContent = cat.name;
+                            select.appendChild(option);
+                        });
+                    } catch (error) {
+                        console.error('Error loading categories:', error);
+                        showToast('Error al cargar categorías', 'error');
+                    }
+                }
+                
+                document.getElementById('add-menu-btn').addEventListener('click', async () => {
+                    await populateCategoriesDropdown();
                     document.getElementById('menu-form-element').reset();
                     document.getElementById('menu-item-id').value = '';
                     document.getElementById('menu-form-title').textContent = 'Agregar Plato';
@@ -1645,7 +1706,123 @@
                 showSection(initialSection);
             }
 
+            // --- CATEGORÍAS MANAGEMENT ---
+            async function loadAndRenderCategories() {
+                try {
+                    const response = await apiRequest("{% url 'restaurant:api_categories' %}");
+                    const list = document.getElementById('categories-list');
+                    
+                    if (response.length === 0) {
+                        list.innerHTML = '<p class="text-gray-500">No hay categorías creadas aún.</p>';
+                        return;
+                    }
+                    
+                    list.innerHTML = response.map(cat => `
+                        <div class="flex items-center justify-between bg-white border border-amber-200 rounded p-3 hover:bg-amber-50">
+                            <div class="flex-1">
+                                <p class="font-medium text-amber-900">${cat.name}</p>
+                                ${cat.description ? `<p class="text-sm text-gray-600">${cat.description}</p>` : ''}
+                            </div>
+                            <button onclick="deleteCategory(${cat.id})" class="text-red-600 hover:text-red-800 text-sm font-medium ml-3">
+                                Eliminar
+                            </button>
+                        </div>
+                    `).join('');
+                } catch (error) {
+                    console.error('Error loading categories:', error);
+                    document.getElementById('categories-list').innerHTML = '<p class="text-red-500">Error al cargar categorías.</p>';
+                }
+            }
+
+            function initCategoriesManagement() {
+                const modal = document.getElementById('categories-modal');
+                const openBtn = document.getElementById('manage-categories-btn');
+                const closeBtn = document.getElementById('close-categories-modal');
+                const addBtn = document.getElementById('add-category-btn');
+                const input = document.getElementById('new-category-input');
+                
+                openBtn.addEventListener('click', () => {
+                    modal.classList.remove('hidden');
+                    loadAndRenderCategories();
+                });
+                
+                closeBtn.addEventListener('click', () => {
+                    modal.classList.add('hidden');
+                });
+                
+                // Validar nombre mientras se escribe
+                input.addEventListener('input', async () => {
+                    const value = input.value.trim();
+                    const message = document.getElementById('category-check-message');
+                    
+                    if (!value) {
+                        message.classList.add('hidden');
+                        return;
+                    }
+                    
+                    try {
+                        const response = await apiRequest(`/restaurant/api/categories/check/?name=${encodeURIComponent(value)}`);
+                        message.classList.remove('hidden');
+                        
+                        if (response.exists) {
+                            message.textContent = '⚠️ Esta categoría ya existe';
+                            message.className = 'mt-2 text-sm text-orange-600';
+                            addBtn.disabled = true;
+                        } else {
+                            message.textContent = '✅ Nombre disponible';
+                            message.className = 'mt-2 text-sm text-green-600';
+                            addBtn.disabled = false;
+                        }
+                    } catch (error) {
+                        console.error('Error checking category:', error);
+                    }
+                });
+                
+                addBtn.addEventListener('click', async () => {
+                    const name = input.value.trim();
+                    if (!name) {
+                        showToast('Por favor ingresa un nombre para la categoría', 'info');
+                        return;
+                    }
+                    
+                    try {
+                        const response = await apiRequest("{% url 'restaurant:api_categories' %}", 'POST', {
+                            name: name,
+                            description: ''
+                        });
+                        
+                        showToast(`Categoría "${name}" creada exitosamente`, 'success');
+                        input.value = '';
+                        document.getElementById('category-check-message').classList.add('hidden');
+                        addBtn.disabled = false;
+                        loadAndRenderCategories();
+                    } catch (error) {
+                        showToast(`Error: ${error.message}`, 'error');
+                    }
+                });
+                
+                // Enter key para crear
+                input.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && !addBtn.disabled) {
+                        addBtn.click();
+                    }
+                });
+            }
+
+            window.deleteCategory = async (id) => {
+                if (confirm('¿Estás seguro de que quieres eliminar esta categoría?')) {
+                    try {
+                        await apiRequest(`/restaurant/api/categories/?id=${id}`, 'DELETE');
+                        showToast('Categoría eliminada exitosamente', 'success');
+                        loadAndRenderCategories();
+                    } catch (error) {
+                        showToast(`Error: ${error.message}`, 'error');
+                    }
+                }
+            };
+
             initialize();
+            initCategoriesManagement();
         });
     </script>
 {% endblock %}

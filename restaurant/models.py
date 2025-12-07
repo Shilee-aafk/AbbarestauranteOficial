@@ -2,6 +2,27 @@ from django.db import models
 from django.contrib.auth.models import User, Group
 import cloudinary.api
 
+class Category(models.Model):
+    """
+    Categoría para agrupar los platos del menú.
+    Valida que no existan categorías duplicadas (case-insensitive).
+    """
+    name = models.CharField(max_length=50, unique=True)
+    description = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['name']
+        verbose_name_plural = 'Categories'
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        # Normalizar el nombre: trim y preservar mayúsculas como se escriba
+        self.name = self.name.strip()
+        super().save(*args, **kwargs)
+
 class MenuItem(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField()
