@@ -356,6 +356,60 @@ def save_order(request):
             if not items:
                 return JsonResponse({'success': False, 'error': 'Order must have at least one item'}, status=400)
 
+            # Protección contra doble envío: generar un hash basado en los items
+            # para detectar si es un duplicado
+            import hashlib
+            items_hash = hashlib.md5(
+                json.dumps(items, sort_keys=True).encode()
+            ).hexdigest()
+            
+            # Verificar si existe una orden reciente con los mismos items
+            # (creada en los últimos 5 segundos por el mismo usuario)
+            from django.utils import timezone
+            recent_time = timezone.now() - timezone.timedelta(seconds=5)
+            
+            # Buscar órdenes duplicadas recientes
+            duplicate_orders = Order.objects.filter(
+                user=request.user,
+                created_at__gte=recent_time,
+                client_identifier=data.get('client_identifier', 'Sin identificar'),
+                room_number=data.get('room_number', '')
+            )
+            
+            if duplicate_orders.exists():
+                # Verificar si los items coinciden exactamente
+                for dup_order in duplicate_orders:
+                    dup_items = dup_order.orderitem_set.all()
+                    if len(items) == dup_items.count():
+                        # Verificar que los items coincidan
+                        all_match = True
+                        for item_data in items:
+                            matching_item = dup_items.filter(
+                                menu_item_id=item_data['id'],
+                                quantity=int(item_data.get('quantity', 1))
+                            ).exists()
+                            if not matching_item:
+                                all_match = False
+                                break
+                        
+                        if all_match:
+                            print(f"⚠️ Orden duplicada detectada. Retornando orden existente: {dup_order.id}")
+                            # Retornar la orden existente para evitar duplicado
+                            return JsonResponse({
+                                'success': True,
+                                'order_id': dup_order.id,
+                                'message': 'Order already exists',
+                                'is_duplicate': True,
+                                'order': {
+                                    'id': dup_order.id,
+                                    'status': dup_order.status,
+                                    'client_identifier': dup_order.client_identifier,
+                                    'room_number': dup_order.room_number,
+                                    'total_amount': float(dup_order.total_amount),
+                                    'created_at': dup_order.created_at.isoformat(),
+                                }
+                            }, status=200)
+
             order = None
             # Usar una transacción atómica para asegurar la integridad de los datos.
             # O todo se crea, o nada se crea si hay un error.
@@ -1430,20 +1484,52 @@ def api_categories(request):
 @csrf_exempt
 def api_categories_check(request):
     """
-    Verifica si una categoría existe (case-insensitive).
+    Verifica si una categoría existe (case-insensitive) y detecta similares.
     GET /api/categories/check/?name=Entradas
+    
+    Retorna:
+    {
+        'name': 'Entradas',
+        'exists': bool,
+        'similar': [
+            {'id': 1, 'name': 'entrada', 'similarity': 0.95}
+        ]
+    }
     """
     if request.method == 'GET':
+        from difflib import SequenceMatcher
+        
         name = request.GET.get('name', '').strip()
         
         if not name:
             return JsonResponse({'error': 'El nombre de la categoría es requerido.'}, status=400)
         
+        # Verificar si existe exactamente (case-insensitive)
         exists = Category.objects.filter(name__iexact=name).exists()
+        
+        # Encontrar categorías similares
+        all_categories = Category.objects.all()
+        similar = []
+        
+        for cat in all_categories:
+            # Calcular similitud usando SequenceMatcher
+            similarity = SequenceMatcher(None, name.lower(), cat.name.lower()).ratio()
+            
+            # Si la similitud es > 70% y NO es exactamente igual (ese caso ya lo cubrimos con exists)
+            if similarity > 0.7 and not cat.name.lower() == name.lower():
+                similar.append({
+                    'id': cat.id,
+                    'name': cat.name,
+                    'similarity': round(similarity * 100, 1)  # Porcentaje de similitud
+                })
+        
+        # Ordenar por similitud (descendente)
+        similar.sort(key=lambda x: x['similarity'], reverse=True)
         
         return JsonResponse({
             'name': name,
-            'exists': exists
+            'exists': exists,
+            'similar': similar
         })
     
     return JsonResponse({'error': f'Método {request.method} no permitido.'}, status=405)

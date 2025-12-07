@@ -231,46 +231,62 @@ function setupGlobalListeners() {
   // Botón para enviar pedido desde el carrito modal
   const cartSubmitBtn = document.getElementById('cart-submit-btn');
   if (cartSubmitBtn) {
+    // Variable para prevenir doble clic
+    let isSubmitting = false;
+
     cartSubmitBtn.addEventListener('click', async () => {
       console.log('📤 Cart submit clicked');
       
+      // Prevenir doble envío
+      if (isSubmitting) {
+        console.log('⚠️ Envío ya en progreso, ignorando clic adicional');
+        return;
+      }
+
       if (cartManager.currentOrder.length === 0) {
         console.log('❌ Carrito vacío');
         uiManager.showToast('El carrito está vacío', 'error');
         return;
       }
 
-      // Usar los valores almacenados en cartManager
-      let clientIdentifier = cartManager.currentClientIdentifier || localStorage.getItem('cartClientIdentifier') || 'Barra';
-      let roomNumber = cartManager.currentRoomNumber || localStorage.getItem('cartRoomNumber') || '';
-
-      console.log('📋 clientIdentifier:', clientIdentifier, 'roomNumber:', roomNumber);
-
-      const orderData = {
-        items: cartManager.currentOrder.map(item => ({
-          id: item.id,
-          quantity: item.quantity,
-          note: item.note || ''
-        })),
-        client_identifier: clientIdentifier,
-        room_number: roomNumber,
-        tip_amount: 0
-      };
-
-      console.log('📦 Order data:', orderData);
-
-      // Determinar si es creación o actualización
-      let endpoint = '/restaurant/save_order/';
-      let method = 'POST';
-
-      if (cartManager.editingOrderId && cartManager.editingOrderStatus === 'ready') {
-        endpoint = `/restaurant/api/waiter/orders/${cartManager.editingOrderId}/`;
-        method = 'PUT';
-      }
-
-      console.log('🌐 Sending to endpoint:', endpoint, 'method:', method);
+      // Marcar como en progreso y desabilitar el botón
+      isSubmitting = true;
+      const originalText = cartSubmitBtn.innerHTML;
+      const originalDisabledState = cartSubmitBtn.disabled;
+      cartSubmitBtn.disabled = true;
+      cartSubmitBtn.innerHTML = '<span>Procesando...</span>';
 
       try {
+        // Usar los valores almacenados en cartManager
+        let clientIdentifier = cartManager.currentClientIdentifier || localStorage.getItem('cartClientIdentifier') || 'Barra';
+        let roomNumber = cartManager.currentRoomNumber || localStorage.getItem('cartRoomNumber') || '';
+
+        console.log('📋 clientIdentifier:', clientIdentifier, 'roomNumber:', roomNumber);
+
+        const orderData = {
+          items: cartManager.currentOrder.map(item => ({
+            id: item.id,
+            quantity: item.quantity,
+            note: item.note || ''
+          })),
+          client_identifier: clientIdentifier,
+          room_number: roomNumber,
+          tip_amount: 0
+        };
+
+        console.log('📦 Order data:', orderData);
+
+        // Determinar si es creación o actualización
+        let endpoint = '/restaurant/save_order/';
+        let method = 'POST';
+
+        if (cartManager.editingOrderId && cartManager.editingOrderStatus === 'ready') {
+          endpoint = `/restaurant/api/waiter/orders/${cartManager.editingOrderId}/`;
+          method = 'PUT';
+        }
+
+        console.log('🌐 Sending to endpoint:', endpoint, 'method:', method);
+
         const response = await fetch(endpoint, {
           method: method,
           headers: {
@@ -338,6 +354,11 @@ function setupGlobalListeners() {
       } catch (error) {
         console.error('❌ Catch error:', error);
         uiManager.showToast('Error al procesar el pedido.', 'error');
+      } finally {
+        // Restaurar el estado del botón
+        isSubmitting = false;
+        cartSubmitBtn.disabled = originalDisabledState;
+        cartSubmitBtn.innerHTML = originalText;
       }
     });
   }
