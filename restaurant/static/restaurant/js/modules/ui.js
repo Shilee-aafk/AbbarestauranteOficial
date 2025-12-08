@@ -137,6 +137,12 @@ export class UIManager {
    * Abre el modal de pago (llamado desde el monitor)
    */
   async openPaymentModal(orderId, fetchUrl) {
+    // Bloquear si el tutorial está activo en pagos
+    if (window.tutorialBlockPaymentModal) {
+      console.log('Payment modal blocked by tutorial');
+      return;
+    }
+
     if (!orderId || orderId === 'undefined') {
       console.error('Invalid orderId:', orderId);
       this.showToast('Error: ID de pedido inválido', 'error');

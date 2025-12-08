@@ -50,6 +50,11 @@ export class OrdersManager {
 
       if (chargeBtn) {
         const orderId = chargeBtn.dataset.orderId;
+        // Bloquear si el tutorial está activo en pagos
+        if (window.tutorialBlockPaymentModal) {
+          console.log('Payment modal blocked by tutorial');
+          return;
+        }
         // Dispatchear evento para que otro handler lo maneje
         window.dispatchEvent(new CustomEvent('openPaymentModal', { detail: { orderId } }));
       }

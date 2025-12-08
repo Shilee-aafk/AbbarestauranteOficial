@@ -5,6 +5,9 @@
 
 class DashboardTutorial {
     constructor() {
+        // Inicializar variable global para bloquear modal de pagos
+        window.tutorialBlockPaymentModal = false;
+        
         // Función helper para crear SVGs
         this.getSVG = (name) => {
             const svgs = {
@@ -95,6 +98,11 @@ class DashboardTutorial {
                 }
             ],
             'payments': [
+                {
+                    element: '.charge-btn',
+                    title: this.getSVG('send') + 'Procesar Cobro',
+                    text: 'Haz click en el botón "Cobrar" para abrir el modal de confirmación de pago. Aquí verás el desglose completo del pedido con subtotal, propina y total.',
+                },
                 {
                     element: '#modal-order-items',
                     title: this.getSVG('list') + 'Detalle de Productos',
@@ -293,18 +301,25 @@ class DashboardTutorial {
                        element.classList.contains('add-to-order-btn') || 
                        element.classList.contains('add-drink-btn') || 
                        element.classList.contains('order-ready-btn') ||
+                       element.classList.contains('charge-btn') ||
                        element.id.includes('btn') ||
                        element.id.includes('button')) {
                 // Para botones, detectar click
-                const checkClick = () => {
+                const checkClick = (e) => {
+                    // Si es el botón de cobro y el tutorial está bloqueando, detener todo
+                    if (element.classList.contains('charge-btn') && window.tutorialBlockPaymentModal) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        e.stopImmediatePropagation();
+                    }
                     // Registrar acción con el nombre del botón o elemento
                     let actionText = element.textContent?.trim() || element.getAttribute('title') || 'Acción realizada';
                     if (actionText.length > 30) actionText = actionText.substring(0, 27) + '...';
                     this.recordAction(stepKey, actionText);
                     setTimeout(() => this.nextStep(), 100);
                 };
-                element.addEventListener('click', checkClick);
-                this.actionListeners[listenerId] = { element, event: 'click', handler: checkClick };
+                element.addEventListener('click', checkClick, true); // Capture phase para ejecutarse primero
+                this.actionListeners[listenerId] = { element, event: 'click', handler: checkClick, useCapture: true };
             } else {
                 // Para elementos que no son inputs ni botones, detectar click genérico
                 const checkClick = () => {
@@ -331,8 +346,12 @@ class DashboardTutorial {
 
     removeActionListeners() {
         Object.values(this.actionListeners).forEach(listener => {
-            if (listener && listener.element && listener.handler && listener.event) {
-                listener.element.removeEventListener(listener.event, listener.handler);
+            if (listener) {
+                if (listener.observer) {
+                    listener.observer.disconnect();
+                } else if (listener.element && listener.handler && listener.event) {
+                    listener.element.removeEventListener(listener.event, listener.handler, listener.useCapture || false);
+                }
             }
         });
         this.actionListeners = {};
@@ -370,6 +389,14 @@ class DashboardTutorial {
                 if (section && this.tutorials[section]) {
                     this.currentSection = section;
                     this.currentStep = 0;
+                    
+                    // Bloquear/desbloquear evento de pago según la sección
+                    if (section === 'payments') {
+                        window.tutorialBlockPaymentModal = this.tutorialActive;
+                    } else {
+                        window.tutorialBlockPaymentModal = false;
+                    }
+                    
                     if (this.tutorialActive) {
                         this.showStep();
                     }
@@ -393,6 +420,23 @@ class DashboardTutorial {
         this.currentStep = 0;
         document.getElementById('tutorial-overlay').classList.add('show');
         document.getElementById('tutorial-modal').classList.add('show');
+        
+        // Detectar sección actual del visible content
+        const activeSection = document.querySelector('[data-section].active') || 
+                              document.querySelector('.content-section:not(.hidden)');
+        
+        if (activeSection && activeSection.id) {
+            this.currentSection = activeSection.id;
+        }
+        
+        console.log('Tutorial started in section:', this.currentSection);
+        
+        // Si estamos en pagos, bloquear el evento openPaymentModal
+        if (this.currentSection === 'payments') {
+            window.tutorialBlockPaymentModal = true;
+            console.log('Payment modal blocking enabled');
+        }
+        
         this.updateProgressDots();
         this.showStep();
         this.setupActionListeners();
@@ -402,6 +446,9 @@ class DashboardTutorial {
         this.tutorialActive = false;
         document.getElementById('tutorial-overlay').classList.remove('show');
         document.getElementById('tutorial-modal').classList.remove('show');
+        
+        // Desbloquear el evento openPaymentModal
+        window.tutorialBlockPaymentModal = false;
         this.removeHighlight();
         this.removeActionListeners();
         // Limpiar listener de reposicionamiento

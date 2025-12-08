@@ -134,6 +134,11 @@ function setupGlobalListeners() {
     servedOrdersList.addEventListener('click', (e) => {
       const chargeButton = e.target.closest('.charge-btn');
       if (chargeButton) {
+        // Bloquear si el tutorial está activo en pagos
+        if (window.tutorialBlockPaymentModal) {
+          console.log('Payment modal blocked by tutorial');
+          return;
+        }
         const orderId = chargeButton.dataset.orderId;
         if (orderId && orderId !== 'undefined') {
           uiManager.openPaymentModal(orderId);
