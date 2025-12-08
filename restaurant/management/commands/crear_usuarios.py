@@ -21,96 +21,96 @@ class Command(BaseCommand):
             'name': 'Ceviche Clásico',
             'description': 'Pescado fresco marinado en jugo de limón, con cebolla roja, cilantro y ají limo.',
             'price': 9800,
-            'categoria': 'Entradas'
+            'category': 'Entradas'
         },
         {
             'name': 'Causa Limeña de Pollo',
             'description': 'Suave puré de papa amarilla sazonado con ají y limón, relleno de pollo y mayonesa.',
             'price': 7500,
-            'categoria': 'Entradas'
+            'category': 'Entradas'
         },
         {
             'name': 'Tequeños de Queso',
             'description': 'Crujientes bastones de masa frita rellenos de queso, acompañados de salsa de palta.',
             'price': 6900,
-            'categoria': 'Entradas'
+            'category': 'Entradas'
         },
         # --- Platos de Fondo ---
         {
             'name': 'Lomo Saltado',
             'description': 'Trozos de lomo de res salteados con cebolla, tomate y ají amarillo, servido con papas fritas y arroz.',
             'price': 12500,
-            'categoria': 'Platos de Fondo'
+            'category': 'Platos de Fondo'
         },
         {
             'name': 'Aji de Gallina',
             'description': 'Pechuga de gallina deshilachada en una cremosa salsa de ají amarillo, nueces y queso.',
             'price': 10500,
-            'categoria': 'Platos de Fondo'
+            'category': 'Platos de Fondo'
         },
         {
             'name': 'Seco de Cordero',
             'description': 'Tierno cordero cocido a fuego lento en salsa de cilantro, acompañado de frijoles y arroz.',
             'price': 13500,
-            'categoria': 'Platos de Fondo'
+            'category': 'Platos de Fondo'
         },
         {
             'name': 'Arroz con Mariscos',
             'description': 'Sabrosa mezcla de arroz con mariscos frescos, aderezo de ajíes y un toque de vino blanco.',
             'price': 14200,
-            'categoria': 'Platos de Fondo'
+            'category': 'Platos de Fondo'
         },
         # --- Postres ---
         {
             'name': 'Suspiro a la Limeña',
             'description': 'Dulce de manjar blanco cubierto con merengue al oporto.',
             'price': 4500,
-            'categoria': 'Postres'
+            'category': 'Postres'
         },
         {
             'name': 'Torta Tres Leches',
             'description': 'Bizcocho esponjoso bañado en una mezcla de tres tipos de leche, cubierto con crema batida.',
             'price': 5200,
-            'categoria': 'Postres'
+            'category': 'Postres'
         },
         # --- Bebestibles (Sin Alcohol) ---
         {
             'name': 'Jugo Natural de Frutilla',
             'description': 'Jugo fresco preparado con frutillas de temporada.',
             'price': 3500,
-            'categoria': 'Bebestibles'
+            'category': 'Bebestibles'
         },
         {
             'name': 'Limonada Menta Jengibre',
             'description': 'Refrescante limonada con toques de menta fresca y jengibre.',
             'price': 3800,
-            'categoria': 'Bebestibles'
+            'category': 'Bebestibles'
         },
         # --- Cócteles (Bar) ---
         {
             'name': 'Pisco Sour',
             'description': 'El clásico cóctel peruano con pisco, jugo de limón, jarabe de goma y clara de huevo.',
             'price': 5500,
-            'categoria': 'Cócteles'
+            'category': 'Cócteles'
         },
         {
             'name': 'Mojito Clásico',
             'description': 'Refrescante mezcla de ron, menta, limón, azúcar y agua con gas.',
             'price': 6200,
-            'categoria': 'Cócteles'
+            'category': 'Cócteles'
         },
         # --- Vinos y Cervezas (Bar) ---
         {
             'name': 'Copa de Vino Tinto (Carmenere)',
             'description': 'Copa de vino tinto reserva, variedad Carmenere.',
             'price': 4800,
-            'categoria': 'Vinos y Cervezas'
+            'category': 'Vinos y Cervezas'
         },
         {
             'name': 'Cerveza Nacional',
             'description': 'Botella de cerveza lager nacional.',
             'price': 3500,
-            'categoria': 'Vinos y Cervezas'
+            'category': 'Vinos y Cervezas'
         },
     ]
 
