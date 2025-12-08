@@ -193,7 +193,7 @@ def cook_dashboard(request):
         orders = Order.objects.filter(
             status__in=['pending', 'preparing']
         ).select_related('user').prefetch_related(
-            'orderitem_set__articulo_menu'
+            'orderitem_set__menu_item'
         ).order_by('created_at')
 
         # Preparar datos JSON para el frontend
@@ -258,7 +258,7 @@ def waiter_dashboard(request):
         orders_for_monitor = Order.objects.filter(
             status__in=['pending', 'preparing', 'ready', 'served']
         ).select_related('user').prefetch_related(
-            'orderitem_set__articulo_menu'
+            'orderitem_set__menu_item'
         ).order_by('created_at')
 
         initial_orders_data = []
@@ -330,7 +330,7 @@ def public_menu_view(request):
 # Helper function to calculate subtotal for an order instance
 def calculate_order_subtotal(order_instance):
     return order_instance.orderitem_set.aggregate(
-        subtotal=Sum(F('articulo_menu__price') * F('quantity'), output_field=fields.DecimalField())
+        subtotal=Sum(F('menu_item__price') * F('quantity'), output_field=fields.DecimalField())
     )['subtotal'] or decimal.Decimal('0.00')
 @csrf_exempt
 @login_required
@@ -656,7 +656,7 @@ def api_orders(request):
             # Para cocina: solo órdenes pendientes y en preparación
             orders = Order.objects.filter(
                 status__in=['pending', 'preparing']
-            ).select_related('user').prefetch_related('orderitem_set__articulo_menu').order_by('created_at')
+            ).select_related('user').prefetch_related('orderitem_set__menu_item').order_by('created_at')
             
             data = []
             for o in orders:
@@ -1167,12 +1167,12 @@ def api_dashboard_charts(request):
     if chart_type == 'sales_by_category':
         # Ventas de hoy por categoría de producto
         category_sales = OrderItem.objects.filter(
-            pedido__status='paid',
-            pedido__created_at__date=today
-        ).values('articulo_menu__categoria').annotate(
-            total=Sum(F('articulo_menu__price') * F('quantity'))
+            order__status='paid',
+            order__created_at__date=today
+        ).values('menu_item__category').annotate(
+            total=Sum(F('menu_item__price') * F('quantity'))
         ).order_by('-total')
-        labels = [c['articulo_menu__categoria'] for c in category_sales]
+        labels = [c['menu_item__category'] for c in category_sales]
         data = [float(c['total']) for c in category_sales]
         return JsonResponse({'labels': labels, 'data': data})
 
