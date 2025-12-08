@@ -1,7 +1,6 @@
-# Generated migration to rename models from Spanish to English
+# Migration to handle model renaming from Spanish to English
 
-from django.db import migrations, models
-import django.db.models.deletion
+from django.db import migrations
 
 
 class Migration(migrations.Migration):
@@ -11,59 +10,26 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        # Step 1: Rename Categoria to Category
-        migrations.RenameModel(
-            old_name='Categoria',
-            new_name='Category',
-        ),
-        
-        # Step 2: Rename ArticuloMenu to MenuItem
-        migrations.RenameModel(
-            old_name='ArticuloMenu',
-            new_name='MenuItem',
-        ),
-        
-        # Step 3: Rename the field in MenuItem
-        migrations.RenameField(
-            model_name='menuitem',
-            old_name='categoria',
-            new_name='category',
-        ),
-        
-        # Step 4: Rename Pedido to Order
-        migrations.RenameModel(
-            old_name='Pedido',
-            new_name='Order',
-        ),
-        
-        # Step 5: Rename ItemPedido to OrderItem
-        migrations.RenameModel(
-            old_name='ItemPedido',
-            new_name='OrderItem',
-        ),
-        
-        # Step 6: Rename the field relationships in OrderItem
-        migrations.RenameField(
-            model_name='orderitem',
-            old_name='pedido',
-            new_name='order',
-        ),
-        migrations.RenameField(
-            model_name='orderitem',
-            old_name='articulo_menu',
-            new_name='menu_item',
-        ),
-        
-        # Step 7: Rename PinRegistro to RegistrationPin
-        migrations.RenameModel(
-            old_name='PinRegistro',
-            new_name='RegistrationPin',
-        ),
-        
-        # Step 8: Update through model on Order.items field
-        migrations.AlterField(
-            model_name='order',
-            name='items',
-            field=models.ManyToManyField(through='restaurant.OrderItem', to='restaurant.MenuItem'),
+        # Rename table using database operations that work across different DBs
+        migrations.RunSQL(
+            # Forward: Rename old table to new table
+            """
+            ALTER TABLE restaurant_articulomenu RENAME TO restaurant_menuitem;
+            ALTER TABLE restaurant_pedido RENAME TO restaurant_order;
+            ALTER TABLE restaurant_itempedido RENAME TO restaurant_orderitem;
+            ALTER TABLE restaurant_categoria RENAME TO restaurant_category;
+            ALTER TABLE restaurant_pinregistro RENAME TO restaurant_registrationpin;
+            """,
+            # Reverse: Rename back to old table names (if we ever need to rollback)
+            """
+            ALTER TABLE restaurant_menuitem RENAME TO restaurant_articulomenu;
+            ALTER TABLE restaurant_order RENAME TO restaurant_pedido;
+            ALTER TABLE restaurant_orderitem RENAME TO restaurant_itempedido;
+            ALTER TABLE restaurant_category RENAME TO restaurant_categoria;
+            ALTER TABLE restaurant_registrationpin RENAME TO restaurant_pinregistro;
+            """,
+            # This migration is database-specific
+            # For PostgreSQL compatibility
         ),
     ]
+
