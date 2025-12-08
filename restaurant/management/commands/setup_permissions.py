@@ -1,36 +1,36 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import Group, Permission, User
 from django.contrib.contenttypes.models import ContentType
-from restaurant.models import ArticuloMenu, Pedido, ItemPedido, PinRegistro
+from restaurant.models import MenuItem, Order, OrderItem, RegistrationPin
 
 class Command(BaseCommand):
     help = 'Setup permissions for user groups'
 
     def handle(self, *args, **options):
         # Get content types
-        articulo_menu_ct = ContentType.objects.get_for_model(ArticuloMenu)
-        pedido_ct = ContentType.objects.get_for_model(Pedido)
-        item_pedido_ct = ContentType.objects.get_for_model(ItemPedido)
+        menuitem_ct = ContentType.objects.get_for_model(MenuItem)
+        order_ct = ContentType.objects.get_for_model(Order)
+        orderitem_ct = ContentType.objects.get_for_model(OrderItem)
         user_ct = ContentType.objects.get_for_model(User)
 
         # Define permissions for each group
         permissions = {
             'Administrador': [
-                # ArticuloMenu permissions
-                Permission.objects.get(content_type=articulo_menu_ct, codename='add_articulomenu'),
-                Permission.objects.get(content_type=articulo_menu_ct, codename='change_articulomenu'),
-                Permission.objects.get(content_type=articulo_menu_ct, codename='delete_articulomenu'),
-                Permission.objects.get(content_type=articulo_menu_ct, codename='view_articulomenu'),
-                # Pedido permissions
-                Permission.objects.get(content_type=pedido_ct, codename='add_pedido'),
-                Permission.objects.get(content_type=pedido_ct, codename='change_pedido'),
-                Permission.objects.get(content_type=pedido_ct, codename='delete_pedido'),
-                Permission.objects.get(content_type=pedido_ct, codename='view_pedido'),
-                # ItemPedido permissions
-                Permission.objects.get(content_type=item_pedido_ct, codename='add_itempedido'),
-                Permission.objects.get(content_type=item_pedido_ct, codename='change_itempedido'),
-                Permission.objects.get(content_type=item_pedido_ct, codename='delete_itempedido'),
-                Permission.objects.get(content_type=item_pedido_ct, codename='view_itempedido'),
+                # MenuItem permissions
+                Permission.objects.get(content_type=menuitem_ct, codename='add_menuitem'),
+                Permission.objects.get(content_type=menuitem_ct, codename='change_menuitem'),
+                Permission.objects.get(content_type=menuitem_ct, codename='delete_menuitem'),
+                Permission.objects.get(content_type=menuitem_ct, codename='view_menuitem'),
+                # Order permissions
+                Permission.objects.get(content_type=order_ct, codename='add_order'),
+                Permission.objects.get(content_type=order_ct, codename='change_order'),
+                Permission.objects.get(content_type=order_ct, codename='delete_order'),
+                Permission.objects.get(content_type=order_ct, codename='view_order'),
+                # OrderItem permissions
+                Permission.objects.get(content_type=orderitem_ct, codename='add_orderitem'),
+                Permission.objects.get(content_type=orderitem_ct, codename='change_orderitem'),
+                Permission.objects.get(content_type=orderitem_ct, codename='delete_orderitem'),
+                Permission.objects.get(content_type=orderitem_ct, codename='view_orderitem'),
                 # User permissions
                 Permission.objects.get(content_type=user_ct, codename='add_user'),
                 Permission.objects.get(content_type=user_ct, codename='change_user'),
@@ -39,28 +39,28 @@ class Command(BaseCommand):
             ],
             'Recepcionista': [
                 # View permissions
-                Permission.objects.get(content_type=articulo_menu_ct, codename='view_articulomenu'),
-                Permission.objects.get(content_type=pedido_ct, codename='view_pedido'),
-                Permission.objects.get(content_type=item_pedido_ct, codename='view_itempedido'),
+                Permission.objects.get(content_type=menuitem_ct, codename='view_menuitem'),
+                Permission.objects.get(content_type=order_ct, codename='view_order'),
+                Permission.objects.get(content_type=orderitem_ct, codename='view_orderitem'),
             ],
             'Cocinero': [
                 # View permissions
-                Permission.objects.get(content_type=pedido_ct, codename='view_pedido'),
-                Permission.objects.get(content_type=item_pedido_ct, codename='view_itempedido'),
-                Permission.objects.get(content_type=articulo_menu_ct, codename='view_articulomenu'),
+                Permission.objects.get(content_type=order_ct, codename='view_order'),
+                Permission.objects.get(content_type=orderitem_ct, codename='view_orderitem'),
+                Permission.objects.get(content_type=menuitem_ct, codename='view_menuitem'),
                 # Order status changes
-                Permission.objects.get(content_type=pedido_ct, codename='change_pedido'),
+                Permission.objects.get(content_type=order_ct, codename='change_order'),
             ],
             'Garzón': [
                 # View permissions
-                Permission.objects.get(content_type=articulo_menu_ct, codename='view_articulomenu'),
-                Permission.objects.get(content_type=pedido_ct, codename='view_pedido'),
-                Permission.objects.get(content_type=item_pedido_ct, codename='view_itempedido'),
+                Permission.objects.get(content_type=menuitem_ct, codename='view_menuitem'),
+                Permission.objects.get(content_type=order_ct, codename='view_order'),
+                Permission.objects.get(content_type=orderitem_ct, codename='view_orderitem'),
                 # Order creation and management
-                Permission.objects.get(content_type=pedido_ct, codename='add_pedido'),
-                Permission.objects.get(content_type=item_pedido_ct, codename='add_itempedido'),
-                Permission.objects.get(content_type=pedido_ct, codename='change_pedido'),
-                Permission.objects.get(content_type=item_pedido_ct, codename='change_itempedido'),
+                Permission.objects.get(content_type=order_ct, codename='add_order'),
+                Permission.objects.get(content_type=orderitem_ct, codename='add_orderitem'),
+                Permission.objects.get(content_type=order_ct, codename='change_order'),
+                Permission.objects.get(content_type=orderitem_ct, codename='change_orderitem'),
             ],
         }
 

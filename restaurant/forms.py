@@ -1,12 +1,12 @@
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import Group
 from django import forms
-from .models import PinRegistro
+from .models import RegistrationPin
 
 class CustomUserCreationForm(UserCreationForm):
     pin = forms.CharField(
         max_length=10, 
-        help_text="Ingresa el PIN de registro proporcionado por el administrador."
+        help_text="Enter the registration PIN provided by the administrator."
     )
 
     def __init__(self, *args, **kwargs):
@@ -20,33 +20,33 @@ class CustomUserCreationForm(UserCreationForm):
 
         self.fields['username'].widget.attrs.update({
             'class': f'{common_classes} rounded-t-md',
-            'placeholder': 'Nombre de usuario'
+            'placeholder': 'Username'
         })
         self.fields['pin'].widget.attrs.update({
             'class': f'{common_classes} rounded-none',
-            'placeholder': 'PIN de Registro'
+            'placeholder': 'Registration PIN'
         })
         self.fields['password1'].widget.attrs.update({
             'class': f'{common_classes} rounded-none',
-            'placeholder': 'Contraseña'
+            'placeholder': 'Password'
         })
         self.fields['password2'].widget.attrs.update({
             'class': f'{common_classes} rounded-b-md',
-            'placeholder': 'Confirmar contraseña'
+            'placeholder': 'Confirm password'
         })
 
     def clean_pin(self):
         pin_value = self.cleaned_data.get("pin")
         try:
-            pin_obj = PinRegistro.objects.get(pin=pin_value, used_by__isnull=True)
-            # Guardamos el objeto pin para usarlo en el método save()
+            pin_obj = RegistrationPin.objects.get(pin=pin_value, used_by__isnull=True)
+            # Save the pin object for use in the save() method
             self.pin_obj = pin_obj
-        except PinRegistro.DoesNotExist:
-            raise forms.ValidationError("Este PIN no es válido o ya ha sido utilizado.")
+        except RegistrationPin.DoesNotExist:
+            raise forms.ValidationError("This PIN is not valid or has already been used.")
         return pin_value
 
     def save(self, commit=True):
-        # Guardar el usuario
+        # Save the user
         user = super().save(commit=False)
         if commit:
             user.save()

@@ -2,7 +2,7 @@ import pusher
 from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from .models import Pedido, ArticuloMenu
+from .models import Order, MenuItem
 
 # --- Configuración del Cliente Pusher ---
 pusher_client = None
@@ -16,7 +16,7 @@ if all([settings.PUSHER_APP_ID, settings.PUSHER_KEY, settings.PUSHER_SECRET, set
     )
 
 # --- Señales para Pedidos ---
-@receiver(post_save, sender=Pedido)
+@receiver(post_save, sender=Order)
 def order_status_changed(sender, instance, created, **kwargs):
     """
     Cuando un pedido se crea o actualiza, envía notificaciones
@@ -25,11 +25,11 @@ def order_status_changed(sender, instance, created, **kwargs):
     if not pusher_client:
         return
 
-    # Obtener items del pedido
+    # Get order items
     items = []
-    for item in instance.itempedido_set.all():
+    for item in instance.orderitem_set.all():
         items.append({
-            'name': item.articulo_menu.name,
+            'name': item.menu_item.name,
             'quantity': item.quantity,
             'note': item.note or '',
             'is_prepared': item.is_prepared,
@@ -98,7 +98,7 @@ def order_status_changed(sender, instance, created, **kwargs):
                 print(f"Error sending status update notification: {str(e)}")
 
 # --- Señales para Items del Menú ---
-@receiver(post_save, sender=ArticuloMenu)
+@receiver(post_save, sender=MenuItem)
 def menu_item_changed(sender, instance, **kwargs):
     """
     Cuando la disponibilidad de un item del menú cambia, notifica a todos.
@@ -122,7 +122,7 @@ def menu_item_changed(sender, instance, **kwargs):
         'name': instance.name,
         'description': instance.description,
         'price': float(instance.price),
-        'categoria': instance.categoria,
+        'category': instance.category,
         'available': instance.available,
         'image_url': image_url
     })

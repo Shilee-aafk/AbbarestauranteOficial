@@ -1,7 +1,7 @@
 import os
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User, Group, Permission
-from restaurant.models import ArticuloMenu
+from restaurant.models import MenuItem
 from django.db import transaction
 
 class Command(BaseCommand):
@@ -193,16 +193,16 @@ class Command(BaseCommand):
         self.stdout.write(self.style.NOTICE('\n>>> Creando platos del menú...'))
         for item_data in self.MENU_ITEMS:
             try:
-                # Usamos el nombre como identificador único para evitar duplicados
-                item, created = ArticuloMenu.objects.get_or_create(
+                # Use the name as a unique identifier to avoid duplicates
+                item, created = MenuItem.objects.get_or_create(
                     name=item_data['name'],
                     defaults=item_data
                 )
                 if created:
-                    self.stdout.write(self.style.SUCCESS(f"Plato '{item.name}' creado exitosamente."))
+                    self.stdout.write(self.style.SUCCESS(f"Dish '{item.name}' created successfully."))
                 else:
-                    self.stdout.write(self.style.NOTICE(f"Plato '{item.name}' ya existía."))
+                    self.stdout.write(self.style.NOTICE(f"Dish '{item.name}' already existed."))
             except Exception as e:
-                self.stdout.write(self.style.ERROR(f"Error creando el plato '{item_data['name']}': {e}"))
+                self.stdout.write(self.style.ERROR(f"Error creating dish '{item_data['name']}': {e}"))
 
         self.stdout.write(self.style.SUCCESS('--- Proceso finalizado ---'))

@@ -3,37 +3,37 @@ from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
 from django.utils.html import format_html
 from django import forms
-from .models import ArticuloMenu, Pedido, ItemPedido, Categoria, PinRegistro
+from .models import MenuItem, Order, OrderItem, Category, RegistrationPin
 
-# Formulario personalizado para ArticuloMenu
-class ArticuloMenuForm(forms.ModelForm):
+# Custom form for MenuItem
+class MenuItemForm(forms.ModelForm):
     class Meta:
-        model = ArticuloMenu
-        fields = ['name', 'description', 'price', 'categoria', 'available', 'image']
+        model = MenuItem
+        fields = ['name', 'description', 'price', 'category', 'available', 'image']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'vTextField'}),
             'description': forms.Textarea(attrs={'class': 'vLargeTextField'}),
             'price': forms.NumberInput(attrs={'class': 'vDecimalField', 'step': '0.01'}),
-            'categoria': forms.TextInput(attrs={'class': 'vTextField'}),
+            'category': forms.TextInput(attrs={'class': 'vTextField'}),
             'available': forms.CheckboxInput(attrs={'class': 'vCheckboxField'}),
             'image': forms.FileInput(attrs={'class': 'vFileField', 'accept': 'image/*'}),
         }
 
-# Clase personalizada para ArticuloMenu
-class ArticuloMenuAdmin(admin.ModelAdmin):
-    form = ArticuloMenuForm
-    list_display = ('name', 'categoria', 'price', 'available', 'image_thumbnail')
-    list_filter = ('categoria', 'available')
+# Custom class for MenuItem
+class MenuItemAdmin(admin.ModelAdmin):
+    form = MenuItemForm
+    list_display = ('name', 'category', 'price', 'available', 'image_thumbnail')
+    list_filter = ('category', 'available')
     search_fields = ('name', 'description')
     list_editable = ('available',)
     
     fieldsets = (
-        ('Información Básica', {
-            'fields': ('name', 'description', 'categoria', 'price', 'available')
+        ('Basic Information', {
+            'fields': ('name', 'description', 'category', 'price', 'available')
         }),
-        ('Imagen del Plato', {
+        ('Dish Image', {
             'fields': ('image', 'image_preview'),
-            'description': 'Sube una imagen del plato (JPG, PNG, WebP). Las imágenes se mostrarán en el menú público.'
+            'description': 'Upload an image of the dish (JPG, PNG, WebP). Images will be shown in the public menu.'
         }),
     )
     readonly_fields = ('image_preview',)
@@ -45,7 +45,7 @@ class ArticuloMenuAdmin(admin.ModelAdmin):
                 obj.image.url
             )
         return "—"
-    image_thumbnail.short_description = "Imagen"
+    image_thumbnail.short_description = "Image"
 
     def image_preview(self, obj):
         if obj.image:
@@ -53,15 +53,15 @@ class ArticuloMenuAdmin(admin.ModelAdmin):
                 '<img src="{}" width="300" style="max-width: 100%; border-radius: 8px;" />',
                 obj.image.url
             )
-        return "Sin imagen — sube una arriba ☝️"
-    image_preview.short_description = "Vista previa"
+        return "No image — upload one above ☝️"
+    image_preview.short_description = "Preview"
 
-# Registrar modelos
-admin.site.register(ArticuloMenu, ArticuloMenuAdmin)
-admin.site.register(Pedido)
-admin.site.register(ItemPedido)
-admin.site.register(Categoria)
-admin.site.register(PinRegistro)
+# Register models
+admin.site.register(MenuItem, MenuItemAdmin)
+admin.site.register(Order)
+admin.site.register(OrderItem)
+admin.site.register(Category)
+admin.site.register(RegistrationPin)
 
 
 class CustomUserAdmin(UserAdmin):

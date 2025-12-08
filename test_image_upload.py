@@ -12,7 +12,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 django.setup()
 
 from django.contrib.auth.models import User, Group
-from restaurant.models import ArticuloMenu
+from restaurant.models import MenuItem
 from django.core.files.base import ContentFile
 from PIL import Image
 from io import BytesIO
@@ -36,7 +36,7 @@ def test_image_upload():
         return
     
     # Get or create a test menu item
-    item, created = ArticuloMenu.objects.get_or_create(
+    item, created = MenuItem.objects.get_or_create(
         name='Test Dish',
         defaults={
             'description': 'Test dish for image upload',

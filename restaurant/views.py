@@ -15,7 +15,7 @@ from openpyxl.styles import Font, Alignment, PatternFill
 from openpyxl.utils import get_column_letter
 from .forms import CustomUserCreationForm
 from django.contrib.auth.forms import AuthenticationForm
-from .models import Pedido, ItemPedido, ArticuloMenu, Group, PinRegistro, Categoria
+from .models import Order, OrderItem, MenuItem, Group, RegistrationPin, Category
 import json
 import decimal
 
@@ -99,7 +99,7 @@ def admin_dashboard(request):
 
     # --- Optimización de Consultas ---
     # 1. Usar aggregate para obtener todos los contadores en una sola consulta
-    stats = Pedido.objects.aggregate(
+    stats = Order.objects.aggregate(
         total_today=Count('id', filter=Q(created_at__date=timezone.now().date())),
         preparing=Count('id', filter=Q(status='preparing')),
         ready=Count('id', filter=Q(status='ready')),
@@ -110,12 +110,12 @@ def admin_dashboard(request):
     # 2. Usar annotate para calcular el total de cada pedido en la DB (evita N+1)
     #    y prefetch_related para cargar los items eficientemente.
     # Ahora que total_amount se almacena directamente, no necesitamos annotate aquí.
-    recent_orders = Pedido.objects.select_related('user').order_by('-created_at')[:10]
+    recent_orders = Order.objects.select_related('user').order_by('-created_at')[:10]
 
-    # Nota: 'orders' aquí es Pedido.objects.all(), no recent_orders.
+    # Nota: 'orders' aquí es Order.objects.all(), no recent_orders.
     # El resto de los objetos se cargan para el renderizado inicial o como fallback.
-    orders = Pedido.objects.all()
-    menu_items = ArticuloMenu.objects.all()
+    orders = Order.objects.all()
+    menu_items = MenuItem.objects.all()
     groups = Group.objects.all()  # Obtener todos los grupos/roles
     user_role = request.user.groups.first().name if request.user.groups.exists() else None
 
@@ -133,7 +133,7 @@ def admin_dashboard(request):
         'name': m.name,
         'description': m.description,
         'price': float(m.price),
-        'categoria': m.categoria,
+        'category': m.category,
         'available': m.available,
         'image_url': m.image_url
     } for m in menu_items], cls=DecimalEncoder)
@@ -159,15 +159,15 @@ def receptionist_dashboard(request):
     from django.db.models import Sum, F, Q
 
     # Unificamos los pedidos que necesitan acción de cobro: 'servido' y 'cargado a habitación'
-    served_orders = Pedido.objects.filter(status__in=['served', 'charged_to_room']).order_by('-created_at')
+    served_orders = Order.objects.filter(status__in=['served', 'charged_to_room']).order_by('-created_at')
     
     # Ahora que total_amount se almacena directamente, no necesitamos annotate aquí.
-    room_charge_orders = Pedido.objects.filter(status='charged_to_room').order_by('-created_at')
+    room_charge_orders = Order.objects.filter(status='charged_to_room').order_by('-created_at')
 
 
 
     today = timezone.now().date()
-    total_sales_today = Pedido.objects.filter(
+    total_sales_today = Order.objects.filter(
         status='paid',
         created_at__date=today
     ).aggregate(total=Sum('total_amount'))['total'] or 0 # Usar el nuevo campo total_amount
@@ -190,20 +190,20 @@ def cook_dashboard(request):
     try:
         # Consulta optimizada para obtener pedidos y sus items
         # Ahora que total_amount se almacena directamente, no necesitamos annotate aquí.
-        orders = Pedido.objects.filter(
+        orders = Order.objects.filter(
             status__in=['pending', 'preparing']
         ).select_related('user').prefetch_related(
-            'itempedido_set__articulo_menu'
+            'orderitem_set__articulo_menu'
         ).order_by('created_at')
 
         # Preparar datos JSON para el frontend
         orders_data = []
         for order in orders:
             items_list = []
-            for item in order.itempedido_set.all():
-                if item.articulo_menu:  # Validar que menu_item no sea nulo
+            for item in order.orderitem_set.all():
+                if item.menu_item:  # Validar que menu_item no sea nulo
                     items_list.append({
-                        'name': item.articulo_menu.name,
+                        'name': item.menu_item.name,
                         'quantity': item.quantity,
                         'note': item.note or '',
                         'is_prepared': getattr(item, 'is_prepared', False)  # Usar getattr para manejo seguro
@@ -239,10 +239,10 @@ def waiter_dashboard(request):
 
     try:
         # --- Datos para la toma de pedidos ---
-        menu_items = ArticuloMenu.objects.filter(available=True)
+        menu_items = MenuItem.objects.filter(available=True)
         # Obtenemos todas las categorías, las normalizamos en Python y eliminamos duplicados.
         # Esto asegura que 'Pizzas' y 'pizzas' se traten como una sola categoría en los filtros.
-        all_categories = menu_items.values_list('categoria', flat=True)
+        all_categories = menu_items.values_list('category', flat=True)
         normalized_categories = {cat.capitalize() for cat in all_categories}
         categories = sorted(list(normalized_categories))
         menu_items_json = json.dumps([{
@@ -255,19 +255,19 @@ def waiter_dashboard(request):
 
         # --- Datos para el monitor de pedidos (carga inicial) ---
         # Usar only() para evitar campos que pueden no existir en la BD (como is_prepared)
-        orders_for_monitor = Pedido.objects.filter(
+        orders_for_monitor = Order.objects.filter(
             status__in=['pending', 'preparing', 'ready', 'served']
         ).select_related('user').prefetch_related(
-            'itempedido_set__articulo_menu'
+            'orderitem_set__articulo_menu'
         ).order_by('created_at')
 
         initial_orders_data = []
         for order in orders_for_monitor:
             items_list = []
-            for item in order.itempedido_set.all():
-                if item.articulo_menu:  # Validar que menu_item no sea nulo
+            for item in order.orderitem_set.all():
+                if item.menu_item:  # Validar que menu_item no sea nulo
                     items_list.append({
-                        'name': item.articulo_menu.name,
+                        'name': item.menu_item.name,
                         'quantity': item.quantity,
                         'is_prepared': item.is_prepared,
                     })
@@ -308,12 +308,12 @@ def public_menu_view(request):
     """
     # Obtener TODOS los items (disponibles e indisponibles) y ordenarlos por categoría
     menu_url = request.build_absolute_uri()
-    menu_items = ArticuloMenu.objects.all().order_by('categoria', 'name')
+    menu_items = MenuItem.objects.all().order_by('category', 'name')
 
     # Agrupar items por categoría en un diccionario
     grouped_menu = {}
     for item in menu_items:
-        category = item.categoria
+        category = item.category
         if not category: # Agrupar items sin categoría en 'Otros'
             category = 'Otros'
         if category not in grouped_menu:
@@ -329,7 +329,7 @@ def public_menu_view(request):
 
 # Helper function to calculate subtotal for an order instance
 def calculate_order_subtotal(order_instance):
-    return order_instance.itempedido_set.aggregate(
+    return order_instance.orderitem_set.aggregate(
         subtotal=Sum(F('articulo_menu__price') * F('quantity'), output_field=fields.DecimalField())
     )['subtotal'] or decimal.Decimal('0.00')
 @csrf_exempt
@@ -369,7 +369,7 @@ def save_order(request):
             recent_time = timezone.now() - timezone.timedelta(seconds=5)
             
             # Buscar órdenes duplicadas recientes
-            duplicate_orders = Pedido.objects.filter(
+            duplicate_orders = Order.objects.filter(
                 user=request.user,
                 created_at__gte=recent_time,
                 client_identifier=data.get('client_identifier', 'Sin identificar'),
@@ -379,7 +379,7 @@ def save_order(request):
             if duplicate_orders.exists():
                 # Verificar si los items coinciden exactamente
                 for dup_order in duplicate_orders:
-                    dup_items = dup_order.itempedido_set.all()
+                    dup_items = dup_order.orderitem_set.all()
                     if len(items) == dup_items.count():
                         # Verificar que los items coincidan
                         all_match = True
@@ -419,18 +419,18 @@ def save_order(request):
                 # Pre-calculate subtotal before creating the order
                 for item in items:
                     try:
-                        articulo_menu = ArticuloMenu.objects.get(id=item['id'])
-                        subtotal += articulo_menu.price * int(item.get('quantity', 1))
-                    except ArticuloMenu.DoesNotExist as e:
-                        print(f"❌ ArticuloMenu not found: {item['id']}")
-                        raise ValueError(f"ArticuloMenu with id {item['id']} not found")
+                        menu_item = MenuItem.objects.get(id=item['id'])
+                        subtotal += menu_item.price * int(item.get('quantity', 1))
+                    except MenuItem.DoesNotExist as e:
+                        print(f"❌ MenuItem not found: {item['id']}")
+                        raise ValueError(f"MenuItem with id {item['id']} not found")
                     except KeyError as e:
                         print(f"❌ Missing key in item: {str(e)}")
                         raise ValueError(f"Missing required field in item: {str(e)}")
                 
                 # Create order with final total amount in one go
                 try:
-                    order = Pedido.objects.create(
+                    order = Order.objects.create(
                         client_identifier=data.get('client_identifier', 'Sin identificar'),
                         room_number=data.get('room_number', ''),
                         user=request.user, 
@@ -446,10 +446,10 @@ def save_order(request):
                 # Create order items
                 for item in items:
                     try:
-                        articulo_menu = ArticuloMenu.objects.get(id=item['id'])
-                        ItemPedido.objects.create(
-                            pedido=order,
-                            articulo_menu=articulo_menu,
+                        menu_item = MenuItem.objects.get(id=item['id'])
+                        OrderItem.objects.create(
+                            order=order,
+                            menu_item=menu_item,
                             quantity=int(item.get('quantity', 1)),
                             note=str(item.get('note', ''))
                         )
@@ -459,11 +459,11 @@ def save_order(request):
             
             if order:
                 # Obtener items del pedido para retornarlos en la respuesta
-                items_list = order.itempedido_set.all()
+                items_list = order.orderitem_set.all()
                 items_data = [{
-                    'id': item.articulo_menu.id,
-                    'name': item.articulo_menu.name,
-                    'price': float(item.articulo_menu.price),
+                    'id': item.menu_item.id,
+                    'name': item.menu_item.name,
+                    'price': float(item.menu_item.price),
                     'quantity': item.quantity,
                     'note': item.note,
                 } for item in items_list]
@@ -511,9 +511,9 @@ def save_order(request):
             else:
                 return JsonResponse({'success': False, 'error': 'Order could not be created'}, status=400)
                 
-        except ArticuloMenu.DoesNotExist as e:
-            print(f"❌ ArticuloMenu.DoesNotExist: {str(e)}")
-            return JsonResponse({'success': False, 'error': f'ArticuloMenu not found'}, status=400)
+        except MenuItem.DoesNotExist as e:
+            print(f"❌ MenuItem.DoesNotExist: {str(e)}")
+            return JsonResponse({'success': False, 'error': f'MenuItem not found'}, status=400)
         except ValueError as e:
             print(f"❌ ValueError: {str(e)}")
             return JsonResponse({'success': False, 'error': f'Validation error: {str(e)}'}, status=400)
@@ -537,16 +537,16 @@ def api_waiter_order_detail(request, pk):
     PUT: Updates the items of an order.
     """
     try:
-        order = Pedido.objects.get(pk=pk)
-    except Pedido.DoesNotExist:
-        return JsonResponse({'error': 'Pedido not found'}, status=404)
+        order = Order.objects.get(pk=pk)
+    except Order.DoesNotExist:
+        return JsonResponse({'error': 'Order not found'}, status=404)
 
     if request.method == 'GET':
-        items = order.itempedido_set.all()
+        items = order.orderitem_set.all()
         items_data = [{ 
-            'id': item.articulo_menu.id,
-            'name': item.articulo_menu.name,
-            'price': float(item.articulo_menu.price),
+            'id': item.menu_item.id,
+            'name': item.menu_item.name,
+            'price': float(item.menu_item.price),
             'quantity': item.quantity,
             'note': item.note,
             'is_prepared': item.is_prepared,
@@ -571,7 +571,7 @@ def api_waiter_order_detail(request, pk):
 
         with transaction.atomic():
             # Get existing items BEFORE any updates
-            existing_items = list(order.itempedido_set.all())
+            existing_items = list(order.orderitem_set.all())
             was_ready = order.status == 'ready'
             
             subtotal = decimal.Decimal('0.00')
@@ -584,13 +584,13 @@ def api_waiter_order_detail(request, pk):
                 menu_item_id = item_data['id']
                 quantity = item_data['quantity']
                 note = item_data.get('note', '')
-                articulo_menu = ArticuloMenu.objects.get(id=menu_item_id)
+                menu_item = MenuItem.objects.get(id=menu_item_id)
                 
                 # Try to find an unmatched existing item of the same type
                 found_match = False
                 for existing_item in existing_items:
                     if (existing_item.id not in matched_existing_items and 
-                        existing_item.articulo_menu_id == menu_item_id):
+                        existing_item.menu_item_id == menu_item_id):
                         # Update this item
                         existing_item.quantity = quantity
                         existing_item.note = note
@@ -604,15 +604,15 @@ def api_waiter_order_detail(request, pk):
                 
                 if not found_match:
                     # Create new item (is_prepared=False for new items)
-                    ItemPedido.objects.create(
-                        pedido=order,
-                        articulo_menu=articulo_menu,
+                    OrderItem.objects.create(
+                        order=order,
+                        menu_item=menu_item,
                         quantity=quantity,
                         note=note,
                         is_prepared=False
                     )
                 
-                subtotal += articulo_menu.price * quantity
+                subtotal += menu_item.price * quantity
             
             # Delete items that were not matched (i.e., removed from the order)
             for existing_item in existing_items:
@@ -634,7 +634,7 @@ def api_waiter_order_detail(request, pk):
 def update_order_status(request, order_id):
     if request.method == 'POST':
         status = request.POST.get('status')
-        order = Pedido.objects.get(id=order_id)
+        order = Order.objects.get(id=order_id)
         order.status = status
         order.save()
         return redirect('cook_dashboard')
@@ -654,9 +654,9 @@ def api_orders(request):
     if request.method == 'GET':
         try:
             # Para cocina: solo órdenes pendientes y en preparación
-            orders = Pedido.objects.filter(
+            orders = Order.objects.filter(
                 status__in=['pending', 'preparing']
-            ).select_related('user').prefetch_related('itempedido_set__articulo_menu').order_by('created_at')
+            ).select_related('user').prefetch_related('orderitem_set__articulo_menu').order_by('created_at')
             
             data = []
             for o in orders:
@@ -666,11 +666,11 @@ def api_orders(request):
                     'status': o.status,
                     'created_at': o.created_at.isoformat(),
                     'items': [{
-                        'name': item.articulo_menu.name,
+                        'name': item.menu_item.name,
                         'quantity': item.quantity,
                         'note': item.note or '',
                         'is_prepared': item.is_prepared,
-                    } for item in o.itempedido_set.all()]
+                    } for item in o.orderitem_set.all()]
                 })
             return JsonResponse(data, safe=False)
         except Exception as e:
@@ -680,7 +680,7 @@ def api_orders(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            order = Pedido.objects.create(
+            order = Order.objects.create(
                 client_identifier=data['client_identifier'],
                 room_number=data.get('room_number'),
                 user=request.user,
@@ -703,7 +703,7 @@ def api_orders(request):
 @user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
 def api_kitchen_orders(request):
     if request.method == 'GET':
-        orders = Pedido.objects.filter(status__in=['pending', 'preparing'])
+        orders = Order.objects.filter(status__in=['pending', 'preparing'])
         data = [{
             'id': o.id,
             'identifier': get_order_identifier(o),
@@ -722,16 +722,16 @@ def api_order_detail(request, pk):
     DELETE: Deletes the order.
     """
     try:
-        order = Pedido.objects.get(pk=pk)
-    except Pedido.DoesNotExist:
-        return JsonResponse({'error': 'Pedido not found'}, status=404)
+        order = Order.objects.get(pk=pk)
+    except Order.DoesNotExist:
+        return JsonResponse({'error': 'Order not found'}, status=404)
 
     if request.method == 'GET':
-        items = order.itempedido_set.all()
+        items = order.orderitem_set.all()
         items_data = [{
-            'id': item.articulo_menu.id,
-            'name': item.articulo_menu.name,
-            'price': float(item.articulo_menu.price),
+            'id': item.menu_item.id,
+            'name': item.menu_item.name,
+            'price': float(item.menu_item.price),
             'quantity': item.quantity,
             'note': item.note,
         } for item in items]
@@ -775,7 +775,7 @@ def api_order_status(request, pk):
     if request.method == 'PUT':
         try:
             data = json.loads(request.body)
-            order = Pedido.objects.get(pk=pk)
+            order = Order.objects.get(pk=pk)
             new_status = data.get('status')
             
             if not new_status:
@@ -797,8 +797,8 @@ def api_order_status(request, pk):
 
             order.save(update_fields=update_fields)  # Only trigger signal for fields we actually changed
             return JsonResponse({'success': True, 'status': order.status, 'total_amount': float(order.total_amount)})
-        except Pedido.DoesNotExist:
-            return JsonResponse({'success': False, 'error': 'Pedido not found'}, status=404)
+        except Order.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Order not found'}, status=404)
         except json.JSONDecodeError as e:
             return JsonResponse({'success': False, 'error': f'Invalid JSON: {str(e)}'}, status=400)
         except Exception as e:
@@ -816,10 +816,10 @@ def api_menu_items(request):
     POST: Creates a new menu item.
     """
     if request.method == 'GET':
-        menu_items = ArticuloMenu.objects.all().order_by('categoria', 'name')
+        menu_items = MenuItem.objects.all().order_by('category', 'name')
         data = [{
             'id': m.id, 'name': m.name, 'description': m.description,
-            'price': float(m.price), 'categoria': m.categoria, 'available': m.available,
+            'price': float(m.price), 'category': m.category, 'available': m.available,
             'image_url': m.image_url
         } for m in menu_items]
         return JsonResponse(data, safe=False)
@@ -841,17 +841,17 @@ def api_menu_items(request):
             if 'price' not in data:
                 return JsonResponse({'error': 'Invalid data: price is required'}, status=400)
             
-            item = ArticuloMenu.objects.create(
+            item = MenuItem.objects.create(
                 name=data['name'].strip(),
                 description=data.get('description', ''),
                 price=data['price'],
-                categoria=data.get('categoria', 'General'),
+                category=data.get('category', 'General'),
                 available=available
             )
             
             return JsonResponse({
                 'id': item.id, 'name': item.name, 'description': item.description,
-                'price': float(item.price), 'categoria': item.categoria, 'available': item.available,
+                'price': float(item.price), 'category': item.category, 'available': item.available,
                 'image_url': item.image_url
             }, status=201)
         except json.JSONDecodeError:
@@ -875,14 +875,14 @@ def api_menu_item_detail(request, pk):
     DELETE: Deletes a menu item.
     """
     try:
-        item = ArticuloMenu.objects.get(pk=pk)
-    except ArticuloMenu.DoesNotExist:
+        item = MenuItem.objects.get(pk=pk)
+    except MenuItem.DoesNotExist:
         return JsonResponse({'error': 'Menu item not found'}, status=404)
 
     if request.method == 'GET':
         return JsonResponse({
             'id': item.id, 'name': item.name, 'description': item.description,
-            'price': float(item.price), 'categoria': item.categoria, 'available': item.available,
+            'price': float(item.price), 'category': item.category, 'available': item.available,
             'image_url': item.image_url
         })
 
@@ -911,7 +911,7 @@ def api_menu_item_detail(request, pk):
             item.name = data.get('name', item.name)
             item.description = data.get('description', item.description)
             item.price = data.get('price', item.price)
-            item.categoria = data.get('categoria', item.categoria)
+            item.category = data.get('category', item.category)
             if 'available' in data:
                 item.available = parse_available(data['available'])
         else:
@@ -922,8 +922,8 @@ def api_menu_item_detail(request, pk):
                 item.description = data['description']
             if 'price' in data:
                 item.price = data['price']
-            if 'categoria' in data:
-                item.categoria = data['categoria']
+            if 'category' in data:
+                item.category = data['category']
             if 'available' in data:
                 item.available = parse_available(data['available'])
         
@@ -935,7 +935,7 @@ def api_menu_item_detail(request, pk):
         print(f"[DEBUG] Item {pk} saved. Available: {item.available}")
         return JsonResponse({
             'id': item.id, 'name': item.name, 'description': item.description,
-            'price': float(item.price), 'categoria': item.categoria, 'available': item.available,
+            'price': float(item.price), 'category': item.category, 'available': item.available,
             'image_url': item.image_url
         })
 
@@ -954,8 +954,8 @@ def api_menu_item_upload_image(request, pk):
     import cloudinary.uploader
     
     try:
-        item = ArticuloMenu.objects.get(pk=pk)
-    except ArticuloMenu.DoesNotExist:
+        item = MenuItem.objects.get(pk=pk)
+    except MenuItem.DoesNotExist:
         return JsonResponse({'error': 'Menu item not found'}, status=404)
     
     if request.method == 'POST':
@@ -1004,8 +1004,8 @@ def api_menu_item_delete_image(request, pk):
     Only handles POST requests.
     """
     try:
-        item = ArticuloMenu.objects.get(pk=pk)
-    except ArticuloMenu.DoesNotExist:
+        item = MenuItem.objects.get(pk=pk)
+    except MenuItem.DoesNotExist:
         return JsonResponse({'error': 'Menu item not found'}, status=404)
     
     if request.method == 'POST':
@@ -1039,7 +1039,7 @@ def api_orders_report(request):
     if request.method == 'GET':
         from django.db.models import Q
         from datetime import datetime
-        orders = Pedido.objects.all() # total_amount is now a stored field
+        orders = Order.objects.all() # total_amount is now a stored field
 
         # Filtering
         search_query = request.GET.get('search', '')
@@ -1104,7 +1104,7 @@ def api_dashboard_charts(request):
     if chart_type == 'sales_by_day':
         # Ventas de los últimos 7 días para pedidos pagados
         seven_days_ago = timezone.now().date() - timedelta(days=6)
-        sales_data = Pedido.objects.filter(
+        sales_data = Order.objects.filter(
             status='paid',
             created_at__date__gte=seven_days_ago
         ).annotate(
@@ -1122,7 +1122,7 @@ def api_dashboard_charts(request):
 
     if chart_type == 'top_dishes':
         # Top 5 platos más vendidos
-        top_dishes = ArticuloMenu.objects.annotate(
+        top_dishes = MenuItem.objects.annotate(
             total_sold=Sum('orderitem__quantity', filter=Q(orderitem__order__status='paid'))
         ).filter(total_sold__gt=0).order_by('-total_sold')[:5]
 
@@ -1132,7 +1132,7 @@ def api_dashboard_charts(request):
 
     if chart_type == 'sales_by_hour':
         # Ventas de hoy por hora
-        sales_data = Pedido.objects.filter(
+        sales_data = Order.objects.filter(
             status='paid',
             created_at__date=today
         ).annotate(
@@ -1150,7 +1150,7 @@ def api_dashboard_charts(request):
     if chart_type == 'waiter_performance':
         # Rendimiento de garzones (pedidos atendidos hoy)
         waiters = User.objects.filter(groups__name='Garzón')
-        performance_data = Pedido.objects.filter(
+        performance_data = Order.objects.filter(
             created_at__date=today,
             user__in=waiters
         ).values('user__username').annotate(
@@ -1166,7 +1166,7 @@ def api_dashboard_charts(request):
 
     if chart_type == 'sales_by_category':
         # Ventas de hoy por categoría de producto
-        category_sales = ItemPedido.objects.filter(
+        category_sales = OrderItem.objects.filter(
             pedido__status='paid',
             pedido__created_at__date=today
         ).values('articulo_menu__categoria').annotate(
@@ -1196,10 +1196,10 @@ def api_registration_pins(request, pk=None):
     if pk is not None:
         if request.method == 'DELETE':
             try:
-                pin = PinRegistro.objects.get(pk=pk)
+                pin = RegistrationPin.objects.get(pk=pk)
                 pin.delete()
                 return JsonResponse({'success': True, 'message': 'PIN eliminado'}, status=204) # 204 No Content
-            except PinRegistro.DoesNotExist:
+            except RegistrationPin.DoesNotExist:
                 return JsonResponse({'error': 'PIN no encontrado'}, status=404)
         else:
             # No se permite GET o POST a un PIN específico por ahora
@@ -1207,7 +1207,7 @@ def api_registration_pins(request, pk=None):
 
     # --- Manejo de la colección de PINs (GET, POST) ---
     if request.method == 'GET':
-        pins = PinRegistro.objects.select_related('group', 'used_by').order_by('-created_at')
+        pins = RegistrationPin.objects.select_related('group', 'used_by').order_by('-created_at')
         data = [{
             'id': pin.id,
             'pin': pin.pin,
@@ -1228,9 +1228,9 @@ def api_registration_pins(request, pk=None):
             # Generar un PIN aleatorio y único
             while True:
                 pin_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
-                if not PinRegistro.objects.filter(pin=pin_code).exists():
+                if not RegistrationPin.objects.filter(pin=pin_code).exists():
                     break
-            pin = PinRegistro.objects.create(pin=pin_code, group=group)
+            pin = RegistrationPin.objects.create(pin=pin_code, group=group)
             return JsonResponse({'success': True, 'pin': pin.pin, 'group': group.name}, status=201)
         except Group.DoesNotExist:
             return JsonResponse({'error': 'El grupo seleccionado no existe.'}, status=400)
@@ -1247,7 +1247,7 @@ def export_orders_excel(request):
     from django.http import HttpResponse
     from django.utils import timezone
 
-    orders = Pedido.objects.prefetch_related('orderitem_set__menu_item').all()
+    orders = Order.objects.prefetch_related('orderitem_set__menu_item').all()
 
     # Filtering (same logic as api_orders_report)
     search_query = request.GET.get('search', '')
@@ -1280,7 +1280,7 @@ def export_orders_excel(request):
     currency_format = '"$"#,##0'
 
     # Write headers
-    headers = ['ID Pedido', 'Cliente/Habitación', 'Estado', 'Fecha y Hora', 'Total']
+    headers = ['ID Order', 'Cliente/Habitación', 'Estado', 'Fecha y Hora', 'Total']
     for col_num, header_title in enumerate(headers, 1):
         cell = ws.cell(row=1, column=col_num, value=header_title)
         cell.font = header_font
@@ -1416,7 +1416,7 @@ def api_categories(request):
     """
     if request.method == 'GET':
         # GET es público - no requiere autenticación
-        categories = Categoria.objects.all().order_by('name')
+        categories = Category.objects.all().order_by('name')
         data = [{
             'id': cat.id,
             'name': cat.name,
@@ -1438,10 +1438,10 @@ def api_categories(request):
                 return JsonResponse({'error': 'El nombre de la categoría es requerido.'}, status=400)
             
             # Verificar si la categoría ya existe (case-insensitive)
-            if Categoria.objects.filter(name__iexact=name).exists():
+            if Category.objects.filter(name__iexact=name).exists():
                 return JsonResponse({'error': 'Esta categoría ya existe.'}, status=400)
             
-            category = Categoria.objects.create(
+            category = Category.objects.create(
                 name=name,
                 description=data.get('description', '')
             )
@@ -1467,13 +1467,13 @@ def api_categories(request):
         pk = request.GET.get('id')
         if pk:
             try:
-                category = Categoria.objects.get(pk=pk)
+                category = Category.objects.get(pk=pk)
                 # Verificar si hay items usando esta categoría
-                if ArticuloMenu.objects.filter(categoria=category.name).exists():
+                if MenuItem.objects.filter(category=category.name).exists():
                     return JsonResponse({'error': 'No se puede eliminar una categoría que está en uso.'}, status=400)
                 category.delete()
                 return JsonResponse({'success': True, 'message': 'Categoría eliminada.'}, status=204)
-            except Categoria.DoesNotExist:
+            except Category.DoesNotExist:
                 return JsonResponse({'error': 'Categoría no encontrada.'}, status=404)
         else:
             return JsonResponse({'error': 'ID de categoría requerido.'}, status=400)
@@ -1505,10 +1505,10 @@ def api_categories_check(request):
             return JsonResponse({'error': 'El nombre de la categoría es requerido.'}, status=400)
         
         # Verificar si existe exactamente (case-insensitive)
-        exists = Categoria.objects.filter(name__iexact=name).exists()
+        exists = Category.objects.filter(name__iexact=name).exists()
         
         # Encontrar categorías similares
-        all_categories = Categoria.objects.all()
+        all_categories = Category.objects.all()
         similar = []
         
         for cat in all_categories:

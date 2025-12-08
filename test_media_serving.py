@@ -13,14 +13,14 @@ django.setup()
 
 from django.test import Client
 from django.conf import settings
-from restaurant.models import ArticuloMenu
+from restaurant.models import MenuItem
 
 def test_media_serving():
     """Test that media files can be served"""
     print("\n=== Testing Media File Serving ===\n")
     
     # Get item with image
-    item = ArticuloMenu.objects.filter(image__isnull=False).exclude(image='').first()
+    item = MenuItem.objects.filter(image__isnull=False).exclude(image='').first()
     
     if not item:
         print("❌ No menu items with images found")
