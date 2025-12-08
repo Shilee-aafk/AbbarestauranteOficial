@@ -11,11 +11,19 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        # This migration uses state_operations to tell Django what the final state should be,
-        # and database_operations to actually perform the renames in PostgreSQL
-        
+        # Drop foreign key constraints before renaming columns
         migrations.RunSQL(
-            # PostgreSQL: Rename tables and columns
+            sql="""
+            ALTER TABLE restaurant_itempedido DROP CONSTRAINT restaurant_itempedido_pedido_id_fkey;
+            ALTER TABLE restaurant_itempedido DROP CONSTRAINT restaurant_itempedido_articulo_menu_id_fkey;
+            """,
+            reverse_sql="""
+            -- These will be recreated when we reverse the rename
+            """,
+        ),
+        
+        # Now do the renames
+        migrations.RunSQL(
             sql="""
             -- Rename columns in ItemPedido table first
             ALTER TABLE restaurant_itempedido RENAME COLUMN pedido_id TO order_id;
@@ -43,6 +51,22 @@ class Migration(migrations.Migration):
             ALTER TABLE restaurant_articulomenu RENAME COLUMN category_id TO categoria_id;
             ALTER TABLE restaurant_itempedido RENAME COLUMN menu_item_id TO articulo_menu_id;
             ALTER TABLE restaurant_itempedido RENAME COLUMN order_id TO pedido_id;
+            """,
+        ),
+        
+        # Recreate foreign key constraints with new names
+        migrations.RunSQL(
+            sql="""
+            ALTER TABLE restaurant_orderitem ADD CONSTRAINT restaurant_orderitem_order_id_fkey 
+                FOREIGN KEY (order_id) REFERENCES restaurant_order(id) ON DELETE CASCADE;
+            ALTER TABLE restaurant_orderitem ADD CONSTRAINT restaurant_orderitem_menu_item_id_fkey 
+                FOREIGN KEY (menu_item_id) REFERENCES restaurant_menuitem(id) ON DELETE CASCADE;
+            """,
+            reverse_sql="""
+            ALTER TABLE restaurant_itempedido ADD CONSTRAINT restaurant_itempedido_pedido_id_fkey 
+                FOREIGN KEY (pedido_id) REFERENCES restaurant_pedido(id) ON DELETE CASCADE;
+            ALTER TABLE restaurant_itempedido ADD CONSTRAINT restaurant_itempedido_articulo_menu_id_fkey 
+                FOREIGN KEY (articulo_menu_id) REFERENCES restaurant_articulomenu(id) ON DELETE CASCADE;
             """,
         ),
     ]
