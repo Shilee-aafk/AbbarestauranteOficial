@@ -70,31 +70,56 @@ class DashboardTutorial {
             ],
             'bar': [
                 {
-                    element: '#drink-menu',
-                    title: this.getSVG('drink') + 'Menú de Bebidas y Cócteles',
-                    text: 'Este es el catálogo completo de bebidas disponibles en el bar. Incluye refrescos, jugos, licores, cócteles y más. Selecciona la bebida que desees agregar.',
+                    element: '#bar-client-identifier',
+                    title: this.getSVG('user') + 'Identificador del Cliente',
+                    text: 'Ingresa el nombre o identificador del cliente de la barra. Ejemplos: "Barra 1", "Cliente de la esquina", "Juan Pérez".',
                 },
                 {
-                    element: '.add-drink-btn',
-                    title: this.getSVG('send') + 'Agregar Bebida al Pedido',
-                    text: 'Haz click en "Agregar" para incluir una bebida en el pedido actual. Puedes especificar cantidad y personalizaciones (ej: con hielo, sin azúcar).',
+                    element: '#bar-room-number',
+                    title: this.getSVG('home') + 'Número de Habitación (Opcional)',
+                    text: 'Si el cliente es huésped del hotel, ingresa su número de habitación. Esto permite cargar el pedido a su cuenta. Si no aplica, déjalo vacío.',
                 },
                 {
-                    element: '#drink-cart',
-                    title: this.getSVG('cart') + 'Revisar Bebidas Agregadas',
-                    text: 'Aquí se muestran todas las bebidas que has agregado al pedido. Revisa cantidades y precios antes de enviar al bar para su preparación.',
+                    element: '#start-bar-order-btn',
+                    title: this.getSVG('check') + 'Iniciar Pedido de Barra',
+                    text: 'Haz click para crear un nuevo pedido de barra. Esto abrirá el menú completo para agregar bebidas y productos.',
+                },
+                {
+                    element: '#menu-items-container',
+                    title: this.getSVG('drink') + 'Menú de Bebidas y Productos',
+                    text: 'Este es el catálogo completo disponible. Busca por nombre o filtra por categoría. Haz click en "Agregar" para incluir un producto al pedido.',
+                },
+                {
+                    element: '#current-order',
+                    title: this.getSVG('list') + 'Resumen del Pedido Actual',
+                    text: 'Aquí ves todos los productos agregados al pedido, cantidades y el total. Puedes eliminar items si es necesario.',
                 }
             ],
             'monitor': [
                 {
-                    element: '#orders-list',
-                    title: this.getSVG('list') + 'Monitor de Pedidos de Cocina',
-                    text: 'Esta es la lista de TODOS los pedidos que han llegado desde el salón. Muestra el cliente, mesa, productos solicitados y tiempo transcurrido desde el pedido.',
+                    element: '#ready-orders-list-monitor',
+                    title: this.getSVG('check') + 'Pedidos Listos para Servir',
+                    text: 'Aquí aparecen todos los pedidos que ya han sido preparados en la cocina y están listos para servir a los clientes. Haz click en "Servir" para entregar el pedido al cliente.',
                 },
                 {
-                    element: '.order-ready-btn',
-                    title: this.getSVG('check') + 'Marcar Pedido como Listo',
-                    text: 'Cuando termines de preparar todos los platos de un pedido, haz click aquí para marcarlo como listo. El personal del salón será notificado para servir.',
+                    element: '.view-details-btn',
+                    title: this.getSVG('list') + 'Ver Detalles del Pedido',
+                    text: 'Haz click en este botón para ver los detalles completos del pedido, incluyendo todos los productos, cantidades y notas especiales.',
+                },
+                {
+                    element: '.mark-served-monitor-btn',
+                    title: this.getSVG('check') + 'Cambiar Estado - Marcar Servido',
+                    text: 'Haz click aquí para marcar el pedido como servido. El pedido se moverá a la sección de "Pedidos Servidos (para Cobrar)" y aparecerá en el panel de cobros.',
+                },
+                {
+                    element: '#in-progress-orders-list-monitor',
+                    title: this.getSVG('list') + 'Pedidos en Curso',
+                    text: 'Esta es la lista de pedidos que están siendo preparados en la cocina. Muestra el cliente, productos solicitados y el tiempo que llevan en preparación.',
+                },
+                {
+                    element: '.status-changer',
+                    title: this.getSVG('send') + 'Cambiar Estado del Pedido',
+                    text: 'Utiliza este selector para cambiar el estado del pedido. Puedes seleccionar entre: Pendiente, En Preparación o Listo. Esto actualiza el progreso de la preparación.',
                 }
             ],
             'payments': [
@@ -139,9 +164,14 @@ class DashboardTutorial {
                     text: 'Este es el monto FINAL que el cliente debe pagar, incluyendo propina (si aplica). Si dividió la cuenta, se muestra cuánto paga cada persona.',
                 },
                 {
+                    element: '#modal-charge-to-room-btn',
+                    title: this.getSVG('home') + 'Cargo a Habitación',
+                    text: 'Si el cliente es huésped del hotel, haz click aquí para enviar el cargo a recepción. El monto será agregado a la cuenta de la habitación y el cliente podrá pagarlo directamente al checkout del hotel.',
+                },
+                {
                     element: '#modal-confirm-payment-btn',
                     title: this.getSVG('check') + 'Confirmar Pago',
-                    text: 'Haz click aquí para procesar el pago y finalizar la transacción. El pedido se marcará como pagado en el sistema.',
+                    text: 'Haz click aquí para procesar el pago en efectivo/tarjeta y finalizar la transacción. El pedido se marcará como pagado en el sistema.',
                 }
             ]
         };
@@ -195,6 +225,7 @@ class DashboardTutorial {
                     transition: all 0.3s ease-out;
                     pointer-events: auto;
                     z-index: 9999 !important;
+                    display: none !important;
                 }
                 #tutorial-modal.show {
                     display: block !important;
@@ -390,12 +421,8 @@ class DashboardTutorial {
                     this.currentSection = section;
                     this.currentStep = 0;
                     
-                    // Bloquear/desbloquear evento de pago según la sección
-                    if (section === 'payments') {
-                        window.tutorialBlockPaymentModal = this.tutorialActive;
-                    } else {
-                        window.tutorialBlockPaymentModal = false;
-                    }
+                    // NO bloquear modales durante el tutorial
+                    window.tutorialBlockPaymentModal = false;
                     
                     if (this.tutorialActive) {
                         this.showStep();
@@ -431,11 +458,9 @@ class DashboardTutorial {
         
         console.log('Tutorial started in section:', this.currentSection);
         
-        // Si estamos en pagos, bloquear el evento openPaymentModal
-        if (this.currentSection === 'payments') {
-            window.tutorialBlockPaymentModal = true;
-            console.log('Payment modal blocking enabled');
-        }
+        // NO bloquear el modal de pagos - permitir que se abra el modal real
+        window.tutorialBlockPaymentModal = false;
+        console.log('Tutorial started, payment modals allowed');
         
         this.updateProgressDots();
         this.showStep();
@@ -667,6 +692,27 @@ class DashboardTutorial {
                 cartModal.classList.add('hidden');
             }
             this.openedCartModal = false;
+        }
+
+        // Cerrar modales de detalles si están abiertos
+        const detailsModal = document.getElementById('order-details-modal');
+        if (detailsModal && !detailsModal.classList.contains('hidden')) {
+            detailsModal.classList.add('hidden');
+        }
+
+        // Cerrar modales de confirmación de entrega
+        const confirmModal = document.querySelector('[id*="confirm-modal"]');
+        if (confirmModal && !confirmModal.classList.contains('hidden')) {
+            confirmModal.classList.add('hidden');
+        }
+
+        // Restaurar visibilidad del modal de pago si fue mostrado temporalmente
+        if (this.paymentModalWasHidden) {
+            const paymentModal = document.getElementById('payment-modal');
+            if (paymentModal) {
+                paymentModal.classList.add('hidden');
+            }
+            this.paymentModalWasHidden = false;
         }
 
         // Si abrimos el modal de pago temporalmente, mantenerlo abierto para que el usuario interactúe
