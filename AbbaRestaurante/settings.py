@@ -142,9 +142,12 @@ LOGIN_REDIRECT_URL = '/restaurant/'
 LOGOUT_REDIRECT_URL = '/restaurant/'
 
 # Media files configuration for user uploads (images, etc.)
-# Usar almacenamiento local, Cloudinary se usa directamente en el código
+# Usar Cloudinary Storage para persistencia en producción y desarrollo
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = BASE_DIR / 'media'  # Solo para desarrollo local
+
+# En Render (producción), DEFAULT_FILE_STORAGE ya está configurado para usar Cloudinary
+# En desarrollo local, puedes cambiar DEFAULT_FILE_STORAGE a None para usar almacenamiento local si lo prefieres
 
 # PUSHER CONFIGURATION
 PUSHER_APP_ID = os.environ.get('PUSHER_APP_ID', '')

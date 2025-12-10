@@ -378,8 +378,12 @@ export class OrdersManager {
         body: JSON.stringify(body)
       });
       if (response.ok) {
-        const text = statusText || this.getStatusInSpanish(newStatus);
-        this.uiManager.showToast(`Pedido #${orderId} marcado como ${text}.`, 'success');
+        // Solo mostrar toast para estados que no sean 'ready'
+        // El evento de Pusher 'pedido-listo' ya mostrará la notificación
+        if (newStatus !== 'ready') {
+          const text = statusText || this.getStatusInSpanish(newStatus);
+          this.uiManager.showToast(`Pedido #${orderId} marcado como ${text}.`, 'success');
+        }
         
         // Actualizar el botón en cook_dashboard si existe
         const orderCard = document.querySelector(`[data-order-id="${orderId}"]`);

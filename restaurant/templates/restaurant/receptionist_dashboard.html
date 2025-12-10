@@ -812,7 +812,7 @@
                     const row = `
                         <tr class="border-b border-gray-100">
                             <td class="py-4">${order.id}</td>
-                            <td class="py-4">${order.room_number || order.client_identifier || ''}</td>
+                            <td class="py-4">${order.identifier}</td>
                             <td class="py-4">
                                 <span class="px-2 py-1 text-xs font-medium rounded-full ${order.status_class}">${order.status_display}</span>
                             </td>

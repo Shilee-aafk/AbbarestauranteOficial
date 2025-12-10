@@ -114,7 +114,8 @@ def admin_dashboard(request):
 
     # Nota: 'orders' aquí es Order.objects.all(), no recent_orders.
     # El resto de los objetos se cargan para el renderizado inicial o como fallback.
-    orders = Order.objects.all()
+    # Optimización: select_related para evitar queries adicionales
+    orders = Order.objects.select_related('user').all()
     menu_items = MenuItem.objects.all()
     groups = Group.objects.all()  # Obtener todos los grupos/roles
     user_role = request.user.groups.first().name if request.user.groups.exists() else None
@@ -458,7 +459,8 @@ def save_order(request):
                         raise
             
             if order:
-                # Obtener items del pedido para retornarlos en la respuesta
+                # Optimización: prefetch_related para cargar los items y sus menu_items de una vez
+                order = Order.objects.prefetch_related('orderitem_set__menu_item').get(pk=order.id)
                 items_list = order.orderitem_set.all()
                 items_data = [{
                     'id': item.menu_item.id,
@@ -535,9 +537,11 @@ def api_waiter_order_detail(request, pk):
     API endpoint for waiters to get and update a specific order.
     GET: Returns the items of an order.
     PUT: Updates the items of an order.
+    Optimized with prefetch_related to avoid N+1 queries.
     """
     try:
-        order = Order.objects.get(pk=pk)
+        # Optimización: prefetch_related para cargar los items y sus menu_items de una vez
+        order = Order.objects.prefetch_related('orderitem_set__menu_item').get(pk=pk)
     except Order.DoesNotExist:
         return JsonResponse({'error': 'Order not found'}, status=404)
 
@@ -1035,11 +1039,13 @@ def api_menu_item_delete_image(request, pk):
 def api_orders_report(request):
     """
     API endpoint to get a filtered list of orders for reporting purposes.
+    Optimized with select_related to avoid N+1 queries.
     """
     if request.method == 'GET':
         from django.db.models import Q
         from datetime import datetime
-        orders = Order.objects.all() # total_amount is now a stored field
+        # Optimización: select_related para el usuario (relación 1-to-N)
+        orders = Order.objects.select_related('user').all()
 
         # Filtering
         search_query = request.GET.get('search', '')
