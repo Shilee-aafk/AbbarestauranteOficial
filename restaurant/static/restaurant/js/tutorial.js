@@ -421,8 +421,12 @@ class DashboardTutorial {
                     this.currentSection = section;
                     this.currentStep = 0;
                     
-                    // NO bloquear modales durante el tutorial
-                    window.tutorialBlockPaymentModal = false;
+                    // Bloquear modal de pagos si estamos en tutorial y la sección es pagos
+                    if (this.tutorialActive && section === 'payments') {
+                        window.tutorialBlockPaymentModal = true;
+                    } else {
+                        window.tutorialBlockPaymentModal = false;
+                    }
                     
                     if (this.tutorialActive) {
                         this.showStep();
