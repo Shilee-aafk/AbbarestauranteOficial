@@ -309,10 +309,10 @@ export class OrdersManager {
         <p class="text-sm text-gray-700 mt-1">Total: $${order.total.toLocaleString('es-CL')}</p>
       </div>
       <div class="flex items-center space-x-2 ml-4">
-        <button class="edit-btn flex items-center justify-center bg-gray-500 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-600" data-order-id="${order.id}">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z"></path></svg>
+        <button class="edit-btn flex items-center justify-center bg-gray-100 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-200 shadow-sm border border-gray-400" data-order-id="${order.id}">
+          <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z"></path></svg>
         </button>
-        <button class="charge-btn flex items-center justify-center bg-amber-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-amber-900" data-order-id="${order.id}">
+        <button class="charge-btn flex items-center justify-center text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm border border-yellow-800 hover:opacity-90" style="background-color: #6F4E37;" data-order-id="${order.id}">
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H4a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
           <span>Cobrar</span>
         </button>
@@ -353,7 +353,7 @@ export class OrdersManager {
   /**
    * Actualiza el estado de un pedido
    */
-  async updateOrderStatus(orderId, newStatus, statusText = null) {
+  async updateOrderStatus(orderId, newStatus, statusText = null, paymentMethod = null, paymentReference = null) {
     if (!orderId || orderId === 'undefined') {
       console.error('Invalid orderId:', orderId);
       this.uiManager.showToast('Error: ID de pedido inválido', 'error');
@@ -368,6 +368,14 @@ export class OrdersManager {
         body.tip_amount = parseFloat(document.getElementById('custom-tip-amount-input').value).toFixed(2) || '0.00';
       } else {
         body.tip_amount = '0.00';
+      }
+      
+      // Add payment method and reference if provided
+      if (paymentMethod) {
+        body.payment_method = paymentMethod;
+      }
+      if (paymentReference) {
+        body.payment_reference = paymentReference;
       }
     }
 

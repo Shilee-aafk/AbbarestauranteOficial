@@ -4,6 +4,7 @@
 {% block title %}Dashboard Recepcionista - AbbaHotel- Restaurante{% endblock %}
 
 {% block extra_head %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="{% static 'restaurant/css/components.css' %}">
     <style>
         /* Custom Toast Notification Styles */
@@ -69,6 +70,16 @@
             border-bottom-width: 1px;
             border-bottom-color: rgb(251, 191, 36);
             overflow: hidden;
+        }
+        /* Payment Methods Chart Styling */
+        #payment-methods-chart-container {
+            display: flex;
+            justify-content: center;
+            padding: 1rem 0;
+        }
+        #payment-methods-chart-container canvas {
+            max-height: 350px !important;
+            width: auto !important;
         }
     </style>
 {% endblock %}
@@ -223,51 +234,112 @@
 
             <div id="reports" class="content-section hidden">
                 <div class="mb-8">
-                    <h1 class="text-3xl font-bold text-gray-900">Reporte de Pedidos</h1>
-                    <p class="text-gray-600 mt-2">Filtra y visualiza todos los pedidos realizados.</p>
+                    <h1 class="text-3xl font-bold text-gray-900">Reportes</h1>
+                    <p class="text-gray-600 mt-2">Visualiza datos detallados de tus operaciones.</p>
                 </div>
 
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <!-- Filters -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                        <input type="text" id="search-input" placeholder="Buscar por N° pedido, cliente, hab..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <select id="status-filter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            <option value="">Todos los Estados</option>
-                            <option value="pending">Pendiente</option>
-                            <option value="preparing">En preparación</option>
-                            <option value="ready">Listo</option>
-                            <option value="served">Servido</option>
-                            <option value="paid">Pagado</option>
-                            <option value="charged_to_room">Cargado a Habitación</option>
-                            <option value="cancelled">Cancelado</option>
-                        </select>
-                        <input type="date" id="date-from-filter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <input type="date" id="date-to-filter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    </div>
-                    <div class="flex justify-end mb-6">
-                        <button id="filter-btn" class="bg-amber-900 text-white px-6 py-2 rounded-lg font-medium hover:bg-amber-900">Buscar</button>
-                        <button id="export-excel-btn" class="ml-2 bg-amber-100 text-amber-900 px-6 py-2 rounded-lg font-medium hover:bg-amber-200">Exportar a Excel</button>
-                    </div>
+                <!-- Report Tabs -->
+                <div class="flex gap-4 mb-6 border-b border-gray-200">
+                    <button class="report-tab active px-4 py-3 font-medium text-gray-700 border-b-2 border-amber-900 text-amber-900 flex items-center gap-2" data-tab="orders-report">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        Reporte de Pedidos
+                    </button>
+                    <button class="report-tab px-4 py-3 font-medium text-gray-700 hover:text-amber-900 flex items-center gap-2" data-tab="payment-methods-report">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                        Métodos de Pago
+                    </button>
+                </div>
 
-                    <!-- Table --> 
-                    <div class="overflow-x-auto">
-                        <table class="w-full table-auto">
-                            <thead>
-                                <tr class="text-left border-b border-gray-200">
-                                    <th class="pb-3 font-semibold text-gray-900">N° PEDIDO</th>
-                                    <th class="pb-3 font-semibold text-gray-900">CLIENTE/HAB.</th>
-                                    <th class="pb-3 font-semibold text-gray-900">ESTADO</th>
-                                    <th class="pb-3 font-semibold text-gray-900">FECHA Y HORA</th>
-                                    <th class="pb-3 font-semibold text-gray-900">TOTAL</th>
-                                </tr>
-                            </thead>
-                            <tbody id="orders-report-tbody">
-                                <!-- Rows will be populated by JS -->
-                                <tr>
-                                    <td colspan="5" class="text-center py-12 text-gray-500">Utilice los filtros para buscar pedidos.</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                <!-- Orders Report Tab -->
+                <div id="orders-report" class="report-tab-content">
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <!-- Filters -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                            <div>
+                                <label class="block text-xs text-gray-600 mb-1">Buscar</label>
+                                <input type="text" id="search-input" placeholder="N° pedido, cliente, hab..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-600 mb-1">Estado</label>
+                                <select id="status-filter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="">Todos los Estados</option>
+                                    <option value="pending">Pendiente</option>
+                                    <option value="preparing">En preparación</option>
+                                    <option value="ready">Listo</option>
+                                    <option value="served">Servido</option>
+                                    <option value="paid">Pagado</option>
+                                    <option value="charged_to_room">Cargado a Habitación</option>
+                                    <option value="cancelled">Cancelado</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-600 mb-1">Desde</label>
+                                <input type="date" id="date-from-filter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="YYYY-MM-DD">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-600 mb-1">Hasta</label>
+                                <input type="date" id="date-to-filter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="YYYY-MM-DD">
+                            </div>
+                        </div>
+                        <div class="flex justify-end mb-6">
+                            <button id="filter-btn" class="bg-amber-900 text-white px-6 py-2 rounded-lg font-medium hover:bg-amber-900">Buscar</button>
+                            <button id="export-excel-btn" class="ml-2 bg-amber-100 text-amber-900 px-6 py-2 rounded-lg font-medium hover:bg-amber-200">Exportar a Excel</button>
+                        </div>
+
+                        <!-- Table --> 
+                        <div class="overflow-x-auto">
+                            <table class="w-full table-auto">
+                                <thead>
+                                    <tr class="text-left border-b border-gray-200">
+                                        <th class="pb-3 font-semibold text-gray-900">N° PEDIDO</th>
+                                        <th class="pb-3 font-semibold text-gray-900">CLIENTE/HAB.</th>
+                                        <th class="pb-3 font-semibold text-gray-900">ESTADO</th>
+                                        <th class="pb-3 font-semibold text-gray-900">MÉTODO DE PAGO</th>
+                                        <th class="pb-3 font-semibold text-gray-900">FECHA Y HORA</th>
+                                        <th class="pb-3 font-semibold text-gray-900">TOTAL</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="orders-report-tbody">
+                                    <!-- Rows will be populated by JS -->
+                                    <tr>
+                                        <td colspan="5" class="text-center py-12 text-gray-500">Utilice los filtros para buscar pedidos.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Methods Report Tab -->
+                <div id="payment-methods-report" class="report-tab-content hidden">
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <!-- Summary -->
+                        <div id="payment-methods-summary"></div>
+
+                        <!-- Tabs for different views -->
+                        <div class="flex border-b border-gray-300 mb-6">
+                            <button data-payment-tab="monthly" class="text-gray-700 px-4 py-3 font-medium hover:text-amber-900 flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Métodos de Pago
+                            </button>
+                            <button data-payment-tab="daily" class="text-gray-700 px-4 py-3 font-medium hover:text-amber-900 flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v11a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path></svg>
+                                Por Día
+                            </button>
+                            <button data-payment-tab="weekly" class="text-gray-700 px-4 py-3 font-medium hover:text-amber-900 flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                Por Semana
+                            </button>
+                        </div>
+
+                        <!-- Monthly Tab -->
+                        <div id="payment-methods-monthly-content" data-payment-content="monthly" class="hidden"></div>
+
+                        <!-- Daily Tab -->
+                        <div id="payment-methods-daily-content" data-payment-content="daily" class="hidden"></div>
+
+                        <!-- Weekly Tab -->
+                        <div id="payment-methods-weekly-content" data-payment-content="weekly" class="hidden"></div>
                     </div>
                 </div>
             </div>
@@ -279,43 +351,92 @@
         <div class="modal-container bg-white rounded-lg shadow-xl w-full max-w-md p-6">
             <div class="mt-3">
                 <div class="text-center">
-                    <h3 class="modal-title p-4" id="modal-title">Confirmar Cobro</h3>
-                    <div class="modal-body text-left">
-                        <ul id="modal-order-items" class="text-sm text-gray-700 space-y-1 max-h-60 overflow-y-auto">
-                            <!-- Order items will be populated here -->
-                        </ul>
-                        <div class="mt-4 pt-4 border-t space-y-2">
-                            <div class="flex justify-between text-md">
-                                <span class="font-semibold">Subtotal:</span>
-                                <span class="font-semibold">$<span id="modal-order-subtotal">0</span></span>
+                    <h3 class="modal-title p-4 text-xl font-bold" id="modal-title">Procesar Pago</h3>
+                    
+                    <div class="modal-body text-left space-y-4">
+                        <!-- Resumen del Pedido -->
+                        <div class="bg-gray-50 p-3 rounded-lg">
+                            <p class="text-sm text-gray-600 mb-2">Pedido: <span id="modal-order-identifier" class="font-semibold"></span></p>
+                            <ul id="modal-order-items" class="text-sm text-gray-700 space-y-1 max-h-40 overflow-y-auto">
+                                <!-- Order items will be populated here -->
+                            </ul>
+                            <div class="mt-3 pt-3 border-t space-y-2">
+                                <div class="flex justify-between text-md">
+                                    <span class="font-semibold">Subtotal:</span>
+                                    <span class="font-semibold">$<span id="modal-order-subtotal">0</span></span>
+                                </div>
+                                <div id="modal-tip-row" class="hidden flex justify-between text-md text-purple-700">
+                                    <span class="font-semibold">Propina:</span>
+                                    <span class="font-semibold">$<span id="modal-order-tip">0</span></span>
+                                </div>
+                                <div class="flex justify-between text-lg font-bold text-gray-900 border-t pt-2">
+                                    <span>Total:</span>
+                                    <span>$<span id="modal-order-total">0</span></span>
+                                </div>
                             </div>
-                            <!-- La sección de propina solo se mostrará si el monto es mayor a cero -->
-                            <div id="modal-tip-row" class="hidden flex justify-between text-md text-purple-700">
-                                <span class="font-semibold">Propina:</span>
-                                <span class="font-semibold">$<span id="modal-order-tip">0</span></span>
+                        </div>
+
+                        <!-- Método de Pago -->
+                        <div>
+                            <label for="payment-method-select" class="block text-sm font-medium text-gray-700 mb-2">Método de Pago</label>
+                            <select id="payment-method-select" class="w-full p-2 border border-gray-300 rounded-md focus:ring-amber-500 focus:border-amber-500">
+                                <option value="cash">Efectivo</option>
+                                <option value="card">Tarjeta</option>
+                                <option value="transfer">Transferencia</option>
+                                <option value="check">Cheque</option>
+                                <option value="mixed">Mixto</option>
+                            </select>
+                        </div>
+
+                        <!-- Campo de Referencia (para cheque/transferencia) -->
+                        <div id="reference-section" class="hidden">
+                            <label for="payment-reference" class="block text-sm font-medium text-gray-700 mb-2">Referencia</label>
+                            <input type="text" id="payment-reference" 
+                                   placeholder="Ej: Nº cheque, ref. transferencia" 
+                                   class="w-full p-2 border border-gray-300 rounded-md focus:ring-amber-500 focus:border-amber-500">
+                        </div>
+
+                        <!-- Propina -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Propina</label>
+                            <div class="grid grid-cols-4 gap-2 mb-2">
+                                <button class="py-2 px-1 border border-gray-300 rounded text-xs font-medium hover:bg-gray-100" 
+                                        onclick="setPaymentTip(0)">Sin</button>
+                                <button class="py-2 px-1 border border-gray-300 rounded text-xs font-medium hover:bg-gray-100" 
+                                        onclick="setPaymentTip('10%')">10%</button>
+                                <button class="py-2 px-1 border border-gray-300 rounded text-xs font-medium hover:bg-gray-100" 
+                                        onclick="setPaymentTip('15%')">15%</button>
+                                <button class="py-2 px-1 border border-gray-300 rounded text-xs font-medium hover:bg-gray-100" 
+                                        onclick="setPaymentTip('20%')">20%</button>
                             </div>
-                            <div class="flex justify-between text-lg font-bold text-gray-900">
-                                <span>Total:</span>
-                                <span>$<span id="modal-order-total">0</span></span>
-                            </div>
+                            <input type="number" id="custom-tip-amount" placeholder="Propina personalizada" 
+                                   min="0" step="0.01"
+                                   class="w-full p-2 border border-gray-300 rounded-md focus:ring-amber-500 focus:border-amber-500">
+                        </div>
+
+                        <!-- Dividir Cuenta (opcional) -->
+                        <div>
+                            <label for="split-bill-select" class="block text-sm font-medium text-gray-700 mb-2">Dividir la cuenta:</label>
+                            <select id="split-bill-select" class="w-full p-2 border border-gray-300 rounded-md">
+                                <option value="1">No dividir</option>
+                            </select>
+                            <p id="split-bill-result" class="mt-2 text-center font-semibold text-blue-600"></p>
                         </div>
                     </div>
                 </div>
-                <div class="mt-4 p-4 bg-gray-100 rounded-lg">
-                    <label for="split-bill-select" class="block text-sm font-medium text-gray-700 mb-2">Dividir la cuenta:</label>
-                    <select id="split-bill-select" class="w-full p-2 border border-gray-300 rounded-md">
-                        <option value="1">No dividir</option>
-                    </select>
-                    <p id="split-bill-result" class="mt-2 text-center font-semibold text-blue-600"></p>
-                </div>
-                <div class="modal-footer">
-                    <button id="modal-confirm-payment-btn" class="px-4 py-2 bg-amber-900 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500">
+
+                <!-- Botones de Acción -->
+                <div class="modal-footer mt-6 space-y-2">
+                    <button id="modal-confirm-payment-btn" class="px-4 py-2 bg-green-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                         Confirmar Pago
                     </button>
-                    <button id="modal-charge-to-room-btn" class="mt-2 px-4 py-2 bg-purple-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 hidden">
+                    <button id="modal-charge-to-room-btn" class="px-4 py-2 bg-purple-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 hidden flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"></path></svg>
                         Cargar a Habitación
                     </button>
-                    <button id="modal-cancel-btn" class="mt-2 px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400">
+                    <button id="modal-cancel-btn" class="px-4 py-2 bg-gray-300 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                         Cancelar
                     </button>
                 </div>
@@ -666,7 +787,8 @@
                 if (!response.ok) throw new Error('Failed to fetch order details');
                 const data = await response.json();
 
-                document.getElementById('modal-title').textContent = `Confirmar Cobro - ${data.identifier || ''}`;
+                // Actualizar información del modal
+                document.getElementById('modal-order-identifier').textContent = data.identifier || `Pedido #${orderId}`;
                 const itemsList = document.getElementById('modal-order-items');
                 itemsList.innerHTML = data.items.map(item => `
                     <li class="flex justify-between" data-item-id="${item.id}">
@@ -676,22 +798,32 @@
                 `).join('');
 
                 const subtotal = data.subtotal;
-
                 const modalOrderSubtotal = document.getElementById('modal-order-subtotal');
                 const modalOrderTip = document.getElementById('modal-order-tip');
                 const modalOrderTotal = document.getElementById('modal-order-total');
+                const customTipAmount = document.getElementById('custom-tip-amount');
+                const paymentMethodSelect = document.getElementById('payment-method-select');
+                const referenceSection = document.getElementById('reference-section');
+                const paymentReference = document.getElementById('payment-reference');
                 const splitSelect = document.getElementById('split-bill-select');
                 const splitResult = document.getElementById('split-bill-result');
                 const tipRow = document.getElementById('modal-tip-row');
                 
+                // Reset form
+                paymentMethodSelect.value = 'cash';
+                customTipAmount.value = '0';
+                paymentReference.value = '';
+                referenceSection.classList.add('hidden');
+                
                 const displayTotals = () => {
-                    const totalAmount = data.total;
+                    const tip = parseFloat(customTipAmount.value) || 0;
+                    const totalAmount = subtotal + tip;
                     
                     modalOrderSubtotal.textContent = subtotal.toLocaleString('es-CL');
+                    modalOrderTip.textContent = tip.toLocaleString('es-CL');
                     modalOrderTotal.textContent = totalAmount.toLocaleString('es-CL');
 
-                    if (data.tip_amount > 0) {
-                        modalOrderTip.textContent = data.tip_amount.toLocaleString('es-CL');
+                    if (tip > 0) {
                         tipRow.classList.remove('hidden');
                     } else {
                         tipRow.classList.add('hidden');
@@ -706,25 +838,47 @@
                     }
                 };
 
+                // Mostrar/Ocultar referencia según método de pago
+                paymentMethodSelect.addEventListener('change', (e) => {
+                    if (['check', 'transfer'].includes(e.target.value)) {
+                        referenceSection.classList.remove('hidden');
+                    } else {
+                        referenceSection.classList.add('hidden');
+                    }
+                });
+
+                // Actualizar totales cuando cambia la propina
+                customTipAmount.addEventListener('change', displayTotals);
+
+                // Configurar opciones de división
                 splitSelect.innerHTML = '<option value="1">No dividir</option>';
                 for (let i = 2; i <= 6; i++) splitSelect.innerHTML += `<option value="${i}">Dividir por ${i} personas</option>`;
                 splitResult.textContent = '';
-                splitSelect.onchange = displayTotals;
+                splitSelect.addEventListener('change', displayTotals);
                 displayTotals();
 
+                // Configurar botón de confirmación de pago
                 const confirmBtn = document.getElementById('modal-confirm-payment-btn');
                 const newConfirmBtn = confirmBtn.cloneNode(true);
                 confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
 
-                newConfirmBtn.onclick = () => {
-                    updateOrderStatus(orderId, 'paid', 'Pagado');
+                newConfirmBtn.onclick = async () => {
+                    const paymentMethod = paymentMethodSelect.value;
+                    const tipAmount = parseFloat(customTipAmount.value) || 0;
+                    const reference = paymentReference.value;
+
+                    await processPayment(orderId, paymentMethod, tipAmount, reference);
                     closePaymentModal();
                 };
 
+                // Configurar botón de cargar a habitación
                 const chargeToRoomBtn = document.getElementById('modal-charge-to-room-btn');
                 if (data.room_number) {
                     chargeToRoomBtn.classList.remove('hidden');
-                    chargeToRoomBtn.onclick = () => {
+                    const newChargeBtn = chargeToRoomBtn.cloneNode(true);
+                    chargeToRoomBtn.parentNode.replaceChild(newChargeBtn, chargeToRoomBtn);
+                    
+                    newChargeBtn.onclick = () => {
                         updateOrderStatus(orderId, 'charged_to_room', 'Cargado a Habitación');
                         closePaymentModal();
                     };
@@ -736,6 +890,64 @@
             } catch (error) {
                 console.error('Error opening payment modal:', error);
                 showToast('No se pudo cargar el detalle del pedido.', 'error');
+            }
+        }
+
+        function setPaymentTip(amount) {
+            const customTipAmount = document.getElementById('custom-tip-amount');
+            const subtotal = parseFloat(document.getElementById('modal-order-subtotal').textContent.replace(/[^\d.-]/g, '')) || 0;
+            
+            if (amount === 0) {
+                customTipAmount.value = '0';
+            } else if (typeof amount === 'string' && amount.includes('%')) {
+                const percent = parseInt(amount);
+                const tip = (subtotal * percent) / 100;
+                customTipAmount.value = tip.toFixed(2);
+            }
+            
+            // Trigger update
+            const event = new Event('change', { bubbles: true });
+            customTipAmount.dispatchEvent(event);
+        }
+
+        async function processPayment(orderId, paymentMethod, tipAmount, paymentReference) {
+            try {
+                const response = await fetch(`/restaurant/api/orders/${orderId}/payment/`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({
+                        payment_method: paymentMethod,
+                        tip_amount: tipAmount,
+                        payment_reference: paymentReference
+                    })
+                });
+
+                const responseData = await response.json();
+                
+                if (response.ok) {
+                    showToast(`✓ Pago registrado - ${responseData.payment_method}`, 'success');
+                    
+                    // Remover del listado
+                    const servedOrderItem = document.getElementById(`served-order-${orderId}`);
+                    if (servedOrderItem) {
+                        servedOrderItem.style.animation = 'fadeOut 0.5s ease-out';
+                        setTimeout(() => {
+                            servedOrderItem.remove();
+                            const list = document.getElementById('served-orders-list');
+                            if (list && list.children.length === 0) {
+                                list.innerHTML = '<li id="no-served-orders" class="text-gray-500">No hay pedidos servidos pendientes de cobro.</li>';
+                            }
+                        }, 500);
+                    }
+                } else {
+                    showToast(`Error: ${responseData.error}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error processing payment:', error);
+                showToast('Error al procesar el pago.', 'error');
             }
         }
 
@@ -795,26 +1007,49 @@
             const dateTo = document.getElementById('date-to-filter').value;
             const tbody = document.getElementById('orders-report-tbody');
 
+            console.log('📋 Fetching orders with filters:', { search, status, dateFrom, dateTo });
+
             const query = new URLSearchParams({ search, status, date_from: dateFrom, date_to: dateTo }).toString();
+            
+            console.log('🌐 URL:', `/restaurant/api/orders-report/?${query}`);
             
             try {
                 const response = await fetch(`/restaurant/api/orders-report/?${query}`);
                 if (!response.ok) throw new Error('Network response was not ok');
                 const orders = await response.json();
 
+                console.log('✅ Órdenes recibidas:', orders);
+
                 tbody.innerHTML = '';
                 if (orders.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-12 text-gray-500">No se encontraron pedidos con los filtros seleccionados.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-12 text-gray-500">No se encontraron pedidos con los filtros seleccionados.</td></tr>';
                     return;
                 }
 
                 orders.forEach(order => {
+                    // Mapeo de métodos de pago a iconos SVG
+                    const paymentIcons = {
+                        'cash': '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>',
+                        'card': '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>',
+                        'transfer': '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>',
+                        'check': '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>',
+                        'mixed': '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>'
+                    };
+
+                    const paymentIcon = paymentIcons[order.payment_method] || paymentIcons['cash'];
+                    
                     const row = `
                         <tr class="border-b border-gray-100">
                             <td class="py-4">${order.id}</td>
                             <td class="py-4">${order.identifier}</td>
                             <td class="py-4">
                                 <span class="px-2 py-1 text-xs font-medium rounded-full ${order.status_class}">${order.status_display}</span>
+                            </td>
+                            <td class="py-4">
+                                <div class="flex items-center gap-2">
+                                    ${paymentIcon}
+                                    <span>${order.payment_method_display}</span>
+                                </div>
                             </td>
                             <td class="py-4">${new Date(order.created_at).toLocaleString('es-CL')}</td>
                             <td class="py-4">$${order.total.toFixed(0)}</td>
@@ -844,6 +1079,44 @@
             window.location.href = `/restaurant/export/orders-excel/?${query}`;
         }
 
+        // Report Tabs Handling
+        document.querySelectorAll('.report-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabName = tab.dataset.tab;
+                
+                // Remove active class from all tabs
+                document.querySelectorAll('.report-tab').forEach(t => {
+                    t.classList.remove('active', 'text-amber-900', 'border-b-2', 'border-amber-900');
+                    t.classList.add('text-gray-700');
+                });
+                
+                // Hide all tab contents
+                document.querySelectorAll('.report-tab-content').forEach(content => {
+                    content.classList.add('hidden');
+                });
+                
+                // Activate current tab
+                tab.classList.add('active', 'text-amber-900', 'border-b-2', 'border-amber-900');
+                tab.classList.remove('text-gray-700');
+                
+                // Show current tab content
+                const content = document.getElementById(tabName);
+                if (content) {
+                    content.classList.remove('hidden');
+                    
+                    // Load orders report if tab is orders-report
+                    if (tabName === 'orders-report') {
+                        fetchOrdersReport();
+                    }
+                    
+                    // Load payment methods report data if tab is payment-methods-report
+                    if (tabName === 'payment-methods-report' && typeof paymentMethodsReport !== 'undefined') {
+                        paymentMethodsReport.loadReport();
+                    }
+                }
+            });
+        });
+
         function showToast(message, type = 'info') {
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
@@ -869,5 +1142,8 @@
             }, 3000);
         }
     </script>
-{% endblock %}
+    
+    <!-- Load payment methods report module -->
+    <script src="{% static 'restaurant/js/modules/payment-methods-report.js' %}"></script>
 
+{% endblock %}

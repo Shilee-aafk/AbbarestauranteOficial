@@ -281,13 +281,61 @@ export class UIManager {
 
     calculateAndDisplayTotals();
 
+    // Payment method selector
+    const paymentMethodBtns = document.querySelectorAll('.payment-method-btn');
+    const selectedPaymentInput = document.getElementById('selected-payment-method');
+    const paymentReferenceContainer = document.getElementById('payment-reference-container');
+    
+    paymentMethodBtns.forEach(btn => {
+      btn.onclick = (e) => {
+        e.preventDefault();
+        const method = btn.dataset.method;
+        selectedPaymentInput.value = method;
+        
+        // Update button styles - remove all selected styles first
+        paymentMethodBtns.forEach(b => {
+          b.classList.remove('bg-amber-500', 'border-amber-500', 'text-white');
+          b.classList.remove('hover:bg-amber-100', 'hover:border-amber-500');
+          b.classList.add('border-gray-300', 'text-gray-700', 'hover:bg-amber-100', 'hover:border-amber-500');
+        });
+        
+        // Add selected styles to clicked button
+        btn.classList.remove('border-gray-300', 'text-gray-700');
+        btn.classList.add('bg-amber-500', 'border-amber-500', 'text-white');
+        
+        // Show/hide reference field based on payment method
+        if (method === 'transfer' || method === 'check') {
+          paymentReferenceContainer.classList.remove('hidden');
+        } else {
+          paymentReferenceContainer.classList.add('hidden');
+          document.getElementById('payment-reference').value = '';
+        }
+      };
+    });
+    
+    // Set initial button state to cash
+    const cashBtn = document.querySelector('[data-method="cash"]');
+    if (cashBtn) {
+      cashBtn.click();
+    }
+
     // Botón de confirmación
     const confirmBtn = document.getElementById('modal-confirm-payment-btn');
     const newConfirmBtn = confirmBtn.cloneNode(true);
     confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
     newConfirmBtn.onclick = () => {
+      // Get payment method and reference
+      const paymentMethod = document.getElementById('selected-payment-method').value || 'cash';
+      const paymentReference = document.getElementById('payment-reference')?.value || '';
+      
       // Esto será llamado desde orders.js
-      window.dispatchEvent(new CustomEvent('payment-confirmed', { detail: { orderId } }));
+      window.dispatchEvent(new CustomEvent('payment-confirmed', { 
+        detail: { 
+          orderId,
+          paymentMethod,
+          paymentReference
+        } 
+      }));
       this.closePaymentModal();
     };
 
@@ -296,7 +344,17 @@ export class UIManager {
     if (roomNumber) {
       chargeToRoomBtn.classList.remove('hidden');
       chargeToRoomBtn.onclick = () => {
-        window.dispatchEvent(new CustomEvent('charge-to-room', { detail: { orderId } }));
+        // Get payment method and reference
+        const paymentMethod = document.getElementById('selected-payment-method').value || 'cash';
+        const paymentReference = document.getElementById('payment-reference')?.value || '';
+        
+        window.dispatchEvent(new CustomEvent('charge-to-room', { 
+          detail: { 
+            orderId,
+            paymentMethod,
+            paymentReference
+          } 
+        }));
         this.closePaymentModal();
       };
     } else {

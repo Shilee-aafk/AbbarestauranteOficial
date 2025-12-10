@@ -82,14 +82,26 @@ class Order(models.Model):
         ('charged_to_room', 'Cargado a Habitación'),
         ('cancelled', 'Cancelado'),
     ]
+    
+    PAYMENT_METHOD_CHOICES = [
+        ('cash', 'Efectivo'),
+        ('card', 'Tarjeta'),
+        ('transfer', 'Transferencia'),
+        ('check', 'Cheque'),
+        ('mixed', 'Mixto'),
+    ]
+    
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     room_number = models.CharField(max_length=10, blank=True, null=True, help_text="Guest room number")
     client_identifier = models.CharField(max_length=100, blank=True, null=True, help_text="Client identifier (e.g., 'Bar 1', 'John Doe')")
     items = models.ManyToManyField(MenuItem, through='OrderItem')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default='cash')
     tip_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    paid_at = models.DateTimeField(null=True, blank=True, help_text="When the order was paid")
+    payment_reference = models.CharField(max_length=100, blank=True, null=True, help_text="Reference for checks or transfers")
 
     class Meta:
         verbose_name = 'Order'
@@ -101,6 +113,10 @@ class Order(models.Model):
     def get_status_display(self):
         """Returns the status name in Spanish"""
         return dict(self.STATUS_CHOICES).get(self.status, self.status)
+
+    def get_payment_method_display(self):
+        """Returns the payment method name in Spanish"""
+        return dict(self.PAYMENT_METHOD_CHOICES).get(self.payment_method, self.payment_method)
 
     def save(self, *args, **kwargs):
         """Clean and validate data before saving"""

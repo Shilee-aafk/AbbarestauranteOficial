@@ -348,7 +348,7 @@ export class OrdersManager {
   /**
    * Actualiza el estado de un pedido
    */
-  async updateOrderStatus(orderId, newStatus, statusText = null) {
+  async updateOrderStatus(orderId, newStatus, statusText = null, paymentMethod = null, paymentReference = null) {
     if (!orderId || orderId === 'undefined') {
       console.error('Invalid orderId:', orderId);
       this.uiManager.showToast('Error: ID de pedido inválido', 'error');
@@ -363,6 +363,14 @@ export class OrdersManager {
         body.tip_amount = parseFloat(document.getElementById('custom-tip-amount-input').value).toFixed(2) || '0.00';
       } else {
         body.tip_amount = '0.00';
+      }
+      
+      // Add payment method and reference if provided
+      if (paymentMethod) {
+        body.payment_method = paymentMethod;
+      }
+      if (paymentReference) {
+        body.payment_reference = paymentReference;
       }
     }
 

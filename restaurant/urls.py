@@ -30,6 +30,8 @@ urlpatterns = [
     path('api/menu-items/<int:pk>/delete-image/', views.api_menu_item_delete_image, name='api_menu_item_delete_image'),
     path('api/waiter/orders/<int:pk>/', views.api_waiter_order_detail, name='api_waiter_order_detail'),
     path('api/orders-report/', views.api_orders_report, name='api_orders_report'),
+    path('api/orders/<int:pk>/payment/', views.api_process_payment, name='api_process_payment'),
+    path('api/payment-methods-report/', views.api_payment_methods_report, name='api_payment_methods_report'),
     # La ruta general para listar/crear va PRIMERO, la específica para un recurso DESPUÉS.
     path('api/pins/', views.api_registration_pins, name='api_registration_pins'),
     path('api/pins/<int:pk>/', views.api_registration_pins, name='api_registration_pin_detail'),

@@ -28,11 +28,6 @@ class DashboardTutorial {
         this.tutorials = {
             'dashboard': [
                 {
-                    element: '#sidebar-toggle',
-                    title: this.getSVG('menu') + 'Menú de Navegación',
-                    text: 'Haz click aquí para abrir/cerrar el menú lateral. Desde aquí accederás a todos los módulos del sistema: Bar, Monitor de Cocina y Pagos.',
-                },
-                {
                     element: '#client-identifier',
                     title: this.getSVG('user') + 'Identificador del Cliente',
                     text: 'Ingresa el nombre del cliente, número de mesa o identificador. Ejemplos: "Mesa 5", "Juan García", "Barra 1", "Habitación 203".',
@@ -97,6 +92,16 @@ class DashboardTutorial {
             ],
             'monitor': [
                 {
+                    element: '#in-progress-orders-list-monitor',
+                    title: this.getSVG('list') + 'Pedidos en Curso',
+                    text: 'Esta es la lista de pedidos que están siendo preparados en la cocina. Muestra el cliente, productos solicitados y el tiempo que llevan en preparación.',
+                },
+                {
+                    element: '.status-changer',
+                    title: this.getSVG('send') + 'Cambiar Estado del Pedido',
+                    text: 'Utiliza este selector para cambiar el estado del pedido. Puedes seleccionar entre: Pendiente, En Preparación o Listo. Esto actualiza el progreso de la preparación.',
+                },
+                {
                     element: '#ready-orders-list-monitor',
                     title: this.getSVG('check') + 'Pedidos Listos para Servir',
                     text: 'Aquí aparecen todos los pedidos que ya han sido preparados en la cocina y están listos para servir a los clientes. Haz click en "Servir" para entregar el pedido al cliente.',
@@ -110,29 +115,98 @@ class DashboardTutorial {
                     element: '.mark-served-monitor-btn',
                     title: this.getSVG('check') + 'Cambiar Estado - Marcar Servido',
                     text: 'Haz click aquí para marcar el pedido como servido. El pedido se moverá a la sección de "Pedidos Servidos (para Cobrar)" y aparecerá en el panel de cobros.',
-                },
-                {
-                    element: '#in-progress-orders-list-monitor',
-                    title: this.getSVG('list') + 'Pedidos en Curso',
-                    text: 'Esta es la lista de pedidos que están siendo preparados en la cocina. Muestra el cliente, productos solicitados y el tiempo que llevan en preparación.',
-                },
-                {
-                    element: '.status-changer',
-                    title: this.getSVG('send') + 'Cambiar Estado del Pedido',
-                    text: 'Utiliza este selector para cambiar el estado del pedido. Puedes seleccionar entre: Pendiente, En Preparación o Listo. Esto actualiza el progreso de la preparación.',
                 }
             ],
             'payments': [
                 {
-                    element: '.charge-btn',
-                    title: this.getSVG('send') + 'Sección de Cobros - Procesar Pago',
+                    element: '#served-orders-list-monitor',
+                    title: this.getSVG('send') + 'Sección de Cobros - Pedidos Servidos',
                     text: 'Esta sección muestra TODOS los pedidos que ya han sido servidos y están listos para cobrar.\n\n' +
-                          '🔸 Busca el pedido del cliente en la lista\n' +
-                          '🔸 Haz click en "Cobrar" para abrir el modal de pago\n' +
-                          '🔸 Verás el desglose: productos, subtotal, propina (opcional) y total\n' +
-                          '🔸 El cliente puede elegir: efectivo, tarjeta, o "Cargo a Habitación"\n' +
-                          '🔸 Confirma el pago y listo - el pedido se marca como cobrado\n\n' +
-                          '💡 Tip: La propina es opcional y se calcula como porcentaje del subtotal.',
+                          '🔸 Aquí verás una lista de todos los pedidos pendientes de cobro\n' +
+                          '🔸 Cada pedido muestra el identificador del cliente y el total a cobrar\n' +
+                          '🔸 Haz click en el botón "Cobrar" para abrir el modal de pago',
+                },
+                {
+                    element: '.charge-btn',
+                    title: this.getSVG('card') + 'Botón Cobrar - Procesar Pago',
+                    text: 'El botón "Cobrar" abre el modal de pago para este pedido.\n\n' +
+                          '🔸 El modal mostrará todos los productos del pedido\n' +
+                          '🔸 Verás el subtotal y el total a cobrar\n' +
+                          '🔸 Luego seleccionarás el método de pago\n\n' +
+                          '💡 Tip: Asegúrate de que el cliente esté presente antes de procesar el pago',
+                },
+                {
+                    element: '#payment-modal #modal-order-subtotal',
+                    title: this.getSVG('list') + 'Resumen de Productos - Modal de Pago',
+                    text: 'En el modal de pago verás una lista completa de todos los productos del pedido.\n\n' +
+                          '🔸 Verifica que todos los productos están aquí\n' +
+                          '🔸 Confirma la cantidad de cada producto\n' +
+                          '🔸 Revisa el subtotal que se muestra aquí\n' +
+                          '🔸 Confirma que el cliente no quiera agregar o quitar nada\n\n' +
+                          '💡 Si hay un error, cancela y regresa a editar el pedido',
+                },
+                {
+                    element: '#payment-modal .payment-method-btn:nth-child(3)',
+                    title: this.getSVG('send') + 'Seleccionar Método de Pago',
+                    text: 'Ahora selecciona cómo va a pagar el cliente. Los 5 métodos disponibles son:\n\n' +
+                          '💵 Efectivo - Pago en efectivo al contado\n' +
+                          '💳 Tarjeta - Tarjeta de crédito o débito\n' +
+                          '🏦 Transferencia - Transferencia bancaria\n' +
+                          '📋 Cheque - Pago con cheque\n' +
+                          '🔀 Mixto - Combinación de dos o más métodos\n\n' +
+                          '🔸 El botón del método seleccionado se pondrá de color ámbar\n' +
+                          '🔸 Si seleccionas Transferencia o Cheque, aparecerá un campo para el comprobante',
+                },
+                {
+                    element: '#payment-reference-container',
+                    title: this.getSVG('list') + 'Campo de Referencia - Para Cheques y Transferencias',
+                    text: 'Este campo aparece SOLO si seleccionaste Cheque o Transferencia.\n\n' +
+                          '🔸 Ingresa el número de cheque o comprobante de transferencia\n' +
+                          '🔸 Esto es importante para el registro y conciliación\n' +
+                          '🔸 Ejemplo: "12345678" para un cheque o "Ref-2025-001" para transferencia\n\n' +
+                          '💡 Tip: Ten el comprobante a mano antes de procesar el pago',
+                },
+                {
+                    element: '#include-tip-checkbox',
+                    title: this.getSVG('list') + 'Incluir Propina - Opcional',
+                    text: 'El cliente puede dejar propina al pagar. Esto es OPCIONAL.\n\n' +
+                          '🔸 Marca el checkbox "Incluir Propina" si el cliente quiere dejar propina\n' +
+                          '🔸 Si NO marca, la propina será $0\n' +
+                          '🔸 En el siguiente paso verás cómo calcular el monto de propina',
+                },
+                {
+                    element: '#tip-preset-buttons .tip-preset-btn:first-child',
+                    title: this.getSVG('check') + 'Propinas Rápidas - Porcentajes Predefinidos',
+                    text: 'Si el cliente quiere dejar propina, puedes usar los botones rápidos:\n\n' +
+                          '🔸 10% - Calcula automáticamente el 10% del subtotal\n' +
+                          '🔸 15% - Calcula automáticamente el 15% del subtotal\n' +
+                          '🔸 20% - Calcula automáticamente el 20% del subtotal\n\n' +
+                          '💡 O puedes ingresar un monto personalizado manualmente\n' +
+                          '💡 El total se actualiza automáticamente',
+                },
+                {
+                    element: '#modal-order-total',
+                    title: this.getSVG('send') + 'Total Final - Monto a Cobrar',
+                    text: 'Este es el monto FINAL que el cliente debe pagar.\n\n' +
+                          '🔸 Se calcula como: Subtotal + Propina (si la hay)\n' +
+                          '🔸 Verifica que sea el monto correcto\n' +
+                          '🔸 Comunica este monto al cliente antes de procesar\n\n' +
+                          '💡 El cliente debe tener este monto en la forma de pago seleccionada',
+                },
+                {
+                    element: '#modal-charge-to-room-btn',
+                    title: this.getSVG('home') + 'Cargar a Habitación',
+                    text: 'Aparece si ingresaste número de habitación.\n\n' +
+                          '🔸 Carga el pedido a la cuenta de la habitación\n' +
+                          '🔸 El cliente pagará en recepción',
+                },
+                {
+                    element: '#modal-confirm-payment-btn',
+                    title: this.getSVG('check') + 'Confirmar Pago',
+                    text: 'Elige uno de estos botones:\n\n' +
+                          '🔸 "Confirmar Pago" - Pago inmediato\n' +
+                          '🔸 "Cargar a Habitación" - Para huéspedes\n\n' +
+                          '✓ El pedido se marcará como PAGADO',
                 }
             ]
         };
@@ -457,7 +531,16 @@ class DashboardTutorial {
         const steps = this.tutorials[this.currentSection];
         if (this.currentStep < steps.length - 1) {
             this.currentStep++;
-            this.showStep();
+            
+            // Añadir delay extra cuando se transiciona a "Pedidos Listos para Servir" en la sección monitor
+            const currentStep = steps[this.currentStep];
+            const delay = (this.currentSection === 'monitor' && currentStep.element === '#ready-orders-list-monitor') ? 1000 : 0;
+            
+            if (delay > 0) {
+                setTimeout(() => this.showStep(), delay);
+            } else {
+                this.showStep();
+            }
         } else {
             this.end();
         }
@@ -498,6 +581,16 @@ class DashboardTutorial {
             nextBtn.innerHTML = this.getSVG('check') + 'Finalizar';
         } else {
             nextBtn.textContent = 'Siguiente →';
+        }
+
+        // Desbloquear modal de pago cuando llegamos al paso del botón "Cobrar"
+        // Esto permite que se abra el modal real en lugar de crear uno nuevo
+        if (step.element === '.charge-btn' || 
+            step.element.includes('#payment-modal') || 
+            step.element.includes('#modal-')) {
+            window.tutorialBlockPaymentModal = false;
+        } else {
+            window.tutorialBlockPaymentModal = true;
         }
 
         // Resaltar elemento y posicionar modal

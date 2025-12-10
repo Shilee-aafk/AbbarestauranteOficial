@@ -152,14 +152,14 @@ function setupGlobalListeners() {
 
   // Events para confirmación de pago
   window.addEventListener('payment-confirmed', (e) => {
-    const { orderId } = e.detail;
-    ordersManager.updateOrderStatus(orderId, 'paid', 'Pagado');
+    const { orderId, paymentMethod = 'cash', paymentReference = '' } = e.detail;
+    ordersManager.updateOrderStatus(orderId, 'paid', 'Pagado', paymentMethod, paymentReference);
     ordersManager.removeServedOrder(orderId);
   });
 
   window.addEventListener('charge-to-room', (e) => {
-    const { orderId } = e.detail;
-    ordersManager.updateOrderStatus(orderId, 'charged_to_room', 'Cargado a Habitación');
+    const { orderId, paymentMethod = 'cash', paymentReference = '' } = e.detail;
+    ordersManager.updateOrderStatus(orderId, 'charged_to_room', 'Cargado a Habitación', paymentMethod, paymentReference);
     ordersManager.removeServedOrder(orderId);
   });
 

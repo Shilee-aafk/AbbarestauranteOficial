@@ -798,6 +798,15 @@ def api_order_status(request, pk):
                     update_fields.extend(['tip_amount', 'total_amount'])
                 except (ValueError, decimal.InvalidOperation) as e:
                     return JsonResponse({'success': False, 'error': f'Invalid tip amount: {str(e)}'}, status=400)
+            
+            # Handle payment method and reference
+            if new_status in ['paid', 'charged_to_room']:
+                if 'payment_method' in data:
+                    order.payment_method = data['payment_method']
+                    update_fields.append('payment_method')
+                if 'payment_reference' in data and data['payment_reference']:
+                    order.payment_reference = data['payment_reference']
+                    update_fields.append('payment_reference')
 
             order.save(update_fields=update_fields)  # Only trigger signal for fields we actually changed
             return JsonResponse({'success': True, 'status': order.status, 'total_amount': float(order.total_amount)})
@@ -1043,7 +1052,9 @@ def api_orders_report(request):
     """
     if request.method == 'GET':
         from django.db.models import Q
-        from datetime import datetime
+        from datetime import datetime, timedelta, date
+        from django.utils import timezone
+        
         # Optimización: select_related para el usuario (relación 1-to-N)
         orders = Order.objects.select_related('user').all()
 
@@ -1065,17 +1076,21 @@ def api_orders_report(request):
         if date_from_query:
             try:
                 date_from = datetime.strptime(date_from_query, '%Y-%m-%d').date()
-                orders = orders.filter(created_at__date__gte=date_from)
+                # Convert to datetime at start of day in current timezone, then to UTC for comparison
+                dt_from = timezone.make_aware(datetime.combine(date_from, datetime.min.time()))
+                orders = orders.filter(created_at__gte=dt_from)
             except ValueError:
-                pass  # Si la fecha no es válida, ignorar el filtro
+                pass
 
         date_to_query = request.GET.get('date_to', '')
         if date_to_query:
             try:
                 date_to = datetime.strptime(date_to_query, '%Y-%m-%d').date()
-                orders = orders.filter(created_at__date__lte=date_to)
+                # Convert to datetime at end of day in current timezone, then to UTC for comparison
+                dt_to = timezone.make_aware(datetime.combine(date_to + timedelta(days=1), datetime.min.time()))
+                orders = orders.filter(created_at__lt=dt_to)
             except ValueError:
-                pass  # Si la fecha no es válida, ignorar el filtro
+                pass
 
         orders = orders.order_by('-created_at')
 
@@ -1088,6 +1103,8 @@ def api_orders_report(request):
                 'status': order.status,
                 'status_display': order.get_status_display(),
                 'status_class': order.status_class,
+                'payment_method': order.payment_method,
+                'payment_method_display': order.get_payment_method_display(),
                 'created_at': order.created_at.isoformat(), # Ensure datetime is serializable
                 'total': float(order.total_amount or 0), # Usar el nuevo campo total_amount
             })
@@ -1183,6 +1200,166 @@ def api_dashboard_charts(request):
         return JsonResponse({'labels': labels, 'data': data})
 
     return JsonResponse({'error': 'Invalid chart type'}, status=400)
+
+@login_required
+@user_passes_test(lambda u: u.groups.filter(name__in=['Administrador', 'Recepcionista']).exists())
+def api_payment_methods_report(request):
+    """
+    API endpoint to get payment methods statistics with daily and weekly breakdowns.
+    Returns monthly data, daily breakdown, and weekly breakdown.
+    """
+    if request.method != 'GET':
+        return JsonResponse({'error': f'Método {request.method} no permitido. Use GET.'}, status=405)
+    
+    from datetime import datetime, timedelta, date
+    from django.db.models import F, Q
+    from django.utils import timezone
+    
+    # Get current month in Santiago timezone
+    today = timezone.now().date()
+    month_start = today.replace(day=1)
+    
+    # Get last day of month
+    if today.month == 12:
+        month_end = today.replace(year=today.year + 1, month=1, day=1) - timedelta(days=1)
+    else:
+        month_end = today.replace(month=today.month + 1, day=1) - timedelta(days=1)
+    
+    # Convert dates to timezone-aware datetimes for filtering
+    month_start_dt = timezone.make_aware(datetime.combine(month_start, datetime.min.time()))
+    month_end_dt = timezone.make_aware(datetime.combine(month_end, datetime.max.time()))
+    
+    # Filtrar órdenes pagadas o cargadas a habitación en el mes actual
+    orders = Order.objects.filter(
+        Q(status='paid') | Q(status='charged_to_room'),
+        created_at__gte=month_start_dt,
+        created_at__lte=month_end_dt
+    )
+    
+    # === MONTHLY SUMMARY (por método de pago) ===
+    payment_stats = orders.values('payment_method').annotate(
+        count=Count('id'),
+        total_sales=Sum('total_amount'),
+        total_tips=Sum('tip_amount')
+    ).order_by('-total_sales')
+    
+    payment_methods = dict(Order.PAYMENT_METHOD_CHOICES)
+    monthly_data = []
+    grand_total = decimal.Decimal('0.00')
+    grand_tips = decimal.Decimal('0.00')
+    
+    for stat in payment_stats:
+        method = stat['payment_method']
+        count = stat['count']
+        total = stat['total_sales'] or decimal.Decimal('0.00')
+        tips = stat['total_tips'] or decimal.Decimal('0.00')
+        
+        grand_total += total
+        grand_tips += tips
+        
+        monthly_data.append({
+            'method': method,
+            'method_display': payment_methods.get(method, method),
+            'count': count,
+            'average': float(total / count) if count > 0 else 0,
+            'total': float(total),
+            'total_tips': float(tips),
+            'percentage': 0
+        })
+    
+    # Calculate percentages
+    if grand_total > 0:
+        for item in monthly_data:
+            item['percentage'] = round((decimal.Decimal(str(item['total'])) / grand_total) * 100, 2)
+    
+    # === DAILY BREAKDOWN ===
+    # Group by date
+    daily_dict = {}
+    for order in orders:
+        order_date = order.created_at.date()
+        if order_date not in daily_dict:
+            daily_dict[order_date] = {
+                'count': 0,
+                'total': decimal.Decimal('0.00'),
+                'total_tips': decimal.Decimal('0.00')
+            }
+        daily_dict[order_date]['count'] += 1
+        daily_dict[order_date]['total'] += order.total_amount or decimal.Decimal('0.00')
+        daily_dict[order_date]['total_tips'] += order.tip_amount or decimal.Decimal('0.00')
+    
+    daily_data = []
+    for date_obj in sorted(daily_dict.keys()):
+        stat = daily_dict[date_obj]
+        daily_data.append({
+            'date': str(date_obj),
+            'day_name': date_obj.strftime('%A'),  # Monday, Tuesday, etc
+            'count': stat['count'],
+            'total': float(stat['total']),
+            'total_tips': float(stat['total_tips']),
+            'average': float(stat['total'] / stat['count']) if stat['count'] > 0 else 0
+        })
+    
+    # === WEEKLY BREAKDOWN ===
+    # Group by ISO week with date range
+    from datetime import timedelta
+    weekly_stats = {}
+    for order in orders:
+        year, week_num, weekday = order.created_at.isocalendar()
+        week_key = f"W{week_num}"
+        
+        if week_key not in weekly_stats:
+            # Calculate week start (Monday) and end (Sunday)
+            order_date = order.created_at.date()
+            week_start = order_date - timedelta(days=weekday - 1)  # ISO weekday: Mon=1, Sun=7
+            week_end = week_start + timedelta(days=6)
+            
+            weekly_stats[week_key] = {
+                'week_num': week_num,
+                'week_start': week_start,
+                'week_end': week_end,
+                'count': 0,
+                'total': decimal.Decimal('0.00'),
+                'total_tips': decimal.Decimal('0.00')
+            }
+        
+        weekly_stats[week_key]['count'] += 1
+        weekly_stats[week_key]['total'] += order.total_amount or decimal.Decimal('0.00')
+        weekly_stats[week_key]['total_tips'] += order.tip_amount or decimal.Decimal('0.00')
+    
+    weekly_data = []
+    for week_key in sorted(weekly_stats.keys()):
+        stat = weekly_stats[week_key]
+        # Format as "8-14 Dic" or similar
+        start_date = stat['week_start'].strftime('%d')
+        end_date = stat['week_end'].strftime('%d %b').lower()
+        week_label = f"{start_date}-{end_date}"
+        
+        weekly_data.append({
+            'week': week_label,
+            'week_num': stat['week_num'],
+            'week_start': str(stat['week_start']),
+            'week_end': str(stat['week_end']),
+            'count': stat['count'],
+            'total': float(stat['total']),
+            'total_tips': float(stat['total_tips']),
+            'average': float(stat['total'] / stat['count']) if stat['count'] > 0 else 0
+        })
+    
+    return JsonResponse({
+        'month': month_start.strftime('%B %Y'),
+        'month_start': str(month_start),
+        'month_end': str(month_end),
+        'summary': {
+            'total_orders': len(orders),
+            'grand_total': float(grand_total),
+            'grand_tips': float(grand_tips),
+            'average_order': float(grand_total / len(orders)) if len(orders) > 0 else 0,
+            'average_tip': float(grand_tips / len(orders)) if len(orders) > 0 else 0,
+        },
+        'monthly': monthly_data,
+        'daily': daily_data,
+        'weekly': weekly_data
+    })
 
 @csrf_exempt
 @login_required
@@ -1286,7 +1463,7 @@ def export_orders_excel(request):
     currency_format = '"$"#,##0'
 
     # Write headers
-    headers = ['ID Order', 'Cliente/Habitación', 'Estado', 'Fecha y Hora', 'Total']
+    headers = ['ID Order', 'Cliente/Habitación', 'Estado', 'Método de Pago', 'Fecha y Hora', 'Total']
     for col_num, header_title in enumerate(headers, 1):
         cell = ws.cell(row=1, column=col_num, value=header_title)
         cell.font = header_font
@@ -1306,17 +1483,18 @@ def export_orders_excel(request):
         ws.cell(row=row_num, column=1, value=order.id)
         ws.cell(row=row_num, column=2, value=get_order_identifier(order))
         ws.cell(row=row_num, column=3, value=order.get_status_display())
-        ws.cell(row=row_num, column=4, value=local_time)
-        total_cell = ws.cell(row=row_num, column=5, value=final_total)
+        ws.cell(row=row_num, column=4, value=order.get_payment_method_display())
+        ws.cell(row=row_num, column=5, value=local_time)
+        total_cell = ws.cell(row=row_num, column=6, value=final_total)
         total_cell.number_format = currency_format
         row_num += 1
 
     # Write total row
-    total_label_cell = ws.cell(row=row_num + 1, column=4, value="Total Vendido:")
+    total_label_cell = ws.cell(row=row_num + 1, column=5, value="Total Vendido:")
     total_label_cell.font = total_font
     total_label_cell.alignment = Alignment(horizontal='right')
 
-    grand_total_cell = ws.cell(row=row_num + 1, column=5, value=grand_total)
+    grand_total_cell = ws.cell(row=row_num + 1, column=6, value=grand_total)
     grand_total_cell.font = total_font
     grand_total_cell.number_format = currency_format
     grand_total_cell.fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid") # Yellow fill
@@ -1539,3 +1717,68 @@ def api_categories_check(request):
         })
     
     return JsonResponse({'error': f'Método {request.method} no permitido.'}, status=405)
+
+
+@csrf_exempt
+@login_required
+@user_passes_test(lambda u: u.groups.filter(name='Recepcionista').exists())
+def api_process_payment(request, pk):
+    """
+    API endpoint to process payment for an order.
+    PUT: Accepts payment_method, tip_amount, and optional payment_reference.
+    Updates order status to 'paid' and records payment details.
+    """
+    from django.utils import timezone
+    
+    if request.method != 'PUT':
+        return JsonResponse({'error': f'Método {request.method} no permitido. Use PUT.'}, status=405)
+    
+    try:
+        order = Order.objects.get(pk=pk)
+    except Order.DoesNotExist:
+        return JsonResponse({'error': 'Orden no encontrada'}, status=404)
+    
+    try:
+        data = json.loads(request.body)
+        payment_method = data.get('payment_method', 'cash')
+        tip_amount = decimal.Decimal(str(data.get('tip_amount', 0)))
+        payment_reference = data.get('payment_reference', '')
+        
+        # Validar método de pago válido
+        valid_methods = dict(Order.PAYMENT_METHOD_CHOICES).keys()
+        if payment_method not in valid_methods:
+            return JsonResponse({'error': 'Método de pago inválido'}, status=400)
+        
+        # Validar que la propina no sea negativa
+        if tip_amount < 0:
+            return JsonResponse({'error': 'La propina no puede ser negativa'}, status=400)
+        
+        # Actualizar orden
+        with transaction.atomic():
+            order.payment_method = payment_method
+            order.paid_at = timezone.now()
+            order.status = 'paid'
+            order.tip_amount = tip_amount
+            if payment_reference:
+                order.payment_reference = payment_reference
+            # El total ya incluye los items, solo sumamos la propina
+            order.total_amount = sum(
+                item.menu_item.price * item.quantity 
+                for item in order.orderitem_set.all()
+            ) + tip_amount
+            order.save()
+        
+        return JsonResponse({
+            'success': True,
+            'order_id': order.id,
+            'status': order.get_status_display(),
+            'payment_method': order.get_payment_method_display(),
+            'total_amount': float(order.total_amount),
+            'tip_amount': float(order.tip_amount),
+            'paid_at': order.paid_at.isoformat() if order.paid_at else None
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'JSON inválido en el cuerpo de la solicitud'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': f'Error al procesar pago: {str(e)}'}, status=500)

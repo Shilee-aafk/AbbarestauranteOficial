@@ -186,3 +186,7 @@ CLOUDINARY_STORAGE = {
 
 # Use Cloudinary for media file storage in production AND development (for consistency)
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+# Timezone Configuration for Chile (Santiago)
+TIME_ZONE = 'America/Santiago'
+USE_TZ = True
