@@ -125,53 +125,14 @@ class DashboardTutorial {
             'payments': [
                 {
                     element: '.charge-btn',
-                    title: this.getSVG('send') + 'Procesar Cobro',
-                    text: 'Haz click en el botón "Cobrar" para abrir el modal de confirmación de pago. Aquí verás el desglose completo del pedido con subtotal, propina y total.',
-                },
-                {
-                    element: '#modal-order-items',
-                    title: this.getSVG('list') + 'Detalle de Productos',
-                    text: 'Aquí aparecen TODOS los productos del pedido. Revisa cantidad, nombres y precios. Si algo está mal, puedes editar el pedido antes de cobrar.',
-                },
-                {
-                    element: '#modal-order-subtotal',
-                    title: this.getSVG('card') + 'Subtotal',
-                    text: 'Este es el monto base del pedido sin impuestos ni propina. Se calcula automáticamente según los productos agregados.',
-                },
-                {
-                    element: '#include-tip-checkbox',
-                    title: this.getSVG('send') + 'Agregar Propina',
-                    text: 'Si el cliente desea incluir propina, marca este checkbox. Luego puedes elegir un porcentaje o ingresar un monto fijo.',
-                },
-                {
-                    element: '#tip-preset-buttons',
-                    title: this.getSVG('check') + 'Porcentajes de Propina',
-                    text: 'Haz click en uno de estos botones para agregar propina rápidamente: 10%, 15%, 18% o 20%. El monto se calcula automáticamente sobre el subtotal.',
-                },
-                {
-                    element: '#custom-tip-percentage-input',
-                    title: this.getSVG('card') + 'Personalizar Propina',
-                    text: 'Si quieres un porcentaje diferente, ingresa aquí el % deseado. También puedes ingresar un monto fijo en el campo de "Monto" a la derecha.',
-                },
-                {
-                    element: '#split-bill-input',
-                    title: this.getSVG('user') + 'Dividir la Cuenta',
-                    text: 'Si el cliente desea dividir el pago entre varias personas, selecciona aquí cuántas personas pagarán. El sistema calcula automáticamente cuánto paga cada uno.',
-                },
-                {
-                    element: '#modal-order-total',
-                    title: this.getSVG('card') + 'Total a Pagar',
-                    text: 'Este es el monto FINAL que el cliente debe pagar, incluyendo propina (si aplica). Si dividió la cuenta, se muestra cuánto paga cada persona.',
-                },
-                {
-                    element: '#modal-charge-to-room-btn',
-                    title: this.getSVG('home') + 'Cargo a Habitación',
-                    text: 'Si el cliente es huésped del hotel, haz click aquí para enviar el cargo a recepción. El monto será agregado a la cuenta de la habitación y el cliente podrá pagarlo directamente al checkout del hotel.',
-                },
-                {
-                    element: '#modal-confirm-payment-btn',
-                    title: this.getSVG('check') + 'Confirmar Pago',
-                    text: 'Haz click aquí para procesar el pago en efectivo/tarjeta y finalizar la transacción. El pedido se marcará como pagado en el sistema.',
+                    title: this.getSVG('send') + 'Sección de Cobros - Procesar Pago',
+                    text: 'Esta sección muestra TODOS los pedidos que ya han sido servidos y están listos para cobrar.\n\n' +
+                          '🔸 Busca el pedido del cliente en la lista\n' +
+                          '🔸 Haz click en "Cobrar" para abrir el modal de pago\n' +
+                          '🔸 Verás el desglose: productos, subtotal, propina (opcional) y total\n' +
+                          '🔸 El cliente puede elegir: efectivo, tarjeta, o "Cargo a Habitación"\n' +
+                          '🔸 Confirma el pago y listo - el pedido se marca como cobrado\n\n' +
+                          '💡 Tip: La propina es opcional y se calcula como porcentaje del subtotal.',
                 }
             ]
         };
@@ -462,9 +423,13 @@ class DashboardTutorial {
         
         console.log('Tutorial started in section:', this.currentSection);
         
-        // NO bloquear el modal de pagos - permitir que se abra el modal real
-        window.tutorialBlockPaymentModal = false;
-        console.log('Tutorial started, payment modals allowed');
+        // Bloquear modal de pagos si iniciamos en sección de pagos
+        if (this.currentSection === 'payments') {
+            window.tutorialBlockPaymentModal = true;
+        } else {
+            window.tutorialBlockPaymentModal = false;
+        }
+        console.log('Payment modal blocking:', window.tutorialBlockPaymentModal);
         
         this.updateProgressDots();
         this.showStep();
