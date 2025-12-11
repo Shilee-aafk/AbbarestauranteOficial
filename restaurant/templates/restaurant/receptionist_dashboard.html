@@ -177,7 +177,7 @@
                     <h2 class="text-xl font-semibold text-gray-900 mb-4">Pedidos Servidos (para Cobrar)</h2>
                     <ul id="served-orders-list" class="space-y-3 max-h-[70vh] overflow-y-auto">
                         {% for order in served_orders %} {# Esta lista ahora incluye 'served' y 'charged_to_room' #}
-                        <li id="served-order-{{ order.id }}" class="flex justify-between items-center bg-blue-50 p-3 rounded-lg">
+                        <li id="served-order-{{ order.id }}" class="flex justify-between items-center bg-amber-50 p-3 rounded-lg border border-amber-300">
                             <div class="truncate mr-4">
                                 <p class="font-semibold truncate">Pedido #{{ order.id }} - {{ order.room_number|default:order.client_identifier }}</p>
                                 <div class="flex items-center space-x-2 mt-1">
@@ -185,7 +185,7 @@
                                     <p class="text-sm text-gray-700">Total: ${{ order.total_amount|floatformat:0 }}</p>
                                 </div>
                             </div>
-                            <button class="charge-btn bg-amber-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-amber-900" data-order-id="{{ order.id }}">
+                            <button class="charge-btn text-white px-4 py-2 rounded-lg text-sm font-medium" style="background-color: #6F4E37;" data-order-id="{{ order.id }}">
                                 Cobrar
                             </button>
                         </li>
@@ -282,7 +282,7 @@
                             </div>
                         </div>
                         <div class="flex justify-end mb-6">
-                            <button id="filter-btn" class="bg-amber-900 text-white px-6 py-2 rounded-lg font-medium hover:bg-amber-900">Buscar</button>
+                            <button id="filter-btn" class="text-white px-6 py-2 rounded-lg font-medium" style="background-color: #6F4E37;">Buscar</button>
                             <button id="export-excel-btn" class="ml-2 bg-amber-100 text-amber-900 px-6 py-2 rounded-lg font-medium hover:bg-amber-200">Exportar a Excel</button>
                         </div>
 
@@ -696,7 +696,7 @@
                         <p class="text-sm text-gray-700">Total: $${order.total.toLocaleString('es-CL')}</p>
                     </div>
                 </div>
-                <button class="charge-btn bg-amber-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-amber-900" data-order-id="${order.id}">
+                <button class="charge-btn text-white px-4 py-2 rounded-lg text-sm font-medium" style="background-color: #6F4E37;" data-order-id="${order.id}">
                     Cobrar
                 </button>
             `;
@@ -706,7 +706,7 @@
             } else {
                 orderLi = document.createElement('li');
                 orderLi.id = `served-order-${order.id}`;
-                orderLi.className = 'flex justify-between items-center bg-blue-50 p-3 rounded-lg';
+                orderLi.className = 'flex justify-between items-center bg-amber-50 p-3 rounded-lg border border-amber-300';
                 orderLi.innerHTML = orderHTML;
                 servedOrdersList.prepend(orderLi);
             }

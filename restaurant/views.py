@@ -1192,10 +1192,10 @@ def api_dashboard_charts(request):
         category_sales = OrderItem.objects.filter(
             order__status='paid',
             order__created_at__date=today
-        ).values('menu_item__category').annotate(
+        ).values('menu_item__category__name').annotate(
             total=Sum(F('menu_item__price') * F('quantity'))
         ).order_by('-total')
-        labels = [c['menu_item__category'] for c in category_sales]
+        labels = [c['menu_item__category__name'] or 'Sin categoría' for c in category_sales]
         data = [float(c['total']) for c in category_sales]
         return JsonResponse({'labels': labels, 'data': data})
 
