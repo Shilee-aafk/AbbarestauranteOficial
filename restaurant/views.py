@@ -1196,16 +1196,21 @@ def api_dashboard_charts(request):
                 order__created_at__date=today,
                 menu_item__isnull=False,
                 menu_item__category__isnull=False
-            ).values('menu_item__category__name').annotate(
+            ).values('menu_item__category').annotate(
                 total=Sum(F('menu_item__price') * F('quantity'), output_field=DecimalField())
             ).order_by('-total')
             
             labels = []
             data = []
-            for c in category_sales:
-                if c['menu_item__category__name'] and c['total']:
-                    labels.append(c['menu_item__category__name'])
-                    data.append(float(c['total']))
+            for item in category_sales:
+                category_id = item['menu_item__category']
+                if category_id:
+                    try:
+                        category = Category.objects.get(id=category_id)
+                        labels.append(category.name)
+                        data.append(float(item['total']))
+                    except Category.DoesNotExist:
+                        pass
             
             return JsonResponse({'labels': labels, 'data': data})
         except Exception as e:
