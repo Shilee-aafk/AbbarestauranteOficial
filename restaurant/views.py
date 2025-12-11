@@ -99,12 +99,13 @@ def admin_dashboard(request):
 
     # --- Optimización de Consultas ---
     # 1. Usar aggregate para obtener todos los contadores en una sola consulta
+    today = timezone.localtime().date()
     stats = Order.objects.aggregate(
-        total_today=Count('id', filter=Q(created_at__date=timezone.now().date())),
-        preparing=Count('id', filter=Q(status='preparing')),
-        ready=Count('id', filter=Q(status='ready')),
-        completed=Count('id', filter=Q(status__in=['served', 'paid'])),
-        total_sales_today=Sum('total_amount', filter=Q(status='paid', created_at__date=timezone.now().date()))
+        total_today=Count('id', filter=Q(created_at__date=today)),
+        preparing=Count('id', filter=Q(status='preparing', created_at__date=today)),
+        ready=Count('id', filter=Q(status='ready', created_at__date=today)),
+        completed=Count('id', filter=Q(status__in=['served', 'paid'], created_at__date=today)),
+        total_sales_today=Sum('total_amount', filter=Q(status='paid', created_at__date=today))
     )
 
     # 2. Usar annotate para calcular el total de cada pedido en la DB (evita N+1)
@@ -1122,11 +1123,11 @@ def api_dashboard_charts(request):
     from datetime import timedelta
 
     chart_type = request.GET.get('chart')
-    today = timezone.now().date()
+    today = timezone.localtime().date()
 
     if chart_type == 'sales_by_day':
         # Ventas de los últimos 7 días para pedidos pagados
-        seven_days_ago = timezone.now().date() - timedelta(days=6)
+        seven_days_ago = timezone.localtime().date() - timedelta(days=6)
         sales_data = Order.objects.filter(
             status='paid',
             created_at__date__gte=seven_days_ago
@@ -1229,17 +1230,26 @@ def api_admin_dashboard_stats(request):
     """
     from django.utils import timezone
     
-    today = timezone.now().date()
-    
-    stats = {
-        'total_today': Order.objects.filter(created_at__date=today).count(),
-        'preparing': Order.objects.filter(status='preparing', created_at__date=today).count(),
-        'ready': Order.objects.filter(status='ready', created_at__date=today).count(),
-        'completed': Order.objects.filter(status='paid', created_at__date=today).count(),
-        'total_sales_today': float(Order.objects.filter(status='paid', created_at__date=today).aggregate(Sum('total_amount'))['total_amount__sum'] or 0)
-    }
-    
-    return JsonResponse(stats)
+    try:
+        # Usar localtime para obtener la fecha en la zona horaria local
+        today = timezone.localtime().date()
+        
+        # Obtener stats de todas las órdenes (sin filtro de fecha por ahora)
+        all_orders = Order.objects.all()
+        
+        stats = {
+            'total_today': all_orders.count(),
+            'preparing': all_orders.filter(status='preparing').count(),
+            'ready': all_orders.filter(status='ready').count(),
+            'completed': all_orders.filter(status='paid').count(),
+            'total_sales_today': float(all_orders.filter(status='paid').aggregate(Sum('total_amount'))['total_amount__sum'] or 0)
+        }
+        
+        return JsonResponse(stats)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'error': str(e)}, status=500)
 
 @login_required
 @user_passes_test(lambda u: u.groups.filter(name__in=['Administrador', 'Recepcionista']).exists())
