@@ -1202,6 +1202,27 @@ def api_dashboard_charts(request):
     return JsonResponse({'error': 'Invalid chart type'}, status=400)
 
 @login_required
+@user_passes_test(lambda u: u.groups.filter(name='Administrador').exists())
+def api_admin_dashboard_stats(request):
+    """
+    API endpoint to get admin dashboard statistics for today.
+    Returns: total_today, preparing, ready, completed, total_sales_today
+    """
+    from django.utils import timezone
+    
+    today = timezone.now().date()
+    
+    stats = {
+        'total_today': Order.objects.filter(created_at__date=today).count(),
+        'preparing': Order.objects.filter(status='preparing', created_at__date=today).count(),
+        'ready': Order.objects.filter(status='ready', created_at__date=today).count(),
+        'completed': Order.objects.filter(status='paid', created_at__date=today).count(),
+        'total_sales_today': float(Order.objects.filter(status='paid', created_at__date=today).aggregate(Sum('total_amount'))['total_amount__sum'] or 0)
+    }
+    
+    return JsonResponse(stats)
+
+@login_required
 @user_passes_test(lambda u: u.groups.filter(name__in=['Administrador', 'Recepcionista']).exists())
 def api_payment_methods_report(request):
     """

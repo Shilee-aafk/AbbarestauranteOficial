@@ -42,4 +42,5 @@ urlpatterns = [
 
     path('export/orders-excel/', views.export_orders_excel, name='export_orders_excel'),
     path('api/dashboard-charts/', views.api_dashboard_charts, name='api_dashboard_charts'),
+    path('api/admin-dashboard-stats/', views.api_admin_dashboard_stats, name='api_admin_dashboard_stats'),
 ]

@@ -978,6 +978,7 @@
             function loadSectionData(sectionId) {
                 switch (sectionId) {
                     case 'dashboard':
+                        loadDashboardStats();
                         renderAllCharts();
                         break;
                     case 'menu':
@@ -990,6 +991,15 @@
                     case 'orders':
                         initReports();
                         break;
+                }
+            }
+
+            async function loadDashboardStats() {
+                try {
+                    const stats = await apiRequest("{% url 'restaurant:api_admin_dashboard_stats' %}");
+                    updateDashboardStats(stats);
+                } catch (error) {
+                    console.error('Error loading dashboard stats:', error);
                 }
             }
 
