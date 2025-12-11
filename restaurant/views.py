@@ -855,10 +855,17 @@ def api_menu_items(request):
             if 'price' not in data:
                 return JsonResponse({'error': 'Invalid data: price is required'}, status=400)
             
+            # Convert price to Decimal to avoid comparison errors
+            try:
+                from decimal import Decimal
+                price = Decimal(str(data['price']))
+            except (ValueError, decimal.InvalidOperation):
+                return JsonResponse({'error': 'Invalid data: price must be a valid number'}, status=400)
+            
             item = MenuItem.objects.create(
                 name=data['name'].strip(),
                 description=data.get('description', ''),
-                price=data['price'],
+                price=price,
                 category=data.get('category', 'General'),
                 available=available
             )
@@ -919,12 +926,23 @@ def api_menu_item_detail(request, pk):
             if isinstance(val, str):
                 return val.lower() in ('true', '1', 'yes', 'on')
             return bool(val)
+        
+        def parse_price(val):
+            """Helper function to parse price to Decimal"""
+            if val is None:
+                return None
+            try:
+                from decimal import Decimal
+                return Decimal(str(val))
+            except (ValueError, decimal.InvalidOperation):
+                raise ValueError("Price must be a valid number")
             
         if request.method == 'PUT':
             # PUT: replace all fields
             item.name = data.get('name', item.name)
             item.description = data.get('description', item.description)
-            item.price = data.get('price', item.price)
+            if 'price' in data:
+                item.price = parse_price(data['price'])
             item.category = data.get('category', item.category)
             if 'available' in data:
                 item.available = parse_available(data['available'])
@@ -935,7 +953,7 @@ def api_menu_item_detail(request, pk):
             if 'description' in data:
                 item.description = data['description']
             if 'price' in data:
-                item.price = data['price']
+                item.price = parse_price(data['price'])
             if 'category' in data:
                 item.category = data['category']
             if 'available' in data:

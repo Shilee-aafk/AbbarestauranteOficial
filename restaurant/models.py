@@ -47,6 +47,14 @@ class MenuItem(models.Model):
         self.name = self.name.strip()
         self.category = self.category.strip()
         
+        # Convert price to Decimal if it's a string
+        if isinstance(self.price, str):
+            from decimal import Decimal, InvalidOperation
+            try:
+                self.price = Decimal(self.price)
+            except (InvalidOperation, ValueError):
+                raise ValueError("El precio debe ser un número válido.")
+        
         # Validar que el precio sea positivo
         if self.price < 0:
             raise ValueError("El precio no puede ser negativo.")
