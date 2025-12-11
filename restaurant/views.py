@@ -1189,15 +1189,29 @@ def api_dashboard_charts(request):
 
     if chart_type == 'sales_by_category':
         # Ventas de hoy por categoría de producto
-        category_sales = OrderItem.objects.filter(
-            order__status='paid',
-            order__created_at__date=today
-        ).values('menu_item__category__name').annotate(
-            total=Sum(F('menu_item__price') * F('quantity'))
-        ).order_by('-total')
-        labels = [c['menu_item__category__name'] or 'Sin categoría' for c in category_sales]
-        data = [float(c['total']) for c in category_sales]
-        return JsonResponse({'labels': labels, 'data': data})
+        from django.db.models import DecimalField
+        try:
+            category_sales = OrderItem.objects.filter(
+                order__status='paid',
+                order__created_at__date=today,
+                menu_item__isnull=False,
+                menu_item__category__isnull=False
+            ).values('menu_item__category__name').annotate(
+                total=Sum(F('menu_item__price') * F('quantity'), output_field=DecimalField())
+            ).order_by('-total')
+            
+            labels = []
+            data = []
+            for c in category_sales:
+                if c['menu_item__category__name'] and c['total']:
+                    labels.append(c['menu_item__category__name'])
+                    data.append(float(c['total']))
+            
+            return JsonResponse({'labels': labels, 'data': data})
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return JsonResponse({'labels': [], 'data': []})
 
     return JsonResponse({'error': 'Invalid chart type'}, status=400)
 

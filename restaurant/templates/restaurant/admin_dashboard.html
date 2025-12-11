@@ -1712,6 +1712,9 @@
                 const urlSection = new URLSearchParams(window.location.search).get('section');
                 const initialSection = urlSection || savedSection || 'dashboard';
                 showSection(initialSection);
+                
+                // Cargar datos del dashboard inmediatamente
+                loadDashboardStats();
             }
 
             // --- CATEGORÍAS MANAGEMENT ---
