@@ -858,9 +858,9 @@
                 // Reset form
                 selectedPaymentMethod.value = 'cash';
                 paymentMethodButtons.forEach(btn => {
-                    btn.classList.remove('bg-amber-200', 'ring-2', 'ring-amber-800');
+                    btn.classList.remove('bg-amber-200', 'ring-1', 'ring-amber-800');
                     if (btn.dataset.method === 'cash') {
-                        btn.classList.add('bg-amber-200', 'ring-2', 'ring-amber-800');
+                        btn.classList.add('bg-amber-200', 'ring-1', 'ring-amber-800');
                     }
                 });
                 customTipPercentageInput.value = '10';
@@ -903,9 +903,9 @@
                     btn.addEventListener('click', (e) => {
                         e.preventDefault();
                         paymentMethodButtons.forEach(b => {
-                            b.classList.remove('bg-amber-200', 'ring-2', 'ring-amber-800');
+                            b.classList.remove('bg-amber-200', 'ring-1', 'ring-amber-800');
                         });
-                        btn.classList.add('bg-amber-200', 'ring-2', 'ring-amber-800');
+                        btn.classList.add('bg-amber-200', 'ring-1', 'ring-amber-800');
                         selectedPaymentMethod.value = btn.dataset.method;
                         
                         if (['check', 'transfer'].includes(btn.dataset.method)) {
