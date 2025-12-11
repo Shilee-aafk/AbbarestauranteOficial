@@ -348,28 +348,29 @@
 
     <!-- Payment Confirmation Modal -->
     <div id="payment-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="modal-container bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-            <div class="mt-3">
-                <div class="text-center">
-                    <h3 class="modal-title p-4 text-xl font-bold" id="modal-title">Procesar Pago</h3>
-                    
-                    <div class="modal-body text-left space-y-4">
+        <div class="modal-container bg-amber-50 rounded-lg shadow-xl w-full max-w-md max-h-[90vh] flex flex-col">
+            <div class="overflow-y-auto flex-1">
+                <div class="p-6">
+                    <div class="text-center">
+                        <h3 class="modal-title pb-4 sticky top-0 bg-amber-50" id="modal-title">Procesar Pago</h3>
+                        
+                        <div class="modal-body text-left space-y-4">
                         <!-- Resumen del Pedido -->
-                        <div class="bg-gray-50 p-3 rounded-lg">
-                            <p class="text-sm text-gray-600 mb-2">Pedido: <span id="modal-order-identifier" class="font-semibold"></span></p>
-                            <ul id="modal-order-items" class="text-sm text-gray-700 space-y-1 max-h-40 overflow-y-auto">
+                        <div class="bg-amber-100 p-3 rounded-lg">
+                            <p class="text-sm text-amber-900 mb-2">Pedido: <span id="modal-order-identifier" class="font-semibold"></span></p>
+                            <ul id="modal-order-items" class="text-sm text-amber-900 space-y-1 max-h-40 overflow-y-auto">
                                 <!-- Order items will be populated here -->
                             </ul>
-                            <div class="mt-3 pt-3 border-t space-y-2">
+                            <div class="mt-3 pt-3 border-t border-amber-300 space-y-2">
                                 <div class="flex justify-between text-md">
                                     <span class="font-semibold">Subtotal:</span>
                                     <span class="font-semibold">$<span id="modal-order-subtotal">0</span></span>
                                 </div>
-                                <div id="modal-tip-row" class="hidden flex justify-between text-md text-purple-700">
+                                <div id="modal-tip-row" class="hidden flex justify-between text-md text-amber-800">
                                     <span class="font-semibold">Propina:</span>
                                     <span class="font-semibold">$<span id="modal-order-tip">0</span></span>
                                 </div>
-                                <div class="flex justify-between text-lg font-bold text-gray-900 border-t pt-2">
+                                <div class="flex justify-between text-lg font-bold text-amber-900 border-t border-amber-300 pt-2">
                                     <span>Total:</span>
                                     <span>$<span id="modal-order-total">0</span></span>
                                 </div>
@@ -377,69 +378,109 @@
                         </div>
 
                         <!-- Método de Pago -->
-                        <div>
-                            <label for="payment-method-select" class="block text-sm font-medium text-gray-700 mb-2">Método de Pago</label>
-                            <select id="payment-method-select" class="w-full p-2 border border-gray-300 rounded-md focus:ring-amber-500 focus:border-amber-500">
-                                <option value="cash">Efectivo</option>
-                                <option value="card">Tarjeta</option>
-                                <option value="transfer">Transferencia</option>
-                                <option value="check">Cheque</option>
-                                <option value="mixed">Mixto</option>
-                            </select>
-                        </div>
-
-                        <!-- Campo de Referencia (para cheque/transferencia) -->
-                        <div id="reference-section" class="hidden">
-                            <label for="payment-reference" class="block text-sm font-medium text-gray-700 mb-2">Referencia</label>
-                            <input type="text" id="payment-reference" 
-                                   placeholder="Ej: Nº cheque, ref. transferencia" 
-                                   class="w-full p-2 border border-gray-300 rounded-md focus:ring-amber-500 focus:border-amber-500">
+                        <div class="space-y-2 py-3 border-b border-amber-300">
+                            <label class="block text-sm font-medium text-amber-900">Método de Pago</label>
+                            <div class="flex flex-wrap gap-2">
+                                <button type="button" class="payment-method-btn flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md border border-amber-800 bg-amber-50 text-amber-900 hover:bg-amber-100 transition" data-method="cash">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z"/>
+                                    </svg>
+                                    Efectivo
+                                </button>
+                                <button type="button" class="payment-method-btn flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md border border-amber-800 bg-amber-50 text-amber-900 hover:bg-amber-100 transition" data-method="card">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h12v2H4V6zm0 4h12v2H4v-2z"/>
+                                    </svg>
+                                    Tarjeta
+                                </button>
+                                <button type="button" class="payment-method-btn flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md border border-amber-800 bg-amber-50 text-amber-900 hover:bg-amber-100 transition" data-method="transfer">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M3 1a1 1 0 000 2h12a1 1 0 100-2H3zM3 5a1 1 0 000 2h12a1 1 0 100-2H3zM0 11a2 2 0 012-2h12a2 2 0 012 2v3a2 2 0 01-2 2H2a2 2 0 01-2-2v-3zm2-1a1 1 0 00-1 1v3a1 1 0 001 1h12a1 1 0 001-1v-3a1 1 0 00-1-1H2z"/>
+                                    </svg>
+                                    Transferencia
+                                </button>
+                                <button type="button" class="payment-method-btn flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md border border-amber-800 bg-amber-50 text-amber-900 hover:bg-amber-100 transition" data-method="check">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Cheque
+                                </button>
+                                <button type="button" class="payment-method-btn flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md border border-amber-800 bg-amber-50 text-amber-900 hover:bg-amber-100 transition" data-method="mixed">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M5.5 13a3.5 3.5 0 01-.369-6.98 4 4 0 117.753-1.3A4.5 4.5 0 1113.5 13H11V9.413l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13H5.5z"/>
+                                    </svg>
+                                    Mixto
+                                </button>
+                            </div>
+                            <input type="hidden" id="selected-payment-method" value="cash">
+                            <!-- Reference field for transfers and checks -->
+                            <div id="payment-reference-container" class="hidden space-y-2">
+                                <label for="payment-reference" class="block text-sm font-medium text-amber-900">Referencia (Nro. de Cheque / Comprobante):</label>
+                                <input type="text" id="payment-reference" class="w-full p-2 border border-amber-300 rounded-md text-sm" placeholder="Ej: 123456789">
+                            </div>
                         </div>
 
                         <!-- Propina -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Propina</label>
-                            <div class="grid grid-cols-4 gap-2 mb-2">
-                                <button class="py-2 px-1 border border-gray-300 rounded text-xs font-medium hover:bg-gray-100" 
-                                        onclick="setPaymentTip(0)">Sin</button>
-                                <button class="py-2 px-1 border border-gray-300 rounded text-xs font-medium hover:bg-gray-100" 
-                                        onclick="setPaymentTip('10%')">10%</button>
-                                <button class="py-2 px-1 border border-gray-300 rounded text-xs font-medium hover:bg-gray-100" 
-                                        onclick="setPaymentTip('15%')">15%</button>
-                                <button class="py-2 px-1 border border-gray-300 rounded text-xs font-medium hover:bg-gray-100" 
-                                        onclick="setPaymentTip('20%')">20%</button>
+                        <div class="flex items-center justify-start gap-4">
+                            <label for="include-tip-checkbox" class="flex items-center cursor-pointer p-2 rounded-lg font-medium transition-colors">
+                                <input type="checkbox" id="include-tip-checkbox" class="form-checkbox h-5 w-5 transition duration-150 ease-in-out">
+                                <span class="ml-3 text-base">Incluir Propina</span>
+                            </label>
+                        </div>
+                        <div id="tip-preset-buttons" class="hidden flex justify-start space-x-2 py-2 pl-4">
+                            <button class="tip-preset-btn px-3 py-1 text-sm font-medium rounded-full border border-amber-300 hover:bg-amber-100 text-amber-900" data-percentage="10">10%</button>
+                            <button class="tip-preset-btn px-3 py-1 text-sm font-medium rounded-full border border-amber-300 hover:bg-amber-100 text-amber-900" data-percentage="15">15%</button>
+                            <button class="tip-preset-btn px-3 py-1 text-sm font-medium rounded-full border border-amber-300 hover:bg-amber-100 text-amber-900" data-percentage="20">20%</button>
+                        </div>
+                        <div id="tip-inputs" class="hidden space-y-2 pl-4 pr-2">
+                            <div class="flex items-center justify-between">
+                                <label for="custom-tip-percentage-input" class="text-sm font-medium text-amber-900">Porcentaje:</label>
+                                <div class="flex items-center">
+                                    <span class="text-sm text-amber-800 ml-1">%</span>
+                                    <input type="number" id="custom-tip-percentage-input" class="w-24 p-1 border border-amber-300 rounded-md text-sm text-right" value="10" min="0">
+                                </div>
                             </div>
-                            <input type="number" id="custom-tip-amount" placeholder="Propina personalizada" 
-                                   min="0" step="0.01"
-                                   class="w-full p-2 border border-gray-300 rounded-md focus:ring-amber-500 focus:border-amber-500">
+                            <div class="flex items-center justify-between">
+                                <label for="custom-tip-amount-input" class="text-sm font-medium text-amber-900">Monto:</label>
+                                <div class="flex items-center">
+                                    <span class="text-sm text-amber-800 mr-1">$</span>
+                                    <input type="number" id="custom-tip-amount-input" class="w-24 p-1 border border-amber-300 rounded-md text-sm text-right" value="0" min="0">
+                                </div>
+                            </div>
                         </div>
 
-                        <!-- Dividir Cuenta (opcional) -->
-                        <div>
-                            <label for="split-bill-select" class="block text-sm font-medium text-gray-700 mb-2">Dividir la cuenta:</label>
-                            <select id="split-bill-select" class="w-full p-2 border border-gray-300 rounded-md">
-                                <option value="1">No dividir</option>
-                            </select>
+                        <!-- Dividir Cuenta -->
+                        <div class="mt-4 p-4 bg-gray-100 rounded-lg">
+                            <label for="split-bill-input" class="block text-sm font-medium text-gray-700 mb-2">Dividir la cuenta por:</label>
+                            <div class="flex items-center space-x-2">
+                                <input type="number" id="split-bill-input" class="w-20 p-2 border border-gray-300 rounded-md text-center" value="1" min="1">
+                                <div class="flex space-x-1">
+                                    <button class="split-preset-btn px-3 py-1 text-sm font-medium rounded-full border border-gray-300 hover:bg-gray-200" data-split="2">2</button>
+                                    <button class="split-preset-btn px-3 py-1 text-sm font-medium rounded-full border border-gray-300 hover:bg-gray-200" data-split="3">3</button>
+                                    <button class="split-preset-btn px-3 py-1 text-sm font-medium rounded-full border border-gray-300 hover:bg-gray-200" data-split="4">4</button>
+                                    <button class="split-preset-btn px-3 py-1 text-sm font-medium rounded-full border border-gray-300 hover:bg-gray-200" data-split="5">5</button>
+                                </div>
+                            </div>
                             <p id="split-bill-result" class="mt-2 text-center font-semibold text-blue-600"></p>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Botones de Acción -->
-                <div class="modal-footer mt-6 space-y-2">
-                    <button id="modal-confirm-payment-btn" class="px-4 py-2 bg-green-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 flex items-center justify-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                        Confirmar Pago
-                    </button>
-                    <button id="modal-charge-to-room-btn" class="px-4 py-2 bg-purple-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 hidden flex items-center justify-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"></path></svg>
-                        Cargar a Habitación
-                    </button>
-                    <button id="modal-cancel-btn" class="px-4 py-2 bg-gray-300 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 flex items-center justify-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                        Cancelar
-                    </button>
-                </div>
+            <!-- Botones de Acción -->
+            <div class="modal-footer p-6 border-t border-amber-300 bg-amber-50 sticky bottom-0 space-y-2">
+                <button id="modal-confirm-payment-btn" class="px-4 py-2 bg-amber-900 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500 flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    Confirmar Pago
+                </button>
+                <button id="modal-charge-to-room-btn" class="px-4 py-2 bg-amber-800 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500 hidden flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"></path></svg>
+                    Cargar a Habitación
+                </button>
+                <button id="modal-cancel-btn" class="px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    Cancelar
+                </button>
             </div>
         </div>
     </div>
@@ -801,22 +842,41 @@
                 const modalOrderSubtotal = document.getElementById('modal-order-subtotal');
                 const modalOrderTip = document.getElementById('modal-order-tip');
                 const modalOrderTotal = document.getElementById('modal-order-total');
-                const customTipAmount = document.getElementById('custom-tip-amount');
-                const paymentMethodSelect = document.getElementById('payment-method-select');
-                const referenceSection = document.getElementById('reference-section');
-                const paymentReference = document.getElementById('payment-reference');
-                const splitSelect = document.getElementById('split-bill-select');
+                const splitInput = document.getElementById('split-bill-input');
                 const splitResult = document.getElementById('split-bill-result');
                 const tipRow = document.getElementById('modal-tip-row');
+                const includeTipCheckbox = document.getElementById('include-tip-checkbox');
+                const tipPresetButtons = document.getElementById('tip-preset-buttons');
+                const tipInputs = document.getElementById('tip-inputs');
+                const customTipPercentageInput = document.getElementById('custom-tip-percentage-input');
+                const customTipAmountInput = document.getElementById('custom-tip-amount-input');
+                const paymentMethodButtons = document.querySelectorAll('.payment-method-btn');
+                const paymentReferenceContainer = document.getElementById('payment-reference-container');
+                const paymentReference = document.getElementById('payment-reference');
+                const selectedPaymentMethod = document.getElementById('selected-payment-method');
                 
                 // Reset form
-                paymentMethodSelect.value = 'cash';
-                customTipAmount.value = '0';
+                selectedPaymentMethod.value = 'cash';
+                paymentMethodButtons.forEach(btn => {
+                    btn.classList.remove('bg-amber-200', 'ring-2', 'ring-amber-800');
+                    if (btn.dataset.method === 'cash') {
+                        btn.classList.add('bg-amber-200', 'ring-2', 'ring-amber-800');
+                    }
+                });
+                customTipPercentageInput.value = '10';
+                customTipAmountInput.value = '0';
                 paymentReference.value = '';
-                referenceSection.classList.add('hidden');
+                paymentReferenceContainer.classList.add('hidden');
+                includeTipCheckbox.checked = false;
+                tipPresetButtons.classList.add('hidden');
+                tipInputs.classList.add('hidden');
+                splitInput.value = '1';
                 
                 const displayTotals = () => {
-                    const tip = parseFloat(customTipAmount.value) || 0;
+                    let tip = 0;
+                    if (includeTipCheckbox.checked) {
+                        tip = parseFloat(customTipAmountInput.value) || 0;
+                    }
                     const totalAmount = subtotal + tip;
                     
                     modalOrderSubtotal.textContent = subtotal.toLocaleString('es-CL');
@@ -829,7 +889,7 @@
                         tipRow.classList.add('hidden');
                     }
 
-                    const numPeople = parseInt(splitSelect.value);
+                    const numPeople = parseInt(splitInput.value);
                     if (numPeople > 1) {
                         const amountPerPerson = totalAmount / numPeople;
                         splitResult.textContent = `${numPeople} pagos de $${amountPerPerson.toLocaleString('es-CL', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
@@ -838,23 +898,71 @@
                     }
                 };
 
-                // Mostrar/Ocultar referencia según método de pago
-                paymentMethodSelect.addEventListener('change', (e) => {
-                    if (['check', 'transfer'].includes(e.target.value)) {
-                        referenceSection.classList.remove('hidden');
-                    } else {
-                        referenceSection.classList.add('hidden');
-                    }
+                // Manejar selección de método de pago
+                paymentMethodButtons.forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        paymentMethodButtons.forEach(b => {
+                            b.classList.remove('bg-amber-200', 'ring-2', 'ring-amber-800');
+                        });
+                        btn.classList.add('bg-amber-200', 'ring-2', 'ring-amber-800');
+                        selectedPaymentMethod.value = btn.dataset.method;
+                        
+                        if (['check', 'transfer'].includes(btn.dataset.method)) {
+                            paymentReferenceContainer.classList.remove('hidden');
+                        } else {
+                            paymentReferenceContainer.classList.add('hidden');
+                        }
+                    });
                 });
 
-                // Actualizar totales cuando cambia la propina
-                customTipAmount.addEventListener('change', displayTotals);
+                // Manejar checkbox de propina
+                includeTipCheckbox.addEventListener('change', () => {
+                    if (includeTipCheckbox.checked) {
+                        tipPresetButtons.classList.remove('hidden');
+                        tipInputs.classList.add('hidden');
+                    } else {
+                        tipPresetButtons.classList.add('hidden');
+                        tipInputs.classList.add('hidden');
+                        customTipPercentageInput.value = '10';
+                        customTipAmountInput.value = '0';
+                    }
+                    displayTotals();
+                });
 
-                // Configurar opciones de división
-                splitSelect.innerHTML = '<option value="1">No dividir</option>';
-                for (let i = 2; i <= 6; i++) splitSelect.innerHTML += `<option value="${i}">Dividir por ${i} personas</option>`;
-                splitResult.textContent = '';
-                splitSelect.addEventListener('change', displayTotals);
+                // Botones de propina preestablecida
+                document.querySelectorAll('.tip-preset-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const percentage = parseInt(btn.dataset.percentage);
+                        const tipAmount = (subtotal * percentage) / 100;
+                        customTipAmountInput.value = tipAmount.toFixed(2);
+                        tipInputs.classList.remove('hidden');
+                        displayTotals();
+                    });
+                });
+
+                // Inputs personalizados de propina
+                customTipPercentageInput.addEventListener('change', () => {
+                    const percentage = parseInt(customTipPercentageInput.value) || 0;
+                    const tipAmount = (subtotal * percentage) / 100;
+                    customTipAmountInput.value = tipAmount.toFixed(2);
+                    displayTotals();
+                });
+
+                customTipAmountInput.addEventListener('change', displayTotals);
+
+                // Botones preestablecidos de división
+                document.querySelectorAll('.split-preset-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        splitInput.value = btn.dataset.split;
+                        displayTotals();
+                    });
+                });
+
+                // Input de división manual
+                splitInput.addEventListener('change', displayTotals);
                 displayTotals();
 
                 // Configurar botón de confirmación de pago
@@ -863,8 +971,8 @@
                 confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
 
                 newConfirmBtn.onclick = async () => {
-                    const paymentMethod = paymentMethodSelect.value;
-                    const tipAmount = parseFloat(customTipAmount.value) || 0;
+                    const paymentMethod = selectedPaymentMethod.value;
+                    const tipAmount = includeTipCheckbox.checked ? (parseFloat(customTipAmountInput.value) || 0) : 0;
                     const reference = paymentReference.value;
 
                     await processPayment(orderId, paymentMethod, tipAmount, reference);
