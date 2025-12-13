@@ -126,8 +126,8 @@
     <div class="lg:ml-64 bg-gray-50 min-h-screen">
         <!-- Header -->
         <div class="bg-white shadow-sm border-b border-gray-200 px-8 py-4">
-            <div class="flex justify-between items-start sm:items-center gap-4 pt-8 sm:pt-0">
-                <h1 class="text-2xl font-bold text-gray-900 hidden sm:block flex-1">Panel de Recepción</h1>
+            <div class="flex justify-center items-start sm:items-center gap-4 pt-8 sm:pt-0">
+                <h1 class="text-2xl font-bold text-center" style="color: #6F4E37;">Panel de Recepción</h1>
             </div>
         </div>
 
@@ -177,7 +177,7 @@
                     <h2 class="text-xl font-semibold text-gray-900 mb-4">Pedidos Servidos (para Cobrar)</h2>
                     <ul id="served-orders-list" class="space-y-3 max-h-[70vh] overflow-y-auto">
                         {% for order in served_orders %} {# Esta lista ahora incluye 'served' y 'charged_to_room' #}
-                        <li id="served-order-{{ order.id }}" class="flex justify-between items-center bg-amber-50 p-3 rounded-lg border border-amber-300">
+                        <li id="served-order-{{ order.id }}" class="flex justify-between items-center bg-amber-50 p-3 rounded-lg border" style="border-color: #6F4E37;">
                             <div class="truncate mr-4">
                                 <p class="font-semibold truncate">Pedido #{{ order.id }} - {{ order.room_number|default:order.client_identifier }}</p>
                                 <div class="flex items-center space-x-2 mt-1">
@@ -199,33 +199,149 @@
             <div id="room_charges" class="content-section hidden">
                 <div class="mb-8">
                     <h1 class="text-3xl font-bold text-gray-900">Cargos a Habitaciones</h1>
-                    <p class="text-gray-600 mt-2">Historial de todos los pedidos cargados a habitaciones.</p>
+                    <p class="text-gray-600 mt-2">Agrupa y paga múltiples pedidos de una habitación en un solo cobro.</p>
                 </div>
 
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <div class="overflow-x-auto">
+                <!-- Tabs -->
+                <div class="flex gap-2 mb-6 border-b border-gray-200 bg-white rounded-t-lg">
+                    <button class="room-bill-tab active px-4 py-3 font-medium text-amber-900 border-b-2 border-amber-900 flex items-center gap-2" data-tab="select-orders">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                        Seleccionar Pedidos
+                    </button>
+                    <button class="room-bill-tab px-4 py-3 font-medium text-gray-700 hover:text-amber-900 flex items-center gap-2" data-tab="bills">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        Mis Facturas
+                    </button>
+                    <button class="room-bill-tab px-4 py-3 font-medium text-gray-700 hover:text-amber-900 flex items-center gap-2" data-tab="history">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Historial
+                    </button>
+                </div>
+
+                <!-- TAB 1: Select Orders -->
+                <div id="select-orders-tab" class="room-bill-tab-content bg-white rounded-b-lg shadow-md p-6">
+                    <div class="space-y-6">
+                        <!-- Filtro de búsqueda -->
+                        <div class="flex gap-2">
+                            <input type="text" 
+                                   id="room-search-input" 
+                                   placeholder="Buscar por habitación o nombre..." 
+                                   class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent">
+                            <button id="clear-search-btn" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium">
+                                Limpiar
+                            </button>
+                        </div>
+
+                        <!-- Filtro por fecha -->
+                        <div class="flex gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                            <div class="flex-1">
+                                <label class="block text-sm font-semibold text-gray-900 mb-2">Desde</label>
+                                <input type="date" 
+                                       id="date-from" 
+                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent">
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-sm font-semibold text-gray-900 mb-2">Hasta</label>
+                                <input type="date" 
+                                       id="date-to" 
+                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent">
+                            </div>
+                            <div class="flex items-end">
+                                <button id="clear-date-filter-btn" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium whitespace-nowrap">
+                                    Limpiar fechas
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Habitaciones con Pedidos -->
+                        <div id="rooms-container" class="space-y-4">
+                            <div class="text-center py-8 text-gray-500">
+                                <p>Cargando habitaciones...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: My Bills -->
+                <div id="bills-tab" class="room-bill-tab-content hidden bg-amber-50 rounded-lg p-6 space-y-4" style="border: 2px solid #6F4E37;">
+                    <div class="space-y-3">
+                        <!-- Botones de estado -->
+                        <div class="flex gap-2 flex-wrap">
+                            <button class="bill-status-filter active bg-amber-100 text-amber-900 px-4 py-2 rounded-lg font-medium transition" data-status="draft">
+                                Borradores
+                            </button>
+                            <button class="bill-status-filter text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition" data-status="confirmed">
+                                Confirmadas
+                            </button>
+                            <button class="bill-status-filter text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition" data-status="paid">
+                                Pagadas
+                            </button>
+                            <button class="bill-status-filter text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition" data-status="cancelled">
+                                Canceladas
+                            </button>
+                            <button class="bill-status-filter text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition" data-status="all">
+                                Todas
+                            </button>
+                        </div>
+
+                        <!-- Filtros de fecha y botón de exportar -->
+                        <div class="flex gap-2 items-center flex-wrap">
+                            <div class="flex gap-2 items-center">
+                                <label class="text-sm font-medium text-amber-900">Desde:</label>
+                                <input type="date" id="bills-date-from" class="px-3 py-2 border border-amber-300 rounded-lg text-sm bg-white text-amber-900 focus:border-amber-500 focus:ring-amber-500">
+                            </div>
+                            <div class="flex gap-2 items-center">
+                                <label class="text-sm font-medium text-amber-900">Hasta:</label>
+                                <input type="date" id="bills-date-to" class="px-3 py-2 border border-amber-300 rounded-lg text-sm bg-white text-amber-900 focus:border-amber-500 focus:ring-amber-500">
+                            </div>
+                            <button id="clear-bills-date-btn" class="px-3 py-2 text-sm border border-amber-300 rounded-lg text-amber-900 hover:bg-amber-100 transition font-medium">
+                                Limpiar fechas
+                            </button>
+                            <button id="export-bills-btn" class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-white transition" style="background-color: #6F4E37;" title="Descargar reporte en Excel">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                Exportar Excel
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto bg-white rounded-lg p-4">
                         <table class="w-full table-auto">
                             <thead>
                                 <tr class="text-left border-b border-gray-200">
-                                    <th class="pb-3 font-semibold text-gray-900">N° PEDIDO</th>
                                     <th class="pb-3 font-semibold text-gray-900">HABITACIÓN</th>
-                                    <th class="pb-3 font-semibold text-gray-900">FECHA Y HORA</th>
+                                    <th class="pb-3 font-semibold text-gray-900">ESTADO</th>
+                                    <th class="pb-3 font-semibold text-gray-900">PEDIDOS</th>
                                     <th class="pb-3 font-semibold text-gray-900">TOTAL</th>
+                                    <th class="pb-3 font-semibold text-gray-900">CREADA</th>
+                                    <th class="pb-3 font-semibold text-gray-900">ACCIONES</th>
                                 </tr>
                             </thead>
-                            <tbody id="room-charges-tbody">
-                                {% for order in room_charge_orders %}
-                                <tr class="border-b border-gray-100" id="room-charge-row-{{ order.id }}">
-                                    <td class="py-4">{{ order.id }}</td>
-                                    <td class="py-4 font-semibold">{{ order.room_number|default:order.client_identifier }}</td>
-                                    <td class="py-4">{{ order.created_at|date:"Y-m-d H:i" }}</td> 
-                                    <td class="py-4">${{ order.total_amount|floatformat:0 }}</td>
+                            <tbody id="bills-tbody">
+                                <tr>
+                                    <td colspan="6" class="text-center py-12 text-gray-500">Cargando facturas...</td>
                                 </tr>
-                                {% empty %}
-                                <tr id="no-room-charges">
-                                    <td colspan="4" class="text-center py-12 text-gray-500">No hay cargos a habitaciones registrados.</td>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TAB 3: History -->
+                <div id="history-tab" class="room-bill-tab-content hidden bg-amber-50 rounded-lg p-6" style="border: 2px solid #6F4E37;">
+                    <div class="overflow-x-auto bg-white rounded-lg p-4">
+                        <table class="w-full table-auto">
+                            <thead>
+                                <tr class="text-left border-b border-gray-200">
+                                    <th class="pb-3 font-semibold text-gray-900">HABITACIÓN</th>
+                                    <th class="pb-3 font-semibold text-gray-900">ESTADO</th>
+                                    <th class="pb-3 font-semibold text-gray-900">TOTAL</th>
+                                    <th class="pb-3 font-semibold text-gray-900">FECHA PAGO</th>
+                                    <th class="pb-3 font-semibold text-gray-900">MÉTODO</th>
                                 </tr>
-                                {% endfor %}
+                            </thead>
+                            <tbody id="history-tbody">
+                                <tr>
+                                    <td colspan="5" class="text-center py-12 text-gray-500">Cargando historial...</td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -1253,5 +1369,8 @@
     
     <!-- Load payment methods report module -->
     <script src="{% static 'restaurant/js/modules/payment-methods-report.js' %}"></script>
+    
+    <!-- Load RoomBill Manager -->
+    <script src="{% static 'restaurant/js/roombill-manager.js' %}"></script>
 
 {% endblock %}

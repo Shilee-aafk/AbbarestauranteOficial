@@ -13,9 +13,9 @@ from django.conf import settings
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill
 from openpyxl.utils import get_column_letter
-from .forms import CustomUserCreationForm
+from .forms import CustomUserCreationForm, CustomAuthenticationForm
 from django.contrib.auth.forms import AuthenticationForm
-from .models import Order, OrderItem, MenuItem, Group, RegistrationPin, Category
+from .models import Order, OrderItem, MenuItem, Group, RegistrationPin, Category, RoomBill
 import json
 import decimal
 
@@ -81,13 +81,13 @@ def login_view(request):
     Vista para el inicio de sesión de usuarios.
     """
     if request.method == 'POST':
-        form = AuthenticationForm(request, data=request.POST)
+        form = CustomAuthenticationForm(request, data=request.POST)
         if form.is_valid():
             user = form.get_user()
             login(request, user)
             return redirect('restaurant:home')
     else:
-        form = AuthenticationForm()
+        form = CustomAuthenticationForm()
     return render(request, 'registration/login.html', {'form': form})
 
 @login_required
@@ -1850,3 +1850,426 @@ def api_process_payment(request, pk):
         return JsonResponse({'error': 'JSON inválido en el cuerpo de la solicitud'}, status=400)
     except Exception as e:
         return JsonResponse({'error': f'Error al procesar pago: {str(e)}'}, status=500)
+
+
+# ============ APIS PARA ROOMBILL ============
+
+@login_required
+@user_passes_test(lambda u: u.groups.filter(name='Recepcionista').exists())
+@csrf_exempt
+def api_get_unpaid_orders_by_room(request):
+    """
+    GET: Retorna los pedidos sin pagar agrupados por habitación y dentro de cada habitación por cliente
+    """
+    if request.method != 'GET':
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+    
+    try:
+        from django.db.models import Sum
+        
+        # Obtener solo pedidos servidos que no estén pagados
+        unpaid_orders = Order.objects.filter(
+            status__in=['served', 'charged_to_room']
+        ).select_related('user').order_by('room_number', 'client_identifier', '-created_at')
+        
+        # Agrupar por habitación y dentro de cada habitación por cliente
+        rooms = {}
+        for order in unpaid_orders:
+            room = order.room_number or 'Sin Habitación'
+            client = order.client_identifier or 'Sin nombre'
+            
+            # Crear estructura de habitación si no existe
+            if room not in rooms:
+                rooms[room] = {
+                    'room_number': room,
+                    'clients': {},
+                    'total': 0
+                }
+            
+            # Crear estructura de cliente dentro de la habitación si no existe
+            if client not in rooms[room]['clients']:
+                rooms[room]['clients'][client] = {
+                    'name': client,
+                    'orders': [],
+                    'total': 0
+                }
+            
+            # Agregar pedido al cliente
+            rooms[room]['clients'][client]['orders'].append({
+                'id': order.id,
+                'created_at': order.created_at.isoformat(),
+                'status': order.status,
+                'status_display': order.get_status_display(),
+                'items': [
+                    {
+                        'name': item.menu_item.name,
+                        'quantity': item.quantity,
+                        'price': float(item.menu_item.price),
+                        'subtotal': float(item.menu_item.price * item.quantity)
+                    }
+                    for item in order.orderitem_set.all()
+                ],
+                'total': float(order.total_amount),
+                'tip': float(order.tip_amount)
+            })
+            
+            # Actualizar totales
+            rooms[room]['clients'][client]['total'] += float(order.total_amount)
+            rooms[room]['total'] += float(order.total_amount)
+        
+        # Convertir diccionarios de clientes a listas
+        for room in rooms.values():
+            room['clients'] = list(room['clients'].values())
+        
+        return JsonResponse({'rooms': list(rooms.values())}, safe=False)
+    
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+@user_passes_test(lambda u: u.groups.filter(name='Recepcionista').exists())
+@csrf_exempt
+def api_create_roombill(request):
+    """
+    POST: Crea una nueva factura de habitación con los pedidos seleccionados
+    Esperado: {
+        "room_number": "101",
+        "guest_name": "John Doe",
+        "order_ids": [1, 2, 3],
+        "tip_amount": 10.00
+    }
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+    
+    try:
+        from django.utils import timezone
+        data = json.loads(request.body)
+        
+        room_number = data.get('room_number', '').strip()
+        guest_name = data.get('guest_name', '').strip()
+        order_ids = data.get('order_ids', [])
+        tip_amount = decimal.Decimal(str(data.get('tip_amount', '0.00')))
+        
+        if not room_number:
+            return JsonResponse({'error': 'Habitación requerida'}, status=400)
+        
+        if not order_ids:
+            return JsonResponse({'error': 'Debe seleccionar al menos un pedido'}, status=400)
+        
+        # Validar que todos los pedidos existan y sean de la misma habitación
+        orders = Order.objects.filter(id__in=order_ids)
+        
+        if len(orders) != len(order_ids):
+            return JsonResponse({'error': 'Algunos pedidos no existen'}, status=400)
+        
+        # Validar que todos sean de la misma habitación
+        for order in orders:
+            if order.room_number != room_number:
+                return JsonResponse({'error': f'El pedido {order.id} no es de la habitación {room_number}'}, status=400)
+        
+        # Crear la factura
+        from .models import RoomBill
+        bill = RoomBill.objects.create(
+            room_number=room_number,
+            guest_name=guest_name,
+            tip_amount=tip_amount,
+            created_by=request.user,
+            status='draft'
+        )
+        
+        # Agregar los pedidos
+        bill.orders.set(orders)
+        
+        # Calcular el total
+        total = bill.calculate_total() + tip_amount
+        bill.total_amount = total
+        bill.save()
+        
+        return JsonResponse({
+            'success': True,
+            'bill_id': bill.id,
+            'message': f'Factura creada: {bill.id}'
+        }, status=201)
+    
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'JSON inválido'}, status=400)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+@user_passes_test(lambda u: u.groups.filter(name='Recepcionista').exists())
+@csrf_exempt
+def api_get_roombills(request):
+    """
+    GET: Retorna las facturas de habitación filtradas por estado
+    ?status=draft|confirmed|paid|all
+    """
+    if request.method != 'GET':
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+    
+    try:
+        from .models import RoomBill
+        
+        status_filter = request.GET.get('status', 'all')
+        
+        bills = RoomBill.objects.prefetch_related('orders').all()
+        
+        if status_filter != 'all':
+            bills = bills.filter(status=status_filter)
+        
+        bills = bills.order_by('-created_at')
+        
+        data = []
+        for bill in bills:
+            data.append({
+                'id': bill.id,
+                'room_number': bill.room_number,
+                'guest_name': bill.guest_name,
+                'status': bill.status,
+                'status_display': bill.get_status_display(),
+                'status_class': bill.status_class,
+                'total': float(bill.total_amount),
+                'tip': float(bill.tip_amount),
+                'payment_method': bill.payment_method,
+                'payment_method_display': bill.get_payment_method_display(),
+                'order_count': bill.orders.count(),
+                'created_at': bill.created_at.isoformat(),
+                'paid_at': bill.paid_at.isoformat() if bill.paid_at else None,
+            })
+        
+        return JsonResponse({'bills': data}, safe=False)
+    
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+@user_passes_test(lambda u: u.groups.filter(name='Recepcionista').exists())
+@csrf_exempt
+def api_roombill_detail(request, bill_id):
+    """
+    GET: Obtiene los detalles de una factura
+    POST: Actualiza el estado o método de pago
+    """
+    try:
+        from .models import RoomBill
+        bill = RoomBill.objects.prefetch_related('orders__orderitem_set__menu_item').get(id=bill_id)
+    except RoomBill.DoesNotExist:
+        return JsonResponse({'error': 'Factura no encontrada'}, status=404)
+    
+    if request.method == 'GET':
+        orders_data = []
+        for order in bill.orders.all():
+            orders_data.append({
+                'id': order.id,
+                'created_at': order.created_at.isoformat(),
+                'items': [
+                    {
+                        'name': item.menu_item.name,
+                        'quantity': item.quantity,
+                        'price': float(item.menu_item.price),
+                        'subtotal': float(item.menu_item.price * item.quantity)
+                    }
+                    for item in order.orderitem_set.all()
+                ],
+                'total': float(order.total_amount)
+            })
+        
+        return JsonResponse({
+            'id': bill.id,
+            'room_number': bill.room_number,
+            'guest_name': bill.guest_name,
+            'status': bill.status,
+            'status_display': bill.get_status_display(),
+            'total': float(bill.total_amount),
+            'tip': float(bill.tip_amount),
+            'payment_method': bill.payment_method,
+            'payment_method_display': bill.get_payment_method_display(),
+            'orders': orders_data,
+            'created_at': bill.created_at.isoformat()
+        })
+    
+    elif request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            
+            # Actualizar estado si se proporciona
+            if 'status' in data:
+                new_status = data.get('status')
+                if new_status not in ['draft', 'confirmed', 'paid', 'cancelled']:
+                    return JsonResponse({'error': 'Estado inválido'}, status=400)
+                bill.status = new_status
+            
+            # Actualizar método de pago si se proporciona
+            if 'payment_method' in data:
+                payment_method = data.get('payment_method')
+                if payment_method not in ['cash', 'card', 'transfer', 'check', 'mixed']:
+                    return JsonResponse({'error': 'Método de pago inválido'}, status=400)
+                bill.payment_method = payment_method
+            
+            # Si se marca como pagada, actualizar paid_at
+            if bill.status == 'paid' and not bill.paid_at:
+                from django.utils import timezone
+                bill.paid_at = timezone.now()
+                
+                # Actualizar el estado de los pedidos a 'paid'
+                for order in bill.orders.all():
+                    order.status = 'paid'
+                    order.paid_at = bill.paid_at
+                    order.save()
+            
+            bill.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Factura actualizada',
+                'status': bill.get_status_display()
+            })
+        
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'JSON inválido'}, status=400)
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def export_roombills_excel(request):
+    """
+    Exporta un reporte de facturas de habitación a un archivo Excel.
+    """
+    from django.http import HttpResponse
+    from django.utils import timezone
+
+    # Obtener todas las facturas
+    bills = RoomBill.objects.prefetch_related('orders__orderitem_set').all()
+
+    # Filtrado opcional por estado (puede ser múltiple separado por comas)
+    status_query = request.GET.get('status', '')
+    if status_query:
+        if status_query != 'all':
+            statuses = status_query.split(',')
+            bills = bills.filter(status__in=statuses)
+
+    # Filtrado opcional por fecha
+    date_from_query = request.GET.get('date_from', '')
+    if date_from_query:
+        bills = bills.filter(created_at__date__gte=date_from_query)
+
+    date_to_query = request.GET.get('date_to', '')
+    if date_to_query:
+        bills = bills.filter(created_at__date__lte=date_to_query)
+
+    # Filtrado opcional por habitación
+    room_query = request.GET.get('room', '')
+    if room_query:
+        bills = bills.filter(room_number__icontains=room_query)
+
+    bills = bills.order_by('-created_at')
+
+    # Crear libro de Excel
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Reporte de Facturas"
+
+    # Definir estilos
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="6F4E37", end_color="6F4E37", fill_type="solid")  # Color café
+    total_font = Font(bold=True)
+    currency_format = '"$"#,##0.00'
+    date_format = 'yyyy-mm-dd hh:mm'
+
+    # Escribir encabezados
+    headers = ['ID Factura', 'Habitación', 'Estado', 'Subtotal', 'Propina', 'Total', 'Método de Pago', 'Fecha de Creación', 'Fecha de Pago']
+    for col_num, header_title in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num, value=header_title)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal='center')
+
+    # Escribir datos
+    grand_total = decimal.Decimal('0.00')
+    grand_subtotal = decimal.Decimal('0.00')
+    grand_tip = decimal.Decimal('0.00')
+    row_num = 2
+
+    for bill in bills:
+        subtotal = bill.total_amount - bill.tip_amount
+        grand_total += bill.total_amount
+        grand_subtotal += subtotal
+        grand_tip += bill.tip_amount
+
+        local_time = timezone.localtime(bill.created_at).strftime('%Y-%m-%d %H:%M')
+        paid_time = timezone.localtime(bill.paid_at).strftime('%Y-%m-%d %H:%M') if bill.paid_at else '-'
+
+        ws.cell(row=row_num, column=1, value=bill.id)
+        ws.cell(row=row_num, column=2, value=bill.room_number)
+        ws.cell(row=row_num, column=3, value=bill.get_status_display())
+
+        subtotal_cell = ws.cell(row=row_num, column=4, value=float(subtotal))
+        subtotal_cell.number_format = currency_format
+
+        tip_cell = ws.cell(row=row_num, column=5, value=float(bill.tip_amount))
+        tip_cell.number_format = currency_format
+
+        total_cell = ws.cell(row=row_num, column=6, value=float(bill.total_amount))
+        total_cell.number_format = currency_format
+
+        ws.cell(row=row_num, column=7, value=bill.get_payment_method_display() if bill.payment_method else '-')
+        ws.cell(row=row_num, column=8, value=local_time)
+        ws.cell(row=row_num, column=9, value=paid_time)
+
+        row_num += 1
+
+    # Escribir fila de totales
+    # Fila de Subtotal
+    subtotal_label_cell = ws.cell(row=row_num + 1, column=3, value="Subtotal:")
+    subtotal_label_cell.font = total_font
+    subtotal_label_cell.alignment = Alignment(horizontal='right')
+
+    subtotal_total_cell = ws.cell(row=row_num + 1, column=4, value=float(grand_subtotal))
+    subtotal_total_cell.font = total_font
+    subtotal_total_cell.number_format = currency_format
+    subtotal_total_cell.fill = PatternFill(start_color="FCD34D", end_color="FCD34D", fill_type="solid")
+
+    # Fila de Propina
+    tip_label_cell = ws.cell(row=row_num + 2, column=3, value="Propina:")
+    tip_label_cell.font = total_font
+    tip_label_cell.alignment = Alignment(horizontal='right')
+
+    tip_total_cell = ws.cell(row=row_num + 2, column=5, value=float(grand_tip))
+    tip_total_cell.font = total_font
+    tip_total_cell.number_format = currency_format
+    tip_total_cell.fill = PatternFill(start_color="FCD34D", end_color="FCD34D", fill_type="solid")
+
+    # Fila de Total con Propina
+    final_total_label_cell = ws.cell(row=row_num + 3, column=3, value="TOTAL CON PROPINA:")
+    final_total_label_cell.font = Font(bold=True, size=12)
+    final_total_label_cell.alignment = Alignment(horizontal='right')
+
+    grand_total_cell = ws.cell(row=row_num + 3, column=6, value=float(grand_total))
+    grand_total_cell.font = Font(bold=True, size=12)
+    grand_total_cell.number_format = currency_format
+    grand_total_cell.fill = PatternFill(start_color="FCD34D", end_color="FCD34D", fill_type="solid")
+
+    # Ajustar ancho de columnas
+    for col_num, header_title in enumerate(headers, 1):
+        column_letter = get_column_letter(col_num)
+        ws.column_dimensions[column_letter].width = 18
+
+    # Crear respuesta HTTP
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = f'attachment; filename="reporte_facturas_{timezone.now().strftime("%Y-%m-%d")}.xlsx"'
+    wb.save(response)
+
+    return response

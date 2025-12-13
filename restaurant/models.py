@@ -167,6 +167,72 @@ class OrderItem(models.Model):
     def __str__(self):
         return f"{self.quantity} x {self.menu_item.name}"
 
+class RoomBill(models.Model):
+    """
+    Agrupación de múltiples pedidos de una habitación para cobro conjunto.
+    """
+    STATUS_CHOICES = [
+        ('draft', 'Borrador'),
+        ('confirmed', 'Confirmada'),
+        ('paid', 'Pagada'),
+        ('cancelled', 'Cancelada'),
+    ]
+    
+    PAYMENT_METHOD_CHOICES = [
+        ('cash', 'Efectivo'),
+        ('card', 'Tarjeta'),
+        ('transfer', 'Transferencia'),
+        ('check', 'Cheque'),
+        ('mixed', 'Mixto'),
+    ]
+    
+    room_number = models.CharField(max_length=10, db_index=True)
+    guest_name = models.CharField(max_length=100, blank=True, null=True)
+    orders = models.ManyToManyField(Order, related_name='roombills')
+    
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    tip_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default='cash')
+    payment_reference = models.CharField(max_length=100, blank=True, null=True)
+    
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft', db_index=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    confirmed_at = models.DateTimeField(null=True, blank=True)
+    paid_at = models.DateTimeField(null=True, blank=True)
+    
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='roombills_created')
+    
+    class Meta:
+        verbose_name = 'Room Bill'
+        verbose_name_plural = 'Room Bills'
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"Bill {self.id} - Habitación {self.room_number}"
+    
+    def calculate_total(self):
+        """Calcula el total de todas las órdenes asociadas"""
+        from django.db.models import Sum
+        total = self.orders.aggregate(total=Sum('total_amount'))['total'] or 0
+        return total
+    
+    def get_status_display(self):
+        return dict(self.STATUS_CHOICES).get(self.status, self.status)
+    
+    def get_payment_method_display(self):
+        return dict(self.PAYMENT_METHOD_CHOICES).get(self.payment_method, self.payment_method)
+    
+    @property
+    def status_class(self):
+        return {
+            'draft': 'bg-gray-100 text-gray-800',
+            'confirmed': 'bg-yellow-100 text-yellow-800',
+            'paid': 'bg-green-100 text-green-800',
+            'cancelled': 'bg-red-100 text-red-800',
+        }.get(self.status, 'bg-gray-100 text-gray-800')
+
+
 class RegistrationPin(models.Model):
     """
     A single-use PIN to register new users with a specific role.

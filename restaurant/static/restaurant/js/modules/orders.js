@@ -204,7 +204,8 @@ export class OrdersManager {
       orderLi = document.createElement('li');
       orderLi.id = `inprogress-order-${order.id}`;
       orderLi.dataset.updatedAt = order.updated_at;
-      orderLi.className = 'bg-amber-50 p-3 rounded-lg border border-amber-200';
+      orderLi.className = 'bg-amber-50 p-3 rounded-lg border';
+      orderLi.style.borderColor = '#6F4E37';
       orderLi.innerHTML = orderHTML;
       this.insertOrderedById(inProgressList, orderLi, order.id);
     }
@@ -270,7 +271,8 @@ export class OrdersManager {
       orderLi = document.createElement('li');
       orderLi.id = `ready-order-${order.id}`;
       orderLi.dataset.updatedAt = order.updated_at;
-      orderLi.className = 'bg-amber-50 p-3 rounded-lg border border-amber-200';
+      orderLi.className = 'bg-amber-50 p-3 rounded-lg border';
+      orderLi.style.borderColor = '#6F4E37';
       orderLi.innerHTML = orderHTML;
       this.insertOrderedById(readyList, orderLi, order.id);
     }
@@ -328,7 +330,8 @@ export class OrdersManager {
       orderLi = document.createElement('li');
       orderLi.id = `served-order-monitor-${order.id}`;
       orderLi.dataset.updatedAt = order.updated_at;
-      orderLi.className = 'flex justify-between items-center bg-amber-50 p-3 rounded-lg border border-amber-200';
+      orderLi.className = 'flex justify-between items-center bg-amber-50 p-3 rounded-lg border';
+      orderLi.style.borderColor = '#6F4E37';
       orderLi.innerHTML = orderHTML;
       this.insertOrderedById(servedOrdersList, orderLi, order.id);
     }
