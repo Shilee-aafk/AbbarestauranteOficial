@@ -50,6 +50,11 @@ export class OrdersManager {
 
       if (chargeBtn) {
         const orderId = chargeBtn.dataset.orderId;
+        // Bloquear si el tutorial está activo en pagos
+        if (window.tutorialBlockPaymentModal) {
+          console.log('Payment modal blocked by tutorial');
+          return;
+        }
         // Dispatchear evento para que otro handler lo maneje
         window.dispatchEvent(new CustomEvent('openPaymentModal', { detail: { orderId } }));
       }
@@ -199,7 +204,8 @@ export class OrdersManager {
       orderLi = document.createElement('li');
       orderLi.id = `inprogress-order-${order.id}`;
       orderLi.dataset.updatedAt = order.updated_at;
-      orderLi.className = 'bg-amber-50 p-3 rounded-lg border border-amber-200';
+      orderLi.className = 'bg-amber-50 p-3 rounded-lg border';
+      orderLi.style.borderColor = '#6F4E37';
       orderLi.innerHTML = orderHTML;
       this.insertOrderedById(inProgressList, orderLi, order.id);
     }
@@ -249,7 +255,7 @@ export class OrdersManager {
         <button class="view-details-btn flex-shrink-0 flex items-center justify-center bg-blue-200 text-blue-900 px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-300" data-order-id="${String(order.id)}">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
         </button>
-        <button class="mark-served-monitor-btn w-full flex items-center justify-center bg-amber-100 text-amber-900 px-4 py-2 rounded-lg text-sm font-bold hover:bg-amber-200" data-order-id="${String(order.id)}">
+        <button class="mark-served-monitor-btn w-full flex items-center justify-center text-white px-4 py-2 rounded-lg text-sm font-bold hover:shadow-lg" style="background-color: #6F4E37;" data-order-id="${String(order.id)}">
           <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
           Marcar Servido
         </button>
@@ -265,7 +271,8 @@ export class OrdersManager {
       orderLi = document.createElement('li');
       orderLi.id = `ready-order-${order.id}`;
       orderLi.dataset.updatedAt = order.updated_at;
-      orderLi.className = 'bg-amber-50 p-3 rounded-lg border border-amber-200';
+      orderLi.className = 'bg-amber-50 p-3 rounded-lg border';
+      orderLi.style.borderColor = '#6F4E37';
       orderLi.innerHTML = orderHTML;
       this.insertOrderedById(readyList, orderLi, order.id);
     }
@@ -304,10 +311,10 @@ export class OrdersManager {
         <p class="text-sm text-gray-700 mt-1">Total: $${order.total.toLocaleString('es-CL')}</p>
       </div>
       <div class="flex items-center space-x-2 ml-4">
-        <button class="edit-btn flex items-center justify-center bg-gray-500 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-600" data-order-id="${order.id}">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z"></path></svg>
+        <button class="edit-btn flex items-center justify-center bg-gray-100 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-200 shadow-sm border border-gray-400" data-order-id="${order.id}">
+          <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z"></path></svg>
         </button>
-        <button class="charge-btn flex items-center justify-center bg-amber-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-amber-900" data-order-id="${order.id}">
+        <button class="charge-btn flex items-center justify-center text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm border border-yellow-800 hover:opacity-90" style="background-color: #6F4E37;" data-order-id="${order.id}">
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H4a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
           <span>Cobrar</span>
         </button>
@@ -323,7 +330,8 @@ export class OrdersManager {
       orderLi = document.createElement('li');
       orderLi.id = `served-order-monitor-${order.id}`;
       orderLi.dataset.updatedAt = order.updated_at;
-      orderLi.className = 'flex justify-between items-center bg-amber-50 p-3 rounded-lg border border-amber-200';
+      orderLi.className = 'flex justify-between items-center bg-amber-50 p-3 rounded-lg border';
+      orderLi.style.borderColor = '#6F4E37';
       orderLi.innerHTML = orderHTML;
       this.insertOrderedById(servedOrdersList, orderLi, order.id);
     }
@@ -381,8 +389,12 @@ export class OrdersManager {
         body: JSON.stringify(body)
       });
       if (response.ok) {
-        const text = statusText || this.getStatusInSpanish(newStatus);
-        this.uiManager.showToast(`Pedido #${orderId} marcado como ${text}.`, 'success');
+        // Solo mostrar toast para estados que no sean 'ready'
+        // El evento de Pusher 'pedido-listo' ya mostrará la notificación
+        if (newStatus !== 'ready') {
+          const text = statusText || this.getStatusInSpanish(newStatus);
+          this.uiManager.showToast(`Pedido #${orderId} marcado como ${text}.`, 'success');
+        }
         
         // Actualizar el botón en cook_dashboard si existe
         const orderCard = document.querySelector(`[data-order-id="${orderId}"]`);
