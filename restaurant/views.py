@@ -1360,11 +1360,22 @@ def api_payment_methods_report(request):
         daily_dict[order_date]['total_tips'] += order.tip_amount or decimal.Decimal('0.00')
     
     daily_data = []
+    days_spanish = {
+        'Monday': 'Lunes',
+        'Tuesday': 'Martes',
+        'Wednesday': 'Miércoles',
+        'Thursday': 'Jueves',
+        'Friday': 'Viernes',
+        'Saturday': 'Sábado',
+        'Sunday': 'Domingo'
+    }
     for date_obj in sorted(daily_dict.keys()):
         stat = daily_dict[date_obj]
+        day_name_en = date_obj.strftime('%A')
+        day_name_es = days_spanish.get(day_name_en, day_name_en)
         daily_data.append({
             'date': str(date_obj),
-            'day_name': date_obj.strftime('%A'),  # Monday, Tuesday, etc
+            'day_name': day_name_es,
             'count': stat['count'],
             'total': float(stat['total']),
             'total_tips': float(stat['total_tips']),
@@ -1399,12 +1410,19 @@ def api_payment_methods_report(request):
         weekly_stats[week_key]['total_tips'] += order.tip_amount or decimal.Decimal('0.00')
     
     weekly_data = []
+    months_spanish = {
+        'January': 'Ene', 'February': 'Feb', 'March': 'Mar', 'April': 'Abr',
+        'May': 'May', 'June': 'Jun', 'July': 'Jul', 'August': 'Ago',
+        'September': 'Sep', 'October': 'Oct', 'November': 'Nov', 'December': 'Dic'
+    }
     for week_key in sorted(weekly_stats.keys()):
         stat = weekly_stats[week_key]
         # Format as "8-14 Dic" or similar
         start_date = stat['week_start'].strftime('%d')
-        end_date = stat['week_end'].strftime('%d %b').lower()
-        week_label = f"{start_date}-{end_date}"
+        month_name_en = stat['week_end'].strftime('%B')
+        month_name_es = months_spanish.get(month_name_en, month_name_en)
+        end_date = stat['week_end'].strftime('%d')
+        week_label = f"{start_date}-{end_date} {month_name_es}"
         
         weekly_data.append({
             'week': week_label,
@@ -1417,8 +1435,17 @@ def api_payment_methods_report(request):
             'average': float(stat['total'] / stat['count']) if stat['count'] > 0 else 0
         })
     
+    months_spanish_full = {
+        'January': 'Enero', 'February': 'Febrero', 'March': 'Marzo', 'April': 'Abril',
+        'May': 'Mayo', 'June': 'Junio', 'July': 'Julio', 'August': 'Agosto',
+        'September': 'Septiembre', 'October': 'Octubre', 'November': 'Noviembre', 'December': 'Diciembre'
+    }
+    month_name_en = month_start.strftime('%B')
+    month_name_es = months_spanish_full.get(month_name_en, month_name_en)
+    month_year = f"{month_name_es} {month_start.year}"
+    
     return JsonResponse({
-        'month': month_start.strftime('%B %Y'),
+        'month': month_year,
         'month_start': str(month_start),
         'month_end': str(month_end),
         'summary': {
