@@ -40,8 +40,10 @@ class DashboardTutorial {
                 {
                     element: '#start-table-order-btn',
                     title: this.getSVG('check') + 'Iniciar Pedido',
-                    text: 'Haz click para crear un nuevo pedido. Asegúrate de haber completado la información del cliente antes de iniciar.',
-                },
+                    text: 'Haz click para crear un nuevo pedido. Asegúrate de haber completado la información del cliente antes de iniciar. 🔸 Este es el final de la primera parte del tutorial.',
+                }
+            ],
+            'dashboard_orders': [
                 {
                     element: '.add-to-order-btn',
                     title: this.getSVG('plate') + 'Agregar Productos al Pedido',
@@ -60,7 +62,7 @@ class DashboardTutorial {
                 {
                     element: '#cart-submit-btn',
                     title: this.getSVG('send') + 'Enviar Pedido a la Cocina',
-                    text: 'Cuando hayas terminado de agregar productos, haz click aquí para enviar el pedido a la cocina. El pedido aparecerá en el Monitor de Cocina.',
+                    text: 'Cuando hayas terminado de agregar productos, haz click aquí para enviar el pedido a la cocina. El pedido aparecerá en el Monitor de Cocina. ✓ ¡Tutorial completado!',
                 }
             ],
             'bar': [
@@ -301,10 +303,10 @@ class DashboardTutorial {
                 }
                 @keyframes pulse {
                     0%, 100% {
-                        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6), 0 0 0 0 rgba(146, 64, 14, 0.7);
+                        box-shadow: 0 0 0 0 rgba(146, 64, 14, 0.7);
                     }
                     50% {
-                        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6), 0 0 0 15px rgba(146, 64, 14, 0);
+                        box-shadow: 0 0 0 15px rgba(146, 64, 14, 0);
                     }
                 }
                 @keyframes border-pulse {
@@ -447,6 +449,21 @@ class DashboardTutorial {
         document.getElementById('tutorial-prev').addEventListener('click', () => this.prevStep());
         document.getElementById('tutorial-overlay').addEventListener('click', () => this.end());
 
+        // Bloqueador de clics para la sección monitor
+        document.addEventListener('click', (e) => {
+            if (this.tutorialActive && this.currentSection === 'monitor') {
+                // Permitir clics SOLO en status-changer
+                if (!e.target.closest('.status-changer')) {
+                    // Bloquear cualquier otro clic
+                    const monitor = document.querySelector('#in-progress-orders-list-monitor, #ready-orders-list-monitor');
+                    if (monitor && monitor.contains(e.target)) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+                }
+            }
+        }, true); // Usar capture phase para interceptar primero
+
         // Detectar cambios de sección
         document.addEventListener('click', (e) => {
             const navLink = e.target.closest('[data-section]');
@@ -475,6 +492,31 @@ class DashboardTutorial {
             if (e.key === 'Escape' && this.tutorialActive) {
                 this.end();
             }
+        });
+
+        // Detectar cuando se inicia un pedido en la sección dashboard
+        const observer = new MutationObserver(() => {
+            if (this.tutorialActive && this.currentSection === 'dashboard') {
+                // Verificar si aparecieron los elementos del pedido (esto indica que se inició un pedido)
+                const orderStarted = document.querySelector('.add-to-order-btn') && document.querySelector('#current-order');
+                const startBtn = document.querySelector('#start-table-order-btn');
+                
+                // Si el botón de iniciar ya no existe o está oculto, y aparecen los elementos del pedido
+                if (orderStarted && (!startBtn || startBtn.offsetParent === null)) {
+                    console.log('Pedido iniciado detectado, cambiando a sección dashboard_orders');
+                    this.currentSection = 'dashboard_orders';
+                    this.currentStep = 0;
+                    this.showStep();
+                    this.setupActionListeners();
+                }
+            }
+        });
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['class', 'style']
         });
 
         // NO auto-lanzar tutorial automáticamente
@@ -519,6 +561,10 @@ class DashboardTutorial {
         window.tutorialBlockPaymentModal = false;
         this.removeHighlight();
         this.removeActionListeners();
+        
+        // Asegurar que se remuevan todos los highlights
+        const highlights = document.querySelectorAll('#tutorial-highlight');
+        highlights.forEach(highlight => highlight.remove());
         // Limpiar listener de reposicionamiento
         if (this.repositionListener) {
             window.removeEventListener('scroll', this.repositionListener, true);
@@ -716,16 +762,14 @@ class DashboardTutorial {
             paymentModalWasHidden = true;
         }
 
-        // NO mostrar overlay - el highlight usará box-shadow para oscurecer el fondo
-        
         // Pequeño delay para permitir que el navegador renderice el elemento
         setTimeout(() => {
             const rect = element.getBoundingClientRect();
             
-            // Crear highlight con borde titilante y sombra oscura alrededor
+            // Crear highlight con borde titilante
             const highlight = document.createElement('div');
             highlight.id = 'tutorial-highlight';
-            highlight.className = 'fixed z-49 border-4 border-amber-600 rounded-lg pointer-events-none';
+            highlight.className = 'absolute z-50 border-4 border-amber-600 rounded-lg pointer-events-none';
             
             highlight.style.top = (rect.top + window.scrollY - 8) + 'px';
             highlight.style.left = (rect.left + window.scrollX - 8) + 'px';
@@ -742,10 +786,9 @@ class DashboardTutorial {
     }
 
     removeHighlight() {
-        const highlight = document.getElementById('tutorial-highlight');
-        if (highlight) {
-            highlight.remove();
-        }
+        // Remover TODOS los highlights (en caso de que haya múltiples)
+        const highlights = document.querySelectorAll('#tutorial-highlight');
+        highlights.forEach(highlight => highlight.remove());
 
         // Si abrimos el modal del carrito, cerrarlo de nuevo
         if (this.openedCartModal) {

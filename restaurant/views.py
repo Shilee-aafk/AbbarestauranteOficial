@@ -163,8 +163,12 @@ def receptionist_dashboard(request):
     # Unificamos los pedidos que necesitan acción de cobro: 'servido' y 'cargado a habitación'
     served_orders = Order.objects.filter(status__in=['served', 'charged_to_room']).order_by('-created_at')
     
-    # Ahora que total_amount se almacena directamente, no necesitamos annotate aquí.
-    room_charge_orders = Order.objects.filter(status='charged_to_room').order_by('-created_at')
+    # Solo pedidos cargados a habitación que tengan room_number (no pedidos sin habitación)
+    room_charge_orders = Order.objects.filter(
+        status='charged_to_room',
+        room_number__isnull=False,
+        room_number__gt=''  # Excluir strings vacíos
+    ).order_by('-created_at')
 
 
 
