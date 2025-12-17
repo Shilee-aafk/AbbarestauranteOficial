@@ -22,7 +22,20 @@ class RoomBillManager {
         this.setupTabListeners();
         this.setupFilterListeners();
         this.setupExportListener();
+        this.setupRealTimeListeners();
         this.loadInitialData();
+    }
+
+    setupRealTimeListeners() {
+        // Escuchar evento cuando se carga un pedido a habitación
+        window.addEventListener('charge-to-room', (e) => {
+            console.log('📦 Pedido cargado a habitación, recargando datos...', e.detail);
+            // Recargar los datos de facturas después de un pequeño delay
+            setTimeout(() => {
+                this.loadBills();
+                this.loadRoomCharges();
+            }, 500);
+        });
     }
 
     setupTabListeners() {
