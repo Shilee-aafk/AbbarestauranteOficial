@@ -1378,7 +1378,17 @@
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('Initializing ReceptionTutorial...');
+            console.log('Initializing ReceptionTutorial and RoomBillManager...');
+            
+            // Initialize RoomBillManager
+            if (typeof RoomBillManager !== 'undefined') {
+                window.roomBillManager = new RoomBillManager();
+                console.log('RoomBillManager initialized');
+            } else {
+                console.error('RoomBillManager class not found');
+            }
+            
+            // Initialize ReceptionTutorial
             if (typeof ReceptionTutorial !== 'undefined') {
                 const tutorial = new ReceptionTutorial();
                 tutorial.init();

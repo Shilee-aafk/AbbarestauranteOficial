@@ -391,12 +391,8 @@ export class UIManager {
       cartToggle.style.pointerEvents = 'auto';
     }
     
-    // Open cart modal on mobile when editing
-    const cartModal = document.getElementById('cart-modal');
-    const isMobile = window.innerWidth < 768; // md breakpoint in Tailwind
-    if (isMobile && cartModal) {
-      cartModal.classList.remove('hidden');
-    }
+    // NO abrir el carrito automáticamente en móvil - dejar que el usuario lo abra manualmente
+    // El usuario puede hacer click en el botón cart-toggle si quiere verlo
   }
 
   /**

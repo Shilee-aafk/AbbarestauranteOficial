@@ -27,14 +27,15 @@ class RoomBillManager {
     }
 
     setupRealTimeListeners() {
-        // Escuchar evento cuando se carga un pedido a habitación
-        window.addEventListener('charge-to-room', (e) => {
-            console.log('📦 Pedido cargado a habitación, recargando datos...', e.detail);
-            // Recargar los datos de facturas después de un pequeño delay
+        // Escuchar evento cuando se actualiza el estado de una orden (charged_to_room)
+        window.addEventListener('order-status-updated', (e) => {
+            console.log('📦 Estado de orden actualizado, recargando datos...', e.detail);
+            // Pequeño delay de 100ms para asegurar que la BD está actualizada
             setTimeout(() => {
                 this.loadBills();
                 this.loadRoomCharges();
-            }, 500);
+                console.log('✅ Datos de facturas actualizados');
+            }, 100);
         });
     }
 

@@ -415,6 +415,19 @@ export class OrdersManager {
             button.setAttribute('onclick', `updateOrderStatus(${orderId}, 'ready')`);
           }
         }
+        
+        // Dispatch custom event for real-time updates
+        if (newStatus === 'charged_to_room') {
+          console.log('🔔 Disparando evento de actualización para facturas...');
+          window.dispatchEvent(new CustomEvent('order-status-updated', {
+            detail: {
+              orderId: orderId,
+              status: newStatus,
+              totalAmount: body.total_amount || 0,
+              tipAmount: body.tip_amount || 0
+            }
+          }));
+        }
       } else {
         this.uiManager.showToast('Error al actualizar el estado del pedido.', 'error');
       }
