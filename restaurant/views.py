@@ -805,13 +805,20 @@ def api_order_status(request, pk):
                     return JsonResponse({'success': False, 'error': f'Invalid tip amount: {str(e)}'}, status=400)
             
             # Handle payment method and reference
-            if new_status in ['paid', 'charged_to_room']:
+            if new_status == 'paid':
+                # For 'paid' status, record the payment method
                 if 'payment_method' in data:
                     order.payment_method = data['payment_method']
                     update_fields.append('payment_method')
                 if 'payment_reference' in data and data['payment_reference']:
                     order.payment_reference = data['payment_reference']
                     update_fields.append('payment_reference')
+            elif new_status == 'charged_to_room':
+                # For 'charged_to_room', CLEAR the payment method
+                # It will be set when the consolidated bill is paid
+                order.payment_method = None
+                order.payment_reference = None
+                update_fields.extend(['payment_method', 'payment_reference'])
 
             order.save(update_fields=update_fields)  # Only trigger signal for fields we actually changed
             return JsonResponse({'success': True, 'status': order.status, 'total_amount': float(order.total_amount)})
@@ -2147,15 +2154,18 @@ def api_roombill_detail(request, bill_id):
                     return JsonResponse({'error': 'Método de pago inválido'}, status=400)
                 bill.payment_method = payment_method
             
-            # Si se marca como pagada, actualizar paid_at
+            # Si se marca como pagada, actualizar paid_at y payment_method de los pedidos
             if bill.status == 'paid' and not bill.paid_at:
                 from django.utils import timezone
                 bill.paid_at = timezone.now()
                 
-                # Actualizar el estado de los pedidos a 'paid'
+                # Actualizar el estado y método de pago de los pedidos a los de la factura
                 for order in bill.orders.all():
                     order.status = 'paid'
                     order.paid_at = bill.paid_at
+                    # Asignar el payment_method de la factura a los pedidos
+                    if bill.payment_method:
+                        order.payment_method = bill.payment_method
                     order.save()
             
             bill.save()

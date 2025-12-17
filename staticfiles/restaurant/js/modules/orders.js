@@ -365,7 +365,7 @@ export class OrdersManager {
 
     const body = { status: newStatus };
 
-    if (newStatus === 'paid' || newStatus === 'charged_to_room') {
+    if (newStatus === 'paid') {
       const includeTipCheckbox = document.getElementById('include-tip-checkbox');
       if (includeTipCheckbox?.checked) {
         body.tip_amount = parseFloat(document.getElementById('custom-tip-amount-input').value).toFixed(2) || '0.00';
@@ -373,12 +373,21 @@ export class OrdersManager {
         body.tip_amount = '0.00';
       }
       
-      // Add payment method and reference if provided
+      // Add payment method and reference only for 'paid' status, NOT for 'charged_to_room'
       if (paymentMethod) {
         body.payment_method = paymentMethod;
       }
       if (paymentReference) {
         body.payment_reference = paymentReference;
+      }
+    } else if (newStatus === 'charged_to_room') {
+      // For 'charged_to_room', only record tip but NOT payment method
+      // Payment method will be recorded when the consolidated bill is paid
+      const includeTipCheckbox = document.getElementById('include-tip-checkbox');
+      if (includeTipCheckbox?.checked) {
+        body.tip_amount = parseFloat(document.getElementById('custom-tip-amount-input').value).toFixed(2) || '0.00';
+      } else {
+        body.tip_amount = '0.00';
       }
     }
 

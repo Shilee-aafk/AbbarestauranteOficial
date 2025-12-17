@@ -105,7 +105,7 @@ class Order(models.Model):
     items = models.ManyToManyField(MenuItem, through='OrderItem')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
-    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default='cash')
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, blank=True, null=True)
     tip_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     paid_at = models.DateTimeField(null=True, blank=True, help_text="When the order was paid")
@@ -192,7 +192,7 @@ class RoomBill(models.Model):
     
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     tip_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default='cash')
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, blank=True, null=True)
     payment_reference = models.CharField(max_length=100, blank=True, null=True)
     
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft', db_index=True)
