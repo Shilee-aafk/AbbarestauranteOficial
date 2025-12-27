@@ -292,16 +292,13 @@ export class UIManager {
         const method = btn.dataset.method;
         selectedPaymentInput.value = method;
         
-        // Update button styles - remove all selected styles first
+        // Update button styles - remove selected class from all buttons
         paymentMethodBtns.forEach(b => {
-          b.classList.remove('bg-amber-500', 'border-amber-500', 'text-white');
-          b.classList.remove('hover:bg-amber-100', 'hover:border-amber-500');
-          b.classList.add('border-gray-300', 'text-gray-700', 'hover:bg-amber-100', 'hover:border-amber-500');
+          b.classList.remove('selected');
         });
         
-        // Add selected styles to clicked button
-        btn.classList.remove('border-gray-300', 'text-gray-700');
-        btn.classList.add('bg-amber-500', 'border-amber-500', 'text-white');
+        // Add selected class to clicked button
+        btn.classList.add('selected');
         
         // Show/hide reference field based on payment method
         if (method === 'transfer' || method === 'check') {
